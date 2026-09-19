@@ -29,6 +29,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const deliveryMethod = document.getElementById("deliveryMethod");
   const shippingFields = document.getElementById("shippingFields");
   const recipientName = document.getElementById("recipientName");
+  const recipientPhone = document.getElementById("recipientPhone");
   const shippingAddress = document.getElementById("shippingAddress");
   const orderBox = document.getElementById("orderBox");
   const orderHelp = document.getElementById("orderHelp");
@@ -128,6 +129,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!needsAddress) {
       recipientName.value = "";
+      recipientPhone.value = "";
       shippingAddress.value = "";
     }
   }
@@ -193,18 +195,17 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const customerName = document.getElementById("customerName").value.trim();
-    const customerPhone = document.getElementById("customerPhone").value.trim();
     const payment = document.querySelector('input[name="payment"]:checked').value;
     const note = document.getElementById("customerNote").value.trim() || "Không có";
 
-    if (!customerName || !customerPhone) {
-      alert("Vui lòng nhập tên và số điện thoại.");
+    if (!customerName) {
+      alert("Vui lòng nhập tên khách.");
       return;
     }
 
     if (deliveryMethod.value !== "pickup") {
-      if (!recipientName.value.trim() || !shippingAddress.value.trim()) {
-        alert("Vui lòng nhập tên người nhận và địa chỉ nhận hàng.");
+      if (!recipientName.value.trim() || !recipientPhone.value.trim() || !shippingAddress.value.trim()) {
+        alert("Vui lòng nhập tên người nhận, số điện thoại và địa chỉ nhận hàng.");
         return;
       }
     }
@@ -225,8 +226,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let text =
       "ĐƠN HÀNG — CÓ CÁI TIỆM\n\n" +
-      "Khách: " + customerName + "\n" +
-      "SĐT: " + customerPhone + "\n\n" +
+      "Khách: " + customerName + "\n\n" +
       lines + "\n\n" +
       "Tổng sản phẩm: $" + money(totalPrice) + "\n" +
       "Nhận hàng: " + deliveryLabels[deliveryMethod.value];
@@ -234,6 +234,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (deliveryMethod.value !== "pickup") {
       text +=
         "\nTên người nhận: " + recipientName.value.trim() +
+        "\nSĐT: " + recipientPhone.value.trim() +
         "\nĐịa chỉ: " + shippingAddress.value.trim();
     }
 
