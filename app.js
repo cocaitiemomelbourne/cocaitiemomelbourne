@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const PAYID = "ĐIỀN PAYID CỦA TIỆM";
 
   let PRODUCTS = [];
+  let CATEGORIES = [];
   const cart = [];
   let currentOrderToken = null;
   let currentOrderCommitted = false;
@@ -41,6 +42,70 @@ document.addEventListener("DOMContentLoaded", function () {
         '"': "&quot;",
         "'": "&#39;"
       }[char];
+    });
+  }
+
+  async function loadCategories() {
+    try {
+      const response = await fetch(
+        SUPABASE_URL + "/rest/v1/product_categories?select=slug,label,sort_order,is_active&is_active=eq.true&order=sort_order.asc,slug.asc",
+        {
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: "Bearer " + SUPABASE_KEY
+          }
+        }
+      );
+
+      if (!response.ok) throw new Error("Không tải được category");
+      CATEGORIES = await response.json();
+    } catch (error) {
+      console.error(error);
+      CATEGORIES = [];
+    }
+  }
+
+  function renderFilters() {
+    const filters = document.getElementById("filters");
+    const seen = new Set();
+    const inferred = PRODUCTS.map(function (p) { return p.category; }).filter(Boolean);
+
+    const categoryList = CATEGORIES.slice();
+
+    inferred.forEach(function (slug) {
+      if (!categoryList.some(function (c) { return c.slug === slug; })) {
+        categoryList.push({
+          slug: slug,
+          label: slug.charAt(0).toUpperCase() + slug.slice(1),
+          sort_order: 999
+        });
+      }
+    });
+
+    const buttons = ['<button class="filter active" type="button" data-category="all">Tất cả</button>'];
+
+    categoryList.forEach(function (category) {
+      if (seen.has(category.slug)) return;
+      seen.add(category.slug);
+      buttons.push(
+        '<button class="filter" type="button" data-category="' +
+        escapeHtml(category.slug) +
+        '">' +
+        escapeHtml(category.label) +
+        '</button>'
+      );
+    });
+
+    filters.innerHTML = buttons.join("");
+
+    filters.querySelectorAll(".filter").forEach(function (button) {
+      button.addEventListener("click", function () {
+        filters.querySelectorAll(".filter").forEach(function (item) {
+          item.classList.remove("active");
+        });
+        button.classList.add("active");
+        renderProducts(button.dataset.category);
+      });
     });
   }
 
@@ -296,17 +361,6 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("closeCartBtn").addEventListener("click", closeCart);
   overlay.addEventListener("click", closeCart);
 
-  document.querySelectorAll(".filter").forEach(function (button) {
-    button.addEventListener("click", function () {
-      document.querySelectorAll(".filter").forEach(function (item) {
-        item.classList.remove("active");
-      });
-
-      button.classList.add("active");
-      renderProducts(button.dataset.category);
-    });
-  });
-
   function chooseProductOptions(product) {
     return new Promise(function (resolve) {
       const groups = Array.isArray(product.option_groups) ? product.option_groups : [];
@@ -530,6 +584,7 @@ document.addEventListener("DOMContentLoaded", function () {
       } catch (error) {
         alert(error.message);
         await loadProducts();
+        renderFilters();
         renderProducts("all");
         return;
       }
@@ -600,6 +655,7 @@ document.addEventListener("DOMContentLoaded", function () {
       messengerBtn.style.display = "block";
 
       await loadProducts();
+      renderFilters();
       renderProducts("all");
     });
 
@@ -629,7 +685,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const dd = String(today.getDate()).padStart(2, "0");
   pickupDate.min = yyyy + "-" + mm + "-" + dd;
 
-  loadProducts().then(function () {
+  Promise.all([loadCategories(), loadProducts()]).then(function () {
+    renderFilters();
     renderProducts("all");
   });
 
