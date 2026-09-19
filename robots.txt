@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cocaitiemomelbourne.github.io/cocaitiemomelbourne/sitemap.xml
