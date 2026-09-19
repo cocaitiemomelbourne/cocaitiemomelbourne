@@ -27,6 +27,9 @@ document.addEventListener("DOMContentLoaded", function () {
   const cartList = document.getElementById("cartList");
   const cartTotal = document.getElementById("cartTotal");
   const deliveryMethod = document.getElementById("deliveryMethod");
+  const pickupFields = document.getElementById("pickupFields");
+  const pickupDate = document.getElementById("pickupDate");
+  const pickupTime = document.getElementById("pickupTime");
   const shippingFields = document.getElementById("shippingFields");
   const recipientName = document.getElementById("recipientName");
   const recipientPhone = document.getElementById("recipientPhone");
@@ -124,13 +127,17 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function syncShippingFields() {
-    const needsAddress = deliveryMethod.value !== "pickup";
-    shippingFields.style.display = needsAddress ? "block" : "none";
+    const isPickup = deliveryMethod.value === "pickup";
+    pickupFields.style.display = isPickup ? "block" : "none";
+    shippingFields.style.display = isPickup ? "none" : "block";
 
-    if (!needsAddress) {
+    if (isPickup) {
       recipientName.value = "";
       recipientPhone.value = "";
       shippingAddress.value = "";
+    } else {
+      pickupDate.value = "";
+      pickupTime.value = "";
     }
   }
 
@@ -203,7 +210,12 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    if (deliveryMethod.value !== "pickup") {
+    if (deliveryMethod.value === "pickup") {
+      if (!pickupDate.value || !pickupTime.value) {
+        alert("Vui lòng chọn ngày và giờ pick up.");
+        return;
+      }
+    } else {
       if (!recipientName.value.trim() || !recipientPhone.value.trim() || !shippingAddress.value.trim()) {
         alert("Vui lòng nhập tên người nhận, số điện thoại và địa chỉ nhận hàng.");
         return;
@@ -231,7 +243,11 @@ document.addEventListener("DOMContentLoaded", function () {
       "Tổng sản phẩm: $" + money(totalPrice) + "\n" +
       "Nhận hàng: " + deliveryLabels[deliveryMethod.value];
 
-    if (deliveryMethod.value !== "pickup") {
+    if (deliveryMethod.value === "pickup") {
+      text +=
+        "\nNgày pick up: " + pickupDate.value +
+        "\nGiờ pick up: " + pickupTime.value;
+    } else {
       text +=
         "\nTên người nhận: " + recipientName.value.trim() +
         "\nSĐT: " + recipientPhone.value.trim() +
@@ -265,6 +281,12 @@ document.addEventListener("DOMContentLoaded", function () {
   messengerBtn.addEventListener("click", function () {
     window.open("https://m.me/" + encodeURIComponent(MESSENGER_PAGE), "_blank");
   });
+
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+  pickupDate.min = yyyy + "-" + mm + "-" + dd;
 
   renderProducts("all");
   updateCart();
