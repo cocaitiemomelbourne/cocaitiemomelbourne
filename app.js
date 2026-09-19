@@ -1,18 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
-  const PRODUCTS = [
+  const SUPABASE_URL = "https://eswrqkhsvlqndjbrgsqo.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_-6iIwPaZQRMkkWAROdfvxg_dmVB81E2";
+  let PRODUCTS = [
     { name: "Ly Sứa Single", price: 20, category: "sua", emoji: "🪼", description: "Chọn 1 loại sứa + 1 loại sốt Thái hoặc Mắm Nhĩ." },
-    { name: "Ly Sứa Combo", price: 32, category: "sua", emoji: "🥗", description: "Mix 5 loại sứa random, kèm Sốt Thái & Mắm Nhĩ." },
-    { name: "Bánh Tráng Xì Ke 100g", price: 6, category: "banhtrang", emoji: "🌶️", description: "Đậm vị, cay nhẹ, ăn vui miệng." },
-    { name: "Bánh Tráng Sate Tôm Hành 150g", price: 10, category: "banhtrang", emoji: "🦐", description: "Sate thơm, tôm hành đậm đà." },
-    { name: "Bánh Tráng Bò Tỏi Chua Cay Duy Best 250g", price: 12, category: "banhtrang", emoji: "🥩", description: "Best seller — chua cay, thơm bò tỏi." },
-    { name: "Bánh tráng Dẻo Tôm Sốt Me Bơ 70g", price: 5, category: "banhtrang", emoji: "🍋", description: "Dẻo mềm, chấm sốt me bơ béo chua ngọt." },
-    { name: "Khô Gà Lá Chanh", price: 8, category: "kho", emoji: "🍗", description: "Thơm lá chanh, dai nhẹ, dễ ăn." },
-    { name: "Khô Heo Cháy Tỏi", price: 10, category: "kho", emoji: "🥓", description: "Mặn ngọt vừa miệng, thơm tỏi." },
-    { name: "Mực Xé Nước Dừa", price: 10, category: "kho", emoji: "🦑", description: "Dai ngọt, thơm vị nước dừa." },
-    { name: "Cơm Cháy Chà Bông 500g", price: 18, category: "khac", emoji: "🍘", description: "Giòn rụm, nhiều chà bông." },
-    { name: "Ghẹ Sữa Rim Giòn 130g", price: 15, category: "khac", emoji: "🦀", description: "Giòn, đậm vị." },
-    { name: "Mít Sấy Giòn", price: 10, category: "khac", emoji: "🍈", description: "Giòn thơm, ăn vui miệng." },
-    { name: "Bánh Gấu Mix 3 Vị 350g", price: 15, category: "khac", emoji: "🐻", description: "Mix 3 vị, giòn thơm." }
+    { name: "Ly Sứa Combo", price: 32, category: "sua", emoji: "🥗", description: "Mix 5 loại sứa random, kèm Sốt Thái & Mắm Nhĩ." }
   ];
 
   const MESSENGER_PAGE = "cocaitiem.o.melbourne";
@@ -38,6 +29,36 @@ document.addEventListener("DOMContentLoaded", function () {
   const orderHelp = document.getElementById("orderHelp");
   const copyOrderBtn = document.getElementById("copyOrderBtn");
   const messengerBtn = document.getElementById("messengerBtn");
+
+  async function loadProducts() {
+    try {
+      const response = await fetch(
+        SUPABASE_URL + "/rest/v1/products?select=id,name,price,category,emoji,description,image_url,sort_order,is_active&is_active=eq.true&order=sort_order.asc,id.asc",
+        {
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: "Bearer " + SUPABASE_KEY
+          }
+        }
+      );
+      if (!response.ok) throw new Error("Không tải được menu");
+      const data = await response.json();
+      PRODUCTS = data.map(function (p) {
+        return {
+          id: p.id,
+          name: p.name,
+          price: Number(p.price),
+          category: p.category,
+          emoji: p.emoji || "🍋",
+          description: p.description || "",
+          image_url: p.image_url || "",
+          sort_order: p.sort_order
+        };
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
   function money(value) {
     return Number(value || 0).toFixed(2).replace(".00", "");
@@ -66,7 +87,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const index = PRODUCTS.indexOf(product);
       return [
         '<div class="product-card">',
-          '<div class="product-visual">', product.emoji, '</div>',
+          '<div class="product-visual">', (product.image_url ? '<img src="' + escapeHtml(product.image_url) + '" alt="' + escapeHtml(product.name) + '">' : product.emoji), '</div>',
           '<div class="product-body">',
             '<h3>', escapeHtml(product.name), '</h3>',
             '<div class="product-desc">', escapeHtml(product.description), '</div>',
@@ -288,7 +309,9 @@ document.addEventListener("DOMContentLoaded", function () {
   const dd = String(today.getDate()).padStart(2, "0");
   pickupDate.min = yyyy + "-" + mm + "-" + dd;
 
-  renderProducts("all");
+  loadProducts().then(function () {
+    renderProducts("all");
+  });
   updateCart();
   syncShippingFields();
 });
