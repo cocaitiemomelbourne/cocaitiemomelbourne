@@ -452,37 +452,36 @@ document.addEventListener("DOMContentLoaded", function () {
       const lines = cart
         .map(function (item) {
           return (
-            "• " +
             item.qty +
             " x " +
             item.name +
-            " — $" +
+            " $" +
             money(item.price * item.qty)
           );
         })
         .join("\n");
 
       let text =
-        "ĐƠN HÀNG — CÓ CÁI TIỆM\n\n" +
-        "Khách: " +
         customerName +
-        "\n\n" +
-        lines +
-        "\n\n" +
-        "Tổng sản phẩm: $" +
-        money(totalPrice) +
         "\n" +
-        "Nhận hàng: " +
-        deliveryLabels[deliveryMethod.value];
+        lines +
+        "\n" +
+        "Tổng: $" +
+        money(totalPrice) +
+        "\n";
 
       if (deliveryMethod.value === "pickup") {
         text +=
+          "Nhận hàng: Pick up Springvale" +
           "\nNgày pick up: " +
           pickupDate.value +
           "\nGiờ pick up: " +
           pickupTime.value;
       } else {
         text +=
+          "Nhận hàng: " +
+          deliveryLabels[deliveryMethod.value] +
+          " (báo giá sau khi tạo đơn)" +
           "\nTên người nhận: " +
           recipientName.value.trim() +
           "\nSĐT: " +
