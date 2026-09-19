@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Có Cái Tiệm | Ăn Vặt Melbourne</title>
+  <meta name="description" content="Có Cái Tiệm - ăn vặt Việt Nam tại Melbourne. Pick up Springvale, delivery Melbourne và AusPost từ $12.">
+  <meta name="robots" content="index,follow">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="topbar">Hàng có sẵn • Pick up Springvale • Delivery Melbourne • AusPost từ $12</div>
+
+  <header class="site-header">
+    <div class="nav">
+      <div class="brand">🍋 Có Cái Tiệm</div>
+      <button id="openCartBtn" class="cart-btn" type="button">
+        🛒 Giỏ hàng <span id="cartCount">0</span>
+      </button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-card">
+      <div class="hero-top">
+        <div>
+          <div class="hero-title">Có Cái Tiệm</div>
+          <div class="hero-subtitle">Ăn vặt Melbourne</div>
+        </div>
+        <div class="hero-tagline">Món ngon cho những ngày thêm vui ♡</div>
+      </div>
+
+      <div class="service-grid">
+        <div class="service-card">
+          <div class="service-icon">📍</div>
+          <div>
+            <div class="service-label">Pick up</div>
+            <div class="service-value">Springvale</div>
+          </div>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">🛵</div>
+          <div>
+            <div class="service-label">Delivery</div>
+            <div class="service-value">Melbourne</div>
+          </div>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">📮</div>
+          <div>
+            <div class="service-label">AusPost</div>
+            <div class="service-value">từ $12</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-note">🛒 Order dễ dàng • Cash hoặc PayID</div>
+    </div>
+  </section>
+
+  <main class="main">
+    <h2>Menu</h2>
+
+    <div class="filters" id="filters">
+      <button class="filter active" type="button" data-category="all">Tất cả</button>
+      <button class="filter" type="button" data-category="sua">Sứa</button>
+      <button class="filter" type="button" data-category="banhtrang">Bánh tráng</button>
+      <button class="filter" type="button" data-category="kho">Khô</button>
+      <button class="filter" type="button" data-category="khac">Ăn vặt khác</button>
+    </div>
+
+    <div id="productGrid" class="product-grid"></div>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <strong>Có Cái Tiệm — Ăn Vặt Melbourne</strong><br>
+      Facebook & TikTok: @cocaitiem.o.melbourne
+    </div>
+  </footer>
+
+  <div id="overlay" class="overlay"></div>
+
+  <aside id="cartDrawer" class="cart-drawer" aria-hidden="true">
+    <div class="drawer-head">
+      <strong>Giỏ hàng</strong>
+      <button id="closeCartBtn" class="close-btn" type="button">✕</button>
+    </div>
+
+    <div id="cartList" class="cart-list"></div>
+
+    <div class="checkout">
+      <div class="total-row">
+        <span>Tổng</span>
+        <span>$<span id="cartTotal">0</span></span>
+      </div>
+
+      <label for="customerName">Tên khách</label>
+      <input id="customerName" type="text" placeholder="Tên của bạn">
+
+      <label for="customerPhone">Số điện thoại</label>
+      <input id="customerPhone" type="tel" placeholder="04xx xxx xxx">
+
+      <label for="deliveryMethod">Nhận hàng</label>
+      <select id="deliveryMethod">
+        <option value="pickup">Pick up Springvale</option>
+        <option value="delivery">Delivery Melbourne</option>
+        <option value="auspost">AusPost</option>
+      </select>
+
+      <div id="shippingFields" class="shipping-fields">
+        <label for="recipientName">Tên người nhận</label>
+        <input id="recipientName" type="text" placeholder="Tên người nhận">
+
+        <label for="shippingAddress">Địa chỉ nhận hàng</label>
+        <textarea id="shippingAddress" rows="3" placeholder="Số nhà, tên đường, suburb, postcode"></textarea>
+      </div>
+
+      <label>Thanh toán</label>
+      <div class="pay-options">
+        <label class="pay-option">
+          <input type="radio" name="payment" value="Cash" checked>
+          💵 Cash
+        </label>
+        <label class="pay-option">
+          <input type="radio" name="payment" value="PayID">
+          📱 PayID
+        </label>
+      </div>
+
+      <label for="customerNote">Ghi chú</label>
+      <textarea id="customerNote" rows="2" placeholder="Ví dụ: ít cay, gọi trước khi giao..."></textarea>
+
+      <button id="makeOrderBtn" class="primary-btn" type="button">Tạo đơn hàng</button>
+
+      <div id="orderBox" class="order-box"></div>
+
+      <div id="orderHelp" class="order-help">
+        <strong>Cách gửi đơn:</strong><br>
+        1. Bấm <strong>Copy đơn hàng</strong><br>
+        2. Bấm <strong>Gửi qua Messenger</strong><br>
+        3. Dán (Paste) nội dung đơn vào khung chat<br>
+        4. Bấm <strong>Send</strong>
+      </div>
+
+      <button id="copyOrderBtn" class="primary-btn copy-btn" type="button">📋 Copy đơn hàng</button>
+      <button id="messengerBtn" class="primary-btn messenger-btn" type="button">💬 Gửi qua Messenger</button>
+    </div>
+  </aside>
+
+  <script src="app.js"></script>
+</body>
+</html>
