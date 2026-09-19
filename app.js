@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const url =
         SUPABASE_URL +
         "/rest/v1/products" +
-        "?select=id,name,price,category,emoji,description,image_url,sort_order,is_active,stock_qty" +
+        "?select=id,name,price,category,emoji,description,image_url,sort_order,is_active,stock_qty,option_groups" +
         "&is_active=eq.true" +
         "&or=(stock_qty.is.null,stock_qty.gt.0)" +
         "&order=sort_order.asc,id.asc";
@@ -77,7 +77,8 @@ document.addEventListener("DOMContentLoaded", function () {
           description: p.description || "",
           image_url: p.image_url || "",
           sort_order: Number(p.sort_order || 0),
-          stock_qty: p.stock_qty === null ? null : Number(p.stock_qty)
+          stock_qty: p.stock_qty === null ? null : Number(p.stock_qty),
+          option_groups: Array.isArray(p.option_groups) ? p.option_groups : []
         };
       });
     } catch (error) {
@@ -169,7 +170,9 @@ document.addEventListener("DOMContentLoaded", function () {
           "<div>",
           "<b>",
           escapeHtml(item.name),
-          "</b><br>",
+          "</b>",
+          item.option_text ? "<br><small>" + escapeHtml(item.option_text) + "</small>" : "",
+          "<br>",
           "<small>$",
           money(item.price),
           " × ",
@@ -304,7 +307,89 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  productGrid.addEventListener("click", function (event) {
+  function chooseProductOptions(product) {
+    return new Promise(function (resolve) {
+      const groups = Array.isArray(product.option_groups) ? product.option_groups : [];
+      if (!groups.length) {
+        resolve([]);
+        return;
+      }
+
+      const backdrop = document.createElement("div");
+      backdrop.className = "option-modal-backdrop";
+
+      const modal = document.createElement("div");
+      modal.className = "option-modal";
+
+      let html =
+        '<div class="option-modal-head">' +
+          '<div><strong>' + escapeHtml(product.name) + '</strong><div class="option-modal-sub">Chọn option trước khi thêm vào giỏ</div></div>' +
+          '<button type="button" class="option-modal-close">✕</button>' +
+        '</div>' +
+        '<div class="option-modal-body">';
+
+      groups.forEach(function (group, groupIndex) {
+        html += '<div class="option-group">' +
+          '<div class="option-group-title">' + escapeHtml(group.name || ("Option " + (groupIndex + 1))) + '</div>';
+
+        (group.choices || []).forEach(function (choice, choiceIndex) {
+          const id = "opt-" + groupIndex + "-" + choiceIndex + "-" + Date.now();
+          html +=
+            '<label class="option-choice" for="' + id + '">' +
+              '<input id="' + id + '" type="radio" name="option-group-' + groupIndex + '" value="' + escapeHtml(choice) + '">' +
+              '<span>' + escapeHtml(choice) + '</span>' +
+            '</label>';
+        });
+
+        html += '</div>';
+      });
+
+      html +=
+        '</div>' +
+        '<div class="option-modal-actions">' +
+          '<button type="button" class="option-cancel-btn">Huỷ</button>' +
+          '<button type="button" class="option-confirm-btn">Thêm vào giỏ</button>' +
+        '</div>';
+
+      modal.innerHTML = html;
+      backdrop.appendChild(modal);
+      document.body.appendChild(backdrop);
+
+      function close(result) {
+        backdrop.remove();
+        resolve(result);
+      }
+
+      modal.querySelector(".option-modal-close").addEventListener("click", function () { close(null); });
+      modal.querySelector(".option-cancel-btn").addEventListener("click", function () { close(null); });
+      backdrop.addEventListener("click", function (e) {
+        if (e.target === backdrop) close(null);
+      });
+
+      modal.querySelector(".option-confirm-btn").addEventListener("click", function () {
+        const selected = [];
+
+        for (let i = 0; i < groups.length; i += 1) {
+          const checked = modal.querySelector('input[name="option-group-' + i + '"]:checked');
+          if (!checked && groups[i].required !== false) {
+            alert("Vui lòng chọn " + (groups[i].name || "option") + ".");
+            return;
+          }
+
+          if (checked) {
+            selected.push({
+              group: groups[i].name || ("Option " + (i + 1)),
+              choice: checked.value
+            });
+          }
+        }
+
+        close(selected);
+      });
+    });
+  }
+
+  productGrid.addEventListener("click", async function (event) {
     const button = event.target.closest("[data-add-index]");
     if (!button) {
       return;
@@ -315,25 +400,30 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    const existing = cart.find(function (item) {
-      return item.id === product.id;
-    });
-
-    if (
-      product.stock_qty !== null &&
-      existing &&
-      existing.qty >= product.stock_qty
-    ) {
-      alert("Món này chỉ còn " + product.stock_qty + " phần.");
+    const selectedOptions = await chooseProductOptions(product);
+    if (selectedOptions === null) {
       return;
     }
 
+    const optionText = selectedOptions.map(function (opt) {
+      return opt.choice;
+    }).join(" • ");
+
+    const variantKey = product.id + "::" + optionText;
+
+    const existing = cart.find(function (item) {
+      return item.variant_key === variantKey;
+    });
+
+    const totalForProduct = cart
+      .filter(function (item) { return item.id === product.id; })
+      .reduce(function (sum, item) { return sum + item.qty; }, 0);
+
     if (
       product.stock_qty !== null &&
-      !existing &&
-      product.stock_qty <= 0
+      totalForProduct >= product.stock_qty
     ) {
-      alert("Món này đã hết hàng.");
+      alert("Món này chỉ còn " + product.stock_qty + " phần.");
       return;
     }
 
@@ -345,7 +435,10 @@ document.addEventListener("DOMContentLoaded", function () {
         name: product.name,
         price: product.price,
         qty: 1,
-        stock_qty: product.stock_qty
+        stock_qty: product.stock_qty,
+        options: selectedOptions,
+        option_text: optionText,
+        variant_key: variantKey
       });
     }
 
@@ -367,13 +460,15 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    if (
-      delta > 0 &&
-      item.stock_qty !== null &&
-      item.qty >= item.stock_qty
-    ) {
-      alert("Món này chỉ còn " + item.stock_qty + " phần.");
-      return;
+    if (delta > 0 && item.stock_qty !== null) {
+      const totalForProduct = cart
+        .filter(function (cartItem) { return cartItem.id === item.id; })
+        .reduce(function (sum, cartItem) { return sum + cartItem.qty; }, 0);
+
+      if (totalForProduct >= item.stock_qty) {
+        alert("Món này chỉ còn " + item.stock_qty + " phần.");
+        return;
+      }
     }
 
     item.qty += delta;
@@ -455,6 +550,7 @@ document.addEventListener("DOMContentLoaded", function () {
             item.qty +
             " x " +
             item.name +
+            (item.option_text ? " — " + item.option_text : "") +
             " $" +
             money(item.price * item.qty)
           );
