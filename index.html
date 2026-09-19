@@ -110,6 +110,12 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-ra
     <label for="customerPhone">Số điện thoại</label><input id="customerPhone" placeholder="04xx xxx xxx">
     <label for="deliveryMethod">Nhận hàng</label>
     <select id="deliveryMethod"><option>Pick up Springvale</option><option>Delivery Melbourne</option><option>AusPost</option></select>
+    <div id="shippingFields" style="display:none">
+      <label for="recipientName">Tên người nhận</label>
+      <input id="recipientName" placeholder="Tên người nhận">
+      <label for="shippingAddress">Địa chỉ nhận hàng</label>
+      <textarea id="shippingAddress" rows="2" placeholder="Số nhà, tên đường, suburb, postcode"></textarea>
+    </div>
     <label>Thanh toán</label>
     <div class="payChoices">
       <label><input type="radio" name="payment" value="Cash" checked> 💵 Cash</label>
@@ -152,7 +158,11 @@ document.addEventListener("DOMContentLoaded", function(){
     order: document.getElementById("orderBox"),
     help: document.getElementById("orderHelp"),
     copy: document.getElementById("copyBtn"),
-    msg: document.getElementById("messengerBtn")
+    msg: document.getElementById("messengerBtn"),
+    shippingFields: document.getElementById("shippingFields"),
+    recipientName: document.getElementById("recipientName"),
+    shippingAddress: document.getElementById("shippingAddress"),
+    deliveryMethod: document.getElementById("deliveryMethod")
   };
 
   function money(v){ return Number(v||0).toFixed(2).replace(".00",""); }
@@ -210,16 +220,35 @@ document.addEventListener("DOMContentLoaded", function(){
     updateCart();
   });
 
+  function toggleShippingFields(){
+    const needsAddress = els.deliveryMethod.value !== "Pick up Springvale";
+    els.shippingFields.style.display = needsAddress ? "block" : "none";
+    if(!needsAddress){
+      els.recipientName.value = "";
+      els.shippingAddress.value = "";
+    }
+  }
+
+  els.deliveryMethod.addEventListener("change", toggleShippingFields);
+  toggleShippingFields();
+
   document.getElementById("makeOrderBtn").addEventListener("click",()=>{
     if(!cart.length){ alert("Vui lòng thêm sản phẩm vào giỏ hàng."); return; }
     const payment=document.querySelector('input[name="payment"]:checked').value;
     const name=document.getElementById("customerName").value||"Chưa nhập";
     const phone=document.getElementById("customerPhone").value||"Chưa nhập";
-    const delivery=document.getElementById("deliveryMethod").value;
+    const delivery=els.deliveryMethod.value;
+    const recipient=els.recipientName.value.trim();
+    const address=els.shippingAddress.value.trim();
+    if(delivery!=="Pick up Springvale" && (!recipient || !address)){ alert("Vui lòng nhập tên người nhận và địa chỉ nhận hàng."); return; }
     const note=document.getElementById("customerNote").value||"Không có";
     const total=cart.reduce((s,x)=>s+x.price*x.qty,0);
     const lines=cart.map(x=>"• "+x.qty+" x "+x.name+" — $"+money(x.price*x.qty)).join("\n");
-    let text="ĐƠN HÀNG — CÓ CÁI TIỆM\n\nKhách: "+name+"\nSĐT: "+phone+"\n\n"+lines+"\n\nTổng sản phẩm: $"+money(total)+"\nNhận hàng: "+delivery+"\nThanh toán: "+payment+"\nGhi chú: "+note;
+    let text="ĐƠN HÀNG — CÓ CÁI TIỆM\n\nKhách: "+name+"\nSĐT: "+phone+"\n\n"+lines+"\n\nTổng sản phẩm: $"+money(total)+"\nNhận hàng: "+delivery;
+    if(delivery!=="Pick up Springvale"){
+      text+="\nTên người nhận: "+recipient+"\nĐịa chỉ: "+address;
+    }
+    text+="\nThanh toán: "+payment+"\nGhi chú: "+note;
     if(payment==="PayID") text+="\n\nPayID: "+PAYID;
     els.order.textContent=text; els.order.style.display="block"; els.help.style.display="block"; els.copy.style.display="block"; els.msg.style.display="block";
   });
