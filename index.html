@@ -118,7 +118,7 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-ra
     <label for="customerNote">Ghi chú</label><textarea id="customerNote" rows="2"></textarea>
     <button id="makeOrderBtn" class="primary">Tạo đơn hàng</button>
     <div id="orderBox" class="orderBox"></div>
-    <button id="copyBtn" class="primary copyBtn">Copy đơn hàng</button>
+    
     <button id="messengerBtn" class="primary msgBtn">💬 Gửi đơn qua Messenger</button>
   </div>
 </aside>
@@ -150,7 +150,6 @@ document.addEventListener("DOMContentLoaded", function(){
     list: document.getElementById("cartList"),
     total: document.getElementById("cartTotal"),
     order: document.getElementById("orderBox"),
-    copy: document.getElementById("copyBtn"),
     msg: document.getElementById("messengerBtn")
   };
 
@@ -220,11 +219,23 @@ document.addEventListener("DOMContentLoaded", function(){
     const lines=cart.map(x=>"• "+x.qty+" x "+x.name+" — $"+money(x.price*x.qty)).join("\n");
     let text="ĐƠN HÀNG — CÓ CÁI TIỆM\n\nKhách: "+name+"\nSĐT: "+phone+"\n\n"+lines+"\n\nTổng sản phẩm: $"+money(total)+"\nNhận hàng: "+delivery+"\nThanh toán: "+payment+"\nGhi chú: "+note;
     if(payment==="PayID") text+="\n\nPayID: "+PAYID;
-    els.order.textContent=text; els.order.style.display="block"; els.copy.style.display="block"; els.msg.style.display="block";
+    els.order.textContent=text; els.order.style.display="block"; els.msg.style.display="block";
   });
 
-  els.copy.addEventListener("click",async()=>{ try{await navigator.clipboard.writeText(els.order.textContent);alert("Đã copy đơn hàng.");}catch(e){alert("Không copy tự động được.");} });
-  els.msg.addEventListener("click",async()=>{ try{await navigator.clipboard.writeText(els.order.textContent);}catch(e){} window.open("https://m.me/"+encodeURIComponent(MESSENGER),"_blank"); });
+  els.msg.addEventListener("click",async()=>{
+    const orderText = els.order.textContent;
+    let copied = false;
+    try{
+      await navigator.clipboard.writeText(orderText);
+      copied = true;
+    }catch(e){}
+    window.open("https://m.me/"+encodeURIComponent(MESSENGER),"_blank");
+    if(copied){
+      setTimeout(()=>alert("Messenger đã mở. Đơn hàng đã được copy sẵn — chỉ cần Paste và Send."),300);
+    }else{
+      setTimeout(()=>alert("Messenger đã mở. Trình duyệt không cho copy tự động; vui lòng copy nội dung đơn phía trên rồi gửi cho Tiệm."),300);
+    }
+  });
 
   renderProducts();
   updateCart();
