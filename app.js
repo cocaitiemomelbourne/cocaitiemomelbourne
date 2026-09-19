@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", function () {
   async function loadProducts() {
     try {
       const response = await fetch(
-        SUPABASE_URL + "/rest/v1/products?select=id,name,price,category,emoji,description,image_url,sort_order,is_active&is_active=eq.true&order=sort_order.asc,id.asc",
+        SUPABASE_URL + "/rest/v1/products?select=id,name,price,category,emoji,description,image_url,sort_order,is_active,stock_qty&is_active=eq.true&or=(stock_qty.is.null,stock_qty.gt.0)&order=sort_order.asc,id.asc",
         {
           headers: {
             apikey: SUPABASE_KEY,
@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const data = await response.json();
       PRODUCTS = data.map(function(p){return {
         id:p.id,name:p.name,price:Number(p.price),category:p.category,emoji:p.emoji||"🍋",
-        description:p.description||"",image_url:p.image_url||"",sort_order:p.sort_order
+        description:p.description||"",image_url:p.image_url||"",sort_order:p.sort_order,stock_qty:p.stock_qty
       };});
     } catch(error) { console.error(error); }
   }
@@ -197,19 +197,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const product = PRODUCTS[Number(button.dataset.addIndex)];
     const existing = cart.find(function (item) {
-      return item.name === product.name;
+      return item.id === product.id;
     });
 
     if (existing) {
       existing.qty += 1;
     } else {
       cart.push({
+        id: product.id,
         name: product.name,
         price: product.price,
         qty: 1
       });
     }
 
+    currentOrderToken = null;
+    currentOrderCommitted = false;
     updateCart();
   });
 
@@ -226,12 +229,57 @@ document.addEventListener("DOMContentLoaded", function () {
       cart.splice(index, 1);
     }
 
+    currentOrderToken = null;
+    currentOrderCommitted = false;
     updateCart();
   });
 
   deliveryMethod.addEventListener("change", syncShippingFields);
 
-  document.getElementById("makeOrderBtn").addEventListener("click", function () {
+  function makeOrderToken(){
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "order-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+  }
+
+  let currentOrderToken = null;
+  let currentOrderCommitted = false;
+
+  async function commitStockForCurrentCart(){
+    if (currentOrderCommitted) return {ok:true,duplicate:true};
+
+    if (!currentOrderToken) currentOrderToken = makeOrderToken();
+
+    const items = cart.map(function(item){
+      return {id:item.id,qty:item.qty};
+    });
+
+    const response = await fetch(SUPABASE_URL + "/rest/v1/rpc/commit_order_stock", {
+      method:"POST",
+      headers:{
+        apikey:SUPABASE_KEY,
+        Authorization:"Bearer " + SUPABASE_KEY,
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        p_order_token:currentOrderToken,
+        p_items:items
+      })
+    });
+
+    const bodyText = await response.text();
+
+    if(!response.ok){
+      let message = "Không thể giữ tồn kho cho đơn này.";
+      if(bodyText.includes("insufficient_stock")) message = "Một món trong giỏ không còn đủ số lượng. Vui lòng tải lại menu và chọn lại.";
+      if(bodyText.includes("product_unavailable")) message = "Một món trong giỏ vừa hết hàng hoặc đã ngừng bán. Vui lòng tải lại menu.";
+      throw new Error(message);
+    }
+
+    currentOrderCommitted = true;
+    return bodyText ? JSON.parse(bodyText) : {ok:true};
+  }
+
+  document.getElementById("makeOrderBtn").addEventListener("click", async function () {
     if (cart.length === 0) {
       alert("Vui lòng thêm sản phẩm vào giỏ hàng.");
       return;
@@ -256,6 +304,15 @@ document.addEventListener("DOMContentLoaded", function () {
         alert("Vui lòng nhập tên người nhận, số điện thoại và địa chỉ nhận hàng.");
         return;
       }
+    }
+
+    try{
+      await commitStockForCurrentCart();
+    }catch(error){
+      alert(error.message);
+      await loadProducts();
+      renderProducts("all");
+      return;
     }
 
     const deliveryLabels = {
@@ -303,6 +360,8 @@ document.addEventListener("DOMContentLoaded", function () {
     orderHelp.style.display = "block";
     copyOrderBtn.style.display = "block";
     messengerBtn.style.display = "block";
+    await loadProducts();
+    renderProducts("all");
   });
 
   copyOrderBtn.addEventListener("click", async function () {
