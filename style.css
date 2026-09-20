@@ -91,3 +91,5 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-ra
 .option-modal-actions{display:flex;gap:10px;padding:16px 18px;border-top:1px solid var(--line)}
 .option-cancel-btn,.option-confirm-btn{flex:1;border:0;border-radius:10px;padding:12px;font-weight:900}
 .option-cancel-btn{background:#f4efe9}.option-confirm-btn{background:var(--dark);color:#fff}
+
+.order-success{display:none;margin-top:12px;padding:13px 14px;border-radius:10px;background:#eaf6ec;border:1px solid #b8dfbf;color:#235d2d;font-size:13px;line-height:1.5;font-weight:700}
