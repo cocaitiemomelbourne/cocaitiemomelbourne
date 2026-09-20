@@ -6,7 +6,7 @@
   <title>Có Cái Tiệm | Ăn Vặt Melbourne</title>
   <meta name="description" content="Có Cái Tiệm - ăn vặt Việt Nam tại Melbourne. Pick up Springvale, delivery Melbourne và AusPost từ $12.">
   <meta name="robots" content="index,follow">
-  <link rel="stylesheet" href="style.css?v=20260919-1720">
+  <link rel="stylesheet" href="style.css?v=20260920-success1">
 </head>
 <body>
   <div class="topbar">Hàng có sẵn • Pick up Springvale • Delivery Melbourne • AusPost từ $12</div>
@@ -137,6 +137,8 @@
 
       <div id="orderBox" class="order-box"></div>
 
+      <div id="orderSuccess" class="order-success" role="status" aria-live="polite"></div>
+
       <div id="orderHelp" class="order-help">
         <strong>Cách gửi đơn:</strong><br>
         1. Bấm <strong>Copy đơn hàng</strong><br>
@@ -151,5 +153,34 @@
   </aside>
 
   <script src="app.js?v=20260920-email-live1"></script>
+  <script>
+    (function () {
+      var orderBox = document.getElementById("orderBox");
+      var successBox = document.getElementById("orderSuccess");
+      var deliveryMethod = document.getElementById("deliveryMethod");
+
+      if (!orderBox || !successBox || !deliveryMethod) return;
+
+      var orderSuccessObserver = new MutationObserver(function () {
+        if (!orderBox.textContent.trim() || orderBox.style.display === "none") return;
+
+        if (deliveryMethod.value === "pickup") {
+          successBox.textContent =
+            "Đơn hàng của bạn đã được tạo và chờ xác nhận, tiệm sẽ liên hệ xác nhận sớm nhất.";
+        } else {
+          successBox.textContent =
+            "Đơn hàng của bạn đã được tạo và chờ xác nhận, tiệm sẽ liên hệ xác nhận sớm nhất thông qua số điện thoại bạn đã điền.";
+        }
+
+        successBox.style.display = "block";
+      });
+
+      orderSuccessObserver.observe(orderBox, {
+        childList: true,
+        characterData: true,
+        subtree: true
+      });
+    })();
+  </script>
 </body>
 </html>
