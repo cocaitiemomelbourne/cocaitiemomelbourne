@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const SUPABASE_URL = "https://eswrqkhsvlqndjbrgsqo.supabase.co";
   const SUPABASE_KEY = "sb_publishable_-6iIwPaZQRMkkWAROdfvxg_dmVB81E2";
   const MESSENGER_PAGE = "cocaitiem.o.melbourne";
+  const MESSENGER_PAGE_ID = "1204366336096979";
   const PAYID = "ĐIỀN PAYID CỦA TIỆM";
 
   let PRODUCTS = [];
@@ -706,10 +707,24 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   messengerBtn.addEventListener("click", function () {
-    window.open(
-      "https://m.me/" + encodeURIComponent(MESSENGER_PAGE),
-      "_blank"
-    );
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const webUrl = "https://m.me/" + encodeURIComponent(MESSENGER_PAGE);
+
+    if (!isMobile) {
+      window.open(webUrl, "_blank");
+      return;
+    }
+
+    const appUrl = "fb-messenger://user-thread/" + encodeURIComponent(MESSENGER_PAGE_ID);
+    const started = Date.now();
+
+    window.location.href = appUrl;
+
+    setTimeout(function () {
+      if (Date.now() - started < 1800) {
+        window.location.href = webUrl;
+      }
+    }, 900);
   });
 
   const today = new Date();
