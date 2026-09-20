@@ -682,6 +682,13 @@ document.addEventListener("DOMContentLoaded", function () {
       copyOrderBtn.style.display = "block";
       messengerBtn.style.display = "block";
 
+      requestAnimationFrame(function () {
+        orderBox.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      });
+
       try {
         await saveOrderDetails(text, customerName);
       } catch (saveError) {
