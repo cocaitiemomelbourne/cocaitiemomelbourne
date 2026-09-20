@@ -6,7 +6,7 @@
   <title>Có Cái Tiệm | Ăn Vặt Melbourne</title>
   <meta name="description" content="Có Cái Tiệm - ăn vặt Việt Nam tại Melbourne. Pick up Springvale, delivery Melbourne và AusPost từ $12.">
   <meta name="robots" content="index,follow">
-  <link rel="stylesheet" href="style.css?v=20260920-success1">
+  <link rel="stylesheet" href="style.css?v=20260920-send-choice1">
 </head>
 <body>
   <div class="topbar">Hàng có sẵn • Pick up Springvale • Delivery Melbourne • AusPost từ $12</div>
@@ -105,6 +105,10 @@
 
         <label for="pickupTime">Chọn giờ pick up</label>
         <input id="pickupTime" type="time">
+
+        <label for="pickupPhone">Số điện thoại <span class="optional-text">(không bắt buộc)</span></label>
+        <input id="pickupPhone" type="tel" placeholder="04xx xxx xxx">
+        <div class="field-note">Chỉ bắt buộc nếu bạn chọn gửi đơn qua Email.</div>
       </div>
 
       <div id="shippingFields" class="shipping-fields">
@@ -140,45 +144,109 @@
       <div id="orderSuccess" class="order-success" role="status" aria-live="polite"></div>
 
       <div id="orderHelp" class="order-help">
-        <strong>Cách gửi đơn:</strong><br>
-        1. Bấm <strong>Copy đơn hàng</strong><br>
-        2. Bấm <strong>Gửi qua Messenger</strong><br>
-        3. Dán (Paste) nội dung đơn vào khung chat<br>
-        4. Bấm <strong>Send</strong>
+        <strong>Chọn 1 cách gửi đơn:</strong>
+        <div class="send-option">
+          <strong>1. Gửi qua Messenger</strong><br>
+          Copy đơn hàng → mở Messenger <strong>@cocaitiem.o.melbourne</strong> → Paste và Send.
+        </div>
+        <div class="send-option">
+          <strong>2. Gửi qua Email</strong><br>
+          Gửi đơn trực tiếp cho Tiệm và chờ xác nhận qua số điện thoại.
+        </div>
       </div>
 
       <button id="copyOrderBtn" class="primary-btn copy-btn" type="button">📋 Copy đơn hàng</button>
-      <button id="messengerBtn" class="primary-btn messenger-btn" type="button">💬 Gửi qua Messenger</button>
+      <button id="messengerBtn" class="primary-btn messenger-btn" type="button">💬 Gửi qua Messenger @cocaitiem.o.melbourne</button>
+      <button id="emailOrderBtn" class="primary-btn email-btn" type="button">✉️ Gửi đơn hàng qua Email</button>
     </div>
   </aside>
 
   <script src="app.js?v=20260920-email-live1"></script>
   <script>
     (function () {
+      var SUPABASE_URL = "https://eswrqkhsvlqndjbrgsqo.supabase.co";
+      var SUPABASE_KEY = "sb_publishable_-6iIwPaZQRMkkWAROdfvxg_dmVB81E2";
+
       var orderBox = document.getElementById("orderBox");
       var successBox = document.getElementById("orderSuccess");
+      var emailBtn = document.getElementById("emailOrderBtn");
       var deliveryMethod = document.getElementById("deliveryMethod");
+      var pickupPhone = document.getElementById("pickupPhone");
+      var recipientPhone = document.getElementById("recipientPhone");
+      var customerName = document.getElementById("customerName");
 
-      if (!orderBox || !successBox || !deliveryMethod) return;
+      if (!orderBox || !successBox || !emailBtn) return;
 
-      var orderSuccessObserver = new MutationObserver(function () {
+      var observer = new MutationObserver(function () {
         if (!orderBox.textContent.trim() || orderBox.style.display === "none") return;
-
-        if (deliveryMethod.value === "pickup") {
-          successBox.textContent =
-            "Đơn hàng của bạn đã được tạo và chờ xác nhận, tiệm sẽ liên hệ xác nhận sớm nhất.";
-        } else {
-          successBox.textContent =
-            "Đơn hàng của bạn đã được tạo và chờ xác nhận, tiệm sẽ liên hệ xác nhận sớm nhất thông qua số điện thoại bạn đã điền.";
-        }
-
-        successBox.style.display = "block";
+        successBox.style.display = "none";
+        successBox.textContent = "";
+        emailBtn.style.display = "block";
+        emailBtn.disabled = false;
+        emailBtn.textContent = "✉️ Gửi đơn hàng qua Email";
       });
 
-      orderSuccessObserver.observe(orderBox, {
+      observer.observe(orderBox, {
         childList: true,
         characterData: true,
         subtree: true
+      });
+
+      emailBtn.addEventListener("click", async function () {
+        if (!orderBox.textContent.trim()) {
+          alert("Vui lòng tạo đơn hàng trước.");
+          return;
+        }
+
+        var phone = deliveryMethod.value === "pickup"
+          ? pickupPhone.value.trim()
+          : recipientPhone.value.trim();
+
+        if (!phone) {
+          alert("Vui lòng nhập số điện thoại để Tiệm liên hệ xác nhận đơn qua Email.");
+          if (deliveryMethod.value === "pickup") {
+            pickupPhone.focus();
+          } else {
+            recipientPhone.focus();
+          }
+          return;
+        }
+
+        emailBtn.disabled = true;
+        emailBtn.textContent = "Đang gửi Email...";
+
+        try {
+          var response = await fetch(
+            SUPABASE_URL + "/rest/v1/rpc/send_order_email_choice",
+            {
+              method: "POST",
+              headers: {
+                apikey: SUPABASE_KEY,
+                Authorization: "Bearer " + SUPABASE_KEY,
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                p_customer_name: customerName.value.trim(),
+                p_order_text: orderBox.textContent,
+                p_phone: phone
+              })
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(await response.text());
+          }
+
+          successBox.textContent =
+            "Đơn hàng của bạn đã được gửi qua Email và chờ xác nhận, tiệm sẽ liên hệ xác nhận sớm nhất thông qua số điện thoại bạn đã điền.";
+          successBox.style.display = "block";
+          emailBtn.textContent = "✓ Đã gửi đơn qua Email";
+        } catch (error) {
+          console.error(error);
+          emailBtn.disabled = false;
+          emailBtn.textContent = "✉️ Gửi đơn hàng qua Email";
+          alert("Chưa gửi được Email. Vui lòng thử lại hoặc gửi đơn qua Messenger.");
+        }
       });
     })();
   </script>
