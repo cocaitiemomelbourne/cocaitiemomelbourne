@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
   const SUPABASE_URL = "https://eswrqkhsvlqndjbrgsqo.supabase.co";
   const SUPABASE_KEY = "sb_publishable_-6iIwPaZQRMkkWAROdfvxg_dmVB81E2";
+  const SUPABASE_ANON_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzd3Jxa2hzdmxxbmRqYnJnc3FvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4MTc3ODksImV4cCI6MjEwNTM5Mzc4OX0.juD5KZ4UXqiQ3L382rFZwrQRpguJVaDde--nSKbeRxs";
   const MESSENGER_PAGE = "cocaitiem.o.melbourne";
   const PAYID = "ĐIỀN PAYID CỦA TIỆM";
 
@@ -290,6 +291,52 @@ document.addEventListener("DOMContentLoaded", function () {
   function resetOrderReservation() {
     currentOrderToken = null;
     currentOrderCommitted = false;
+  }
+
+  async function saveOrderDetails(orderText, customerName) {
+    const response = await fetch(
+      SUPABASE_URL + "/rest/v1/rpc/save_order_details",
+      {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: "Bearer " + SUPABASE_ANON_JWT,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          p_order_token: currentOrderToken,
+          p_customer_name: customerName,
+          p_order_text: orderText
+        })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Không lưu được nội dung đơn hàng.");
+    }
+  }
+
+  async function emailCurrentOrder() {
+    const response = await fetch(
+      SUPABASE_URL + "/functions/v1/send-order-email",
+      {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: "Bearer " + SUPABASE_ANON_JWT,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          order_token: currentOrderToken
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const detail = await response.text();
+      console.error("Order email failed:", detail);
+      throw new Error("Đơn đã tạo nhưng email chưa gửi được.");
+    }
   }
 
   function makeOrderToken() {
@@ -653,6 +700,14 @@ document.addEventListener("DOMContentLoaded", function () {
       orderHelp.style.display = "block";
       copyOrderBtn.style.display = "block";
       messengerBtn.style.display = "block";
+
+      try {
+        await saveOrderDetails(text, customerName);
+        await emailCurrentOrder();
+      } catch (emailError) {
+        console.error(emailError);
+        alert(emailError.message);
+      }
 
       await loadProducts();
       renderFilters();
