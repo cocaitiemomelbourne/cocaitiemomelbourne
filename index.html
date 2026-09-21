@@ -535,7 +535,13 @@ document.addEventListener("DOMContentLoaded", function () {
   function renderProducts(category) {
     const selected =
       category === "all"
-        ? PRODUCTS
+        ? PRODUCTS.slice().sort(function (a, b) {
+            return String(a.name || "").localeCompare(
+              String(b.name || ""),
+              window.CCT_LANG === "en" ? "en" : "vi",
+              { sensitivity: "base" }
+            );
+          })
         : PRODUCTS.filter(function (product) {
             return product.category === category;
           });
