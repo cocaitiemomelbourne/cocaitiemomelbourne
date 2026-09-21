@@ -112,3 +112,8 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-ra
   .card-qty-center{min-width:44px}
   .card-selected-label{font-size:8px}
 }
+
+.language-switcher{position:relative;z-index:1;display:flex;align-items:center;gap:10px;margin-top:12px}
+.language-btn{border:0;background:transparent;padding:0;font-weight:800;color:#6f4b20;font-size:14px}
+.language-btn.active{text-decoration:underline;text-underline-offset:4px;color:#2f241b}
+.language-separator{font-weight:800;color:#8d642f}
