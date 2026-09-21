@@ -99,3 +99,16 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-ra
 .send-option{margin-top:10px;padding:10px 12px;border-radius:9px;background:rgba(255,255,255,.55)}
 .email-btn{display:none;background:#9b5c12}
 .email-btn:disabled{opacity:.65;cursor:not-allowed}
+
+.product-card.selected{border-color:#e6a11c;box-shadow:0 0 0 2px rgba(242,165,27,.14)}
+.card-qty-control{display:flex;align-items:center;gap:7px;background:#fff5df;border:1px solid #f0c46b;border-radius:999px;padding:4px}
+.card-qty-btn{width:34px;height:34px;border:0;border-radius:50%;background:#f2a51b;font-size:20px;font-weight:900;line-height:1}
+.card-qty-center{min-width:52px;text-align:center;line-height:1.05}
+.card-qty-center strong{display:block;font-size:16px}
+.card-selected-label{display:block;font-size:9px;font-weight:800;color:#806f61;text-transform:uppercase;letter-spacing:.03em}
+@media(max-width:560px){
+  .card-qty-control{gap:4px;padding:3px}
+  .card-qty-btn{width:30px;height:30px;font-size:18px}
+  .card-qty-center{min-width:44px}
+  .card-selected-label{font-size:8px}
+}
