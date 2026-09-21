@@ -7,6 +7,40 @@
   <meta name="description" content="Có Cái Tiệm - ăn vặt Việt Nam tại Melbourne. Pick up Springvale, delivery Melbourne và AusPost từ $12.">
   <meta name="robots" content="index,follow">
   <link rel="stylesheet" href="style-bilingual-v3.css">
+  <style>
+    .language-switcher-v4{
+      position:relative;
+      z-index:5;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-top:14px;
+      min-height:26px;
+    }
+    .language-switcher-v4 .language-btn{
+      display:inline-block;
+      border:0;
+      background:transparent;
+      padding:3px 0;
+      margin:0;
+      font:inherit;
+      font-size:14px;
+      font-weight:800;
+      line-height:20px;
+      color:#5d3d18;
+      cursor:pointer;
+    }
+    .language-switcher-v4 .language-btn.active{
+      color:#2f241b;
+      text-decoration:underline;
+      text-underline-offset:4px;
+    }
+    .language-switcher-v4 .language-separator{
+      display:inline-block;
+      font-weight:800;
+      color:#8d642f;
+    }
+  </style>
 </head>
 <body>
   <div class="topbar">Hàng có sẵn • Pick up Springvale • Delivery Melbourne • AusPost từ $12</div>
@@ -55,7 +89,7 @@
       </div>
 
       <div class="hero-note">🛒 Order dễ dàng • Cash hoặc PayID</div>
-      <div class="language-switcher" aria-label="Language">
+      <div class="language-switcher-v4" aria-label="Language selector">
         <button type="button" class="language-btn active" data-lang="vi">Vietnamese</button>
         <span class="language-separator">|</span>
         <button type="button" class="language-btn" data-lang="en">English</button>
