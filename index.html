@@ -6,7 +6,7 @@
   <title>Có Cái Tiệm | Ăn Vặt Melbourne</title>
   <meta name="description" content="Có Cái Tiệm - ăn vặt Việt Nam tại Melbourne. Pick up Springvale, delivery Melbourne và AusPost từ $12.">
   <meta name="robots" content="index,follow">
-  <link rel="stylesheet" href="style-bilingual-v1.css">
+  <link rel="stylesheet" href="style-stable-v3.css">
 </head>
 <body>
   <div class="topbar">Hàng có sẵn • Pick up Springvale • Delivery Melbourne • AusPost từ $12</div>
@@ -55,11 +55,6 @@
       </div>
 
       <div class="hero-note">🛒 Order dễ dàng • Cash hoặc PayID</div>
-      <div class="language-switcher" aria-label="Language">
-        <button type="button" class="language-btn active" data-lang="vi">Vietnamese</button>
-        <span class="language-separator">|</span>
-        <button type="button" class="language-btn" data-lang="en">English</button>
-      </div>
     </div>
   </section>
 
@@ -166,8 +161,95 @@
     </div>
   </aside>
 
-  <script src="app-bilingual-v3.js"></script>
-  <script src="inline-qty-bilingual-v1.js"></script>
-  <script src="email-bilingual-v1.js"></script>
+  <script src="app-stable-v3.js"></script>
+  <script src="inline-qty-addon-v2.js"></script>
+  <script>
+    (function () {
+      var SUPABASE_URL = "https://eswrqkhsvlqndjbrgsqo.supabase.co";
+      var SUPABASE_KEY = "sb_publishable_-6iIwPaZQRMkkWAROdfvxg_dmVB81E2";
+
+      var orderBox = document.getElementById("orderBox");
+      var successBox = document.getElementById("orderSuccess");
+      var emailBtn = document.getElementById("emailOrderBtn");
+      var deliveryMethod = document.getElementById("deliveryMethod");
+      var pickupPhone = document.getElementById("pickupPhone");
+      var recipientPhone = document.getElementById("recipientPhone");
+      var customerName = document.getElementById("customerName");
+
+      if (!orderBox || !successBox || !emailBtn) return;
+
+      var observer = new MutationObserver(function () {
+        if (!orderBox.textContent.trim() || orderBox.style.display === "none") return;
+        successBox.style.display = "none";
+        successBox.textContent = "";
+        emailBtn.style.display = "block";
+        emailBtn.disabled = false;
+        emailBtn.textContent = "✉️ Gửi đơn hàng qua Email";
+      });
+
+      observer.observe(orderBox, {
+        childList: true,
+        characterData: true,
+        subtree: true
+      });
+
+      emailBtn.addEventListener("click", async function () {
+        if (!orderBox.textContent.trim()) {
+          alert("Vui lòng tạo đơn hàng trước.");
+          return;
+        }
+
+        var phone = deliveryMethod.value === "pickup"
+          ? pickupPhone.value.trim()
+          : recipientPhone.value.trim();
+
+        if (!phone) {
+          alert("Vui lòng nhập số điện thoại để Tiệm liên hệ xác nhận đơn qua Email.");
+          if (deliveryMethod.value === "pickup") {
+            pickupPhone.focus();
+          } else {
+            recipientPhone.focus();
+          }
+          return;
+        }
+
+        emailBtn.disabled = true;
+        emailBtn.textContent = "Đang gửi Email...";
+
+        try {
+          var response = await fetch(
+            SUPABASE_URL + "/rest/v1/rpc/send_order_email_choice",
+            {
+              method: "POST",
+              headers: {
+                apikey: SUPABASE_KEY,
+                Authorization: "Bearer " + SUPABASE_KEY,
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                p_customer_name: customerName.value.trim(),
+                p_order_text: orderBox.textContent,
+                p_phone: phone
+              })
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(await response.text());
+          }
+
+          successBox.textContent =
+            "Đơn hàng của bạn đã được gửi qua Email và chờ xác nhận, tiệm sẽ liên hệ xác nhận sớm nhất thông qua số điện thoại bạn đã điền.";
+          successBox.style.display = "block";
+          emailBtn.textContent = "✓ Đã gửi đơn qua Email";
+        } catch (error) {
+          console.error(error);
+          emailBtn.disabled = false;
+          emailBtn.textContent = "✉️ Gửi đơn hàng qua Email";
+          alert("Chưa gửi được Email. Vui lòng thử lại hoặc gửi đơn qua Messenger.");
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
