@@ -447,7 +447,12 @@ document.addEventListener("DOMContentLoaded", function () {
   function renderFilters() {
     const filters = document.getElementById("filters");
     const seen = new Set();
-    const inferred = PRODUCTS.map(function (p) { return p.category; }).filter(Boolean);
+    const inferred = PRODUCTS.reduce(function (all, p) {
+      const list = Array.isArray(p.categories) && p.categories.length
+        ? p.categories
+        : (p.category ? [p.category] : []);
+      return all.concat(list);
+    }, []).filter(Boolean);
 
     const categoryList = CATEGORIES.slice();
 
@@ -493,7 +498,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const url =
         SUPABASE_URL +
         "/rest/v1/products" +
-        "?select=id,name,price,category,emoji,description,image_url,sort_order,is_active,stock_qty,option_groups" +
+        "?select=id,name,price,category,categories,emoji,description,image_url,sort_order,is_active,stock_qty,option_groups" +
         "&is_active=eq.true" +
         "&or=(stock_qty.is.null,stock_qty.gt.0)" +
         "&order=sort_order.asc,id.asc";
@@ -517,6 +522,9 @@ document.addEventListener("DOMContentLoaded", function () {
           name: p.name,
           price: Number(p.price),
           category: p.category,
+          categories: Array.isArray(p.categories) && p.categories.length
+            ? p.categories
+            : (p.category ? [p.category] : []),
           emoji: p.emoji || "🍋",
           description: p.description || "",
           image_url: p.image_url || "",
@@ -543,7 +551,10 @@ document.addEventListener("DOMContentLoaded", function () {
             );
           })
         : PRODUCTS.filter(function (product) {
-            return product.category === category;
+            const list = Array.isArray(product.categories) && product.categories.length
+              ? product.categories
+              : (product.category ? [product.category] : []);
+            return list.includes(category);
           });
 
     if (!selected.length) {
