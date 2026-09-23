@@ -115,6 +115,9 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-ra
 .card-qty-center{min-width:52px;text-align:center;line-height:1.05}
 .card-qty-center strong{display:block;font-size:16px}
 .card-selected-label{display:block;font-size:9px;font-weight:800;color:#806f61;text-transform:uppercase;letter-spacing:.03em}
+.delivery-fee-status{margin-top:8px;padding:10px 12px;border-radius:9px;background:#f7f4f1;border:1px solid var(--line);font-size:12px;line-height:1.45;color:var(--muted)}
+.delivery-fee-status.matched{background:#eaf6ec;border-color:#b8dfbf;color:#235d2d}
+.delivery-fee-status.quote{background:#fff3cd;border-color:#f1d98a;color:#5c4615}
 @media(max-width:560px){
   .card-qty-control{gap:4px;padding:3px}
   .card-qty-btn{width:30px;height:30px;font-size:18px}
@@ -280,6 +283,7 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-ra
 
         <label for="shippingAddress">Địa chỉ nhận hàng</label>
         <textarea id="shippingAddress" rows="3" placeholder="Số nhà, tên đường, suburb, postcode"></textarea>
+        <div id="deliveryFeeStatus" class="delivery-fee-status" style="display:none"></div>
       </div>
 
       <label>Thanh toán</label>
@@ -353,7 +357,11 @@ document.addEventListener("DOMContentLoaded", function () {
       pickupRequired:"Vui lòng chọn ngày và giờ pick up.",
       shippingRequired:"Vui lòng nhập tên người nhận, số điện thoại và địa chỉ nhận hàng.",
       copied:"Đã copy đơn hàng. Tiếp theo bấm Gửi qua Messenger, dán nội dung đơn vào khung chat rồi bấm Send.",
-      copyFail:"Trình duyệt không cho copy tự động. Vui lòng chọn nội dung đơn và copy thủ công."
+      copyFail:"Trình duyệt không cho copy tự động. Vui lòng chọn nội dung đơn và copy thủ công.",
+      deliveryMatched:"Phí delivery {suburb}: AUD {fee}",
+      deliveryUnknown:"Khu vực này chưa có giá delivery tự động. Tiệm sẽ báo phí sau.",
+      deliveryPrompt:"Nhập địa chỉ để xem phí delivery.",
+      auspostQuote:"Phí AusPost sẽ được báo sau."
     };
     const en = {
       all:"All",
@@ -374,7 +382,11 @@ document.addEventListener("DOMContentLoaded", function () {
       pickupRequired:"Please choose a pickup date and time.",
       shippingRequired:"Please enter the recipient name, phone number and delivery address.",
       copied:"Order copied. Next, tap Send via Messenger, paste the order into the chat and send it.",
-      copyFail:"Your browser could not copy automatically. Please select and copy the order manually."
+      copyFail:"Your browser could not copy automatically. Please select and copy the order manually.",
+      deliveryMatched:"Delivery to {suburb}: AUD {fee}",
+      deliveryUnknown:"This area does not have an automatic delivery rate yet. The shop will quote the fee.",
+      deliveryPrompt:"Enter your address to see the delivery fee.",
+      auspostQuote:"AusPost fee will be quoted separately."
     };
     let value = (isEnglish() ? en : vi)[key] || key;
     if (arg !== undefined) value = value.replace("{n}", String(arg));
@@ -387,6 +399,8 @@ document.addEventListener("DOMContentLoaded", function () {
   window.CCT_CART = cart;
   let currentOrderToken = null;
   let currentOrderCommitted = false;
+  let DELIVERY_RATES = [];
+  let currentDeliveryRate = null;
 
   const productGrid = document.getElementById("productGrid");
   const cartCount = document.getElementById("cartCount");
@@ -403,6 +417,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const recipientName = document.getElementById("recipientName");
   const recipientPhone = document.getElementById("recipientPhone");
   const shippingAddress = document.getElementById("shippingAddress");
+  const deliveryFeeStatus = document.getElementById("deliveryFeeStatus");
   const orderBox = document.getElementById("orderBox");
   const orderHelp = document.getElementById("orderHelp");
   const copyOrderBtn = document.getElementById("copyOrderBtn");
@@ -443,6 +458,101 @@ document.addEventListener("DOMContentLoaded", function () {
       CATEGORIES = [];
     }
   }
+
+  async function loadDeliveryRates() {
+    try {
+      const response = await fetch(
+        SUPABASE_URL + "/rest/v1/delivery_rates?select=id,zone,suburb,fee,aliases,is_active&is_active=eq.true&order=sort_order.asc,id.asc",
+        {
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: "Bearer " + SUPABASE_KEY
+          }
+        }
+      );
+      if (!response.ok) throw new Error("delivery_rates_load_failed");
+      DELIVERY_RATES = await response.json();
+      DELIVERY_RATES.sort(function (a, b) {
+        return String(b.suburb || "").length - String(a.suburb || "").length;
+      });
+    } catch (error) {
+      console.error(error);
+      DELIVERY_RATES = [];
+    }
+  }
+
+  function normalizePlace(value) {
+    return String(value || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function findDeliveryRate(address) {
+    const normalized = " " + normalizePlace(address) + " ";
+    if (!normalizePlace(address)) return null;
+
+    let best = null;
+    let bestLength = -1;
+
+    DELIVERY_RATES.forEach(function (rate) {
+      const names = [rate.suburb].concat(Array.isArray(rate.aliases) ? rate.aliases : []);
+      names.forEach(function (name) {
+        const n = normalizePlace(name);
+        if (!n) return;
+        if (normalized.includes(" " + n + " ") && n.length > bestLength) {
+          best = rate;
+          bestLength = n.length;
+        }
+      });
+    });
+
+    return best;
+  }
+
+  function updateDeliveryFeeStatus() {
+    currentDeliveryRate = null;
+
+    if (!deliveryFeeStatus) {
+      updateCart();
+      return;
+    }
+
+    deliveryFeeStatus.classList.remove("matched", "quote");
+
+    if (deliveryMethod.value === "delivery") {
+      deliveryFeeStatus.style.display = "block";
+      const address = shippingAddress.value.trim();
+
+      if (!address) {
+        deliveryFeeStatus.textContent = ui("deliveryPrompt");
+      } else {
+        const rate = findDeliveryRate(address);
+        if (rate) {
+          currentDeliveryRate = rate;
+          deliveryFeeStatus.classList.add("matched");
+          deliveryFeeStatus.textContent = ui("deliveryMatched")
+            .replace("{suburb}", rate.suburb)
+            .replace("{fee}", money(rate.fee));
+        } else {
+          deliveryFeeStatus.classList.add("quote");
+          deliveryFeeStatus.textContent = ui("deliveryUnknown");
+        }
+      }
+    } else if (deliveryMethod.value === "auspost") {
+      deliveryFeeStatus.style.display = "block";
+      deliveryFeeStatus.classList.add("quote");
+      deliveryFeeStatus.textContent = ui("auspostQuote");
+    } else {
+      deliveryFeeStatus.style.display = "none";
+      deliveryFeeStatus.textContent = "";
+    }
+
+    updateCart();
+  }
+
+  window.CCT_updateDeliveryFeeStatus = updateDeliveryFeeStatus;
 
   function renderFilters() {
     const filters = document.getElementById("filters");
@@ -617,8 +727,15 @@ document.addEventListener("DOMContentLoaded", function () {
       return sum + item.price * item.qty;
     }, 0);
 
+    const deliveryFee =
+      deliveryMethod &&
+      deliveryMethod.value === "delivery" &&
+      currentDeliveryRate
+        ? Number(currentDeliveryRate.fee || 0)
+        : 0;
+
     cartCount.textContent = totalQty;
-    cartTotal.textContent = money(totalPrice);
+    cartTotal.textContent = money(totalPrice + deliveryFee);
 
     if (cart.length === 0) {
       cartList.innerHTML = ui("cartEmpty");
@@ -682,6 +799,8 @@ document.addEventListener("DOMContentLoaded", function () {
       pickupDate.value = "";
       pickupTime.value = "";
     }
+
+    updateDeliveryFeeStatus();
   }
 
   function resetOrderReservation() {
@@ -957,6 +1076,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   deliveryMethod.addEventListener("change", syncShippingFields);
+  shippingAddress.addEventListener("input", updateDeliveryFeeStatus);
 
   document
     .getElementById("makeOrderBtn")
@@ -1014,9 +1134,17 @@ document.addEventListener("DOMContentLoaded", function () {
         auspost: "AusPost"
       };
 
-      const totalPrice = cart.reduce(function (sum, item) {
+      const itemTotal = cart.reduce(function (sum, item) {
         return sum + item.price * item.qty;
       }, 0);
+
+      const deliveryFee =
+        deliveryMethod.value === "delivery" && currentDeliveryRate
+          ? Number(currentDeliveryRate.fee || 0)
+          : null;
+
+      const grandTotal =
+        deliveryFee === null ? itemTotal : itemTotal + deliveryFee;
 
       const lines = cart
         .map(function (item) {
@@ -1036,35 +1164,56 @@ document.addEventListener("DOMContentLoaded", function () {
         "\n" +
         lines +
         "\n" +
-        "Tổng: $" +
-        money(totalPrice) +
+        (isEnglish() ? "Items: $" : "Tiền món: $") +
+        money(itemTotal) +
         "\n";
 
       if (deliveryMethod.value === "pickup") {
         text +=
-          "Nhận hàng: Pick up Springvale" +
-          "\nNgày pick up: " +
+          (isEnglish() ? "Total: $" : "Tổng: $") + money(itemTotal) +
+          (isEnglish() ? "\nFulfilment: Pick up Springvale" : "\nNhận hàng: Pick up Springvale") +
+          (isEnglish() ? "\nPickup date: " : "\nNgày pick up: ") +
           pickupDate.value +
-          "\nGiờ pick up: " +
+          (isEnglish() ? "\nPickup time: " : "\nGiờ pick up: ") +
           pickupTime.value +
           (pickupPhone && pickupPhone.value.trim()
-            ? "\nSĐT: " + pickupPhone.value.trim()
+            ? (isEnglish() ? "\nPhone: " : "\nSĐT: ") + pickupPhone.value.trim()
             : "");
+      } else if (deliveryMethod.value === "delivery") {
+        if (currentDeliveryRate) {
+          text +=
+            "Delivery fee (" + currentDeliveryRate.suburb + "): $" + money(deliveryFee) +
+            (isEnglish() ? "\nTotal: $" : "\nTổng: $") + money(grandTotal);
+        } else {
+          text +=
+            (isEnglish() ? "Delivery fee: Quote required" : "Delivery fee: Chờ báo giá") +
+            (isEnglish() ? "\nSubtotal: $" : "\nTổng tạm tính: $") + money(itemTotal);
+        }
+
+        text +=
+          (isEnglish() ? "\nFulfilment: Delivery Melbourne" : "\nNhận hàng: Delivery Melbourne") +
+          (isEnglish() ? "\nRecipient: " : "\nTên người nhận: ") +
+          recipientName.value.trim() +
+          (isEnglish() ? "\nPhone: " : "\nSĐT: ") +
+          recipientPhone.value.trim() +
+          (isEnglish() ? "\nAddress: " : "\nĐịa chỉ: ") +
+          shippingAddress.value.trim();
       } else {
         text +=
-          "Nhận hàng: " +
-          deliveryLabels[deliveryMethod.value] +
-          " (báo giá sau khi tạo đơn)" +
-          "\nTên người nhận: " +
+          (isEnglish() ? "AusPost fee: Quote required" : "AusPost fee: Chờ báo giá") +
+          (isEnglish() ? "\nSubtotal: $" : "\nTổng tạm tính: $") + money(itemTotal) +
+          (isEnglish() ? "\nFulfilment: AusPost" : "\nNhận hàng: AusPost") +
+          (isEnglish() ? "\nRecipient: " : "\nTên người nhận: ") +
           recipientName.value.trim() +
-          "\nSĐT: " +
+          (isEnglish() ? "\nPhone: " : "\nSĐT: ") +
           recipientPhone.value.trim() +
-          "\nĐịa chỉ: " +
+          (isEnglish() ? "\nAddress: " : "\nĐịa chỉ: ") +
           shippingAddress.value.trim();
       }
 
       text +=
-        "\nThanh toán: " + payment + "\nGhi chú: " + note;
+        (isEnglish() ? "\nPayment: " : "\nThanh toán: ") + payment +
+        (isEnglish() ? "\nNote: " : "\nGhi chú: ") + note;
 
       if (payment === "PayID") {
         text += "\n\nPayID: " + PAYID;
@@ -1147,9 +1296,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const dd = String(today.getDate()).padStart(2, "0");
   pickupDate.min = yyyy + "-" + mm + "-" + dd;
 
-  Promise.all([loadCategories(), loadProducts()]).then(function () {
+  Promise.all([loadCategories(), loadProducts(), loadDeliveryRates()]).then(function () {
     renderFilters();
     renderProducts("all");
+    updateDeliveryFeeStatus();
   });
 
   updateCart();
@@ -1300,6 +1450,9 @@ document.addEventListener("DOMContentLoaded", function () {
     currentLang=lang==="en"?"en":"vi"; window.CCT_LANG=currentLang;
     localStorage.setItem("cct_lang",currentLang);
     applyProducts(); renderAll();
+    if (typeof window.CCT_updateDeliveryFeeStatus === "function") {
+      window.CCT_updateDeliveryFeeStatus();
+    }
   }
 
   window.CCT_setLanguage=switchLanguage;
