@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quản lý đơn hàng | Có Cái Tiệm</title>
+<style>
+:root{--bg:#fffaf3;--ink:#2f241b;--muted:#7d6c5e;--line:#e7ddd3;--card:#fff;--accent:#f2a51b;--dark:#2b251f}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+button,input,select{font:inherit}.wrap{max-width:1200px;margin:auto;padding:20px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:18px}
+h1{font-size:28px;margin:0}.sub{color:var(--muted);font-size:13px;margin-top:5px}.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px}
+.login{max-width:520px;margin:70px auto}.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1}
+input,select{width:100%;padding:11px 12px;border:1px solid #d7cdc3;border-radius:10px;background:#fff}
+.btn{border:0;border-radius:10px;padding:11px 14px;font-weight:800;cursor:pointer;background:var(--dark);color:#fff}.btn.alt{background:#eee7df;color:#33291f}.btn.small{padding:8px 10px;font-size:12px}
+.notice{margin-top:12px;padding:10px 12px;border-radius:10px;background:#fff3cd;border:1px solid #efd98f;font-size:13px;line-height:1.45}
+.toolbar{display:grid;grid-template-columns:2fr 1fr auto;gap:10px;margin-bottom:14px}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:14px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}.stat b{display:block;font-size:20px}.stat span{font-size:11px;color:var(--muted)}
+.orders{display:grid;gap:10px}.order{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}.order-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.order-no{font-weight:900;font-size:16px}.meta{font-size:12px;color:var(--muted);margin-top:3px}.amount{font-size:18px;font-weight:900;white-space:nowrap}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}.cell{background:#faf7f3;border-radius:9px;padding:9px}.cell b{display:block;font-size:11px;color:var(--muted);margin-bottom:4px}.cell span{font-size:13px;word-break:break-word}
+.actions{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}.status-select{max-width:180px}
+details{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}summary{cursor:pointer;font-weight:800;font-size:13px}.items{margin-top:10px;display:grid;gap:6px}.item{padding:8px 10px;background:#faf7f3;border-radius:8px;font-size:13px}
+.empty{text-align:center;padding:35px;color:var(--muted)}.hidden{display:none!important}
+@media(max-width:850px){.stats{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:repeat(2,1fr)}.toolbar{grid-template-columns:1fr}.order-head{flex-direction:column}.amount{font-size:16px}}
+@media(max-width:520px){.wrap{padding:12px}.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section id="loginView" class="login panel">
+    <h1>Quản lý đơn hàng</h1>
+    <div class="sub">Có Cái Tiệm • đăng nhập bằng email quản trị</div>
+    <div style="margin-top:18px">
+      <input id="loginEmail" type="email" placeholder="Email quản trị">
+      <button id="sendLinkBtn" class="btn" style="width:100%;margin-top:10px">Gửi link đăng nhập</button>
+      <div id="loginMsg" class="notice hidden"></div>
+    </div>
+  </section>
+
+  <section id="appView" class="hidden">
+    <div class="top">
+      <div>
+        <h1>Đơn hàng</h1>
+        <div id="adminEmail" class="sub"></div>
+      </div>
+      <div class="row" style="flex:0 0 auto">
+        <button id="reloadBtn" class="btn alt">↻ Tải lại</button>
+        <button id="logoutBtn" class="btn alt">Đăng xuất</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b id="s-new">0</b><span>Mới</span></div>
+      <div class="stat"><b id="s-confirmed">0</b><span>Đã xác nhận</span></div>
+      <div class="stat"><b id="s-preparing">0</b><span>Đang chuẩn bị</span></div>
+      <div class="stat"><b id="s-ready">0</b><span>Sẵn sàng</span></div>
+      <div class="stat"><b id="s-completed">0</b><span>Hoàn tất</span></div>
+      <div class="stat"><b id="s-cancelled">0</b><span>Đã huỷ</span></div>
+    </div>
+
+    <div class="toolbar">
+      <input id="searchBox" type="search" placeholder="Tìm mã đơn, tên khách, SĐT...">
+      <select id="statusFilter">
+        <option value="all">Tất cả trạng thái</option>
+        <option value="new">Mới</option>
+        <option value="confirmed">Đã xác nhận</option>
+        <option value="preparing">Đang chuẩn bị</option>
+        <option value="ready">Sẵn sàng</option>
+        <option value="completed">Hoàn tất</option>
+        <option value="cancelled">Đã huỷ</option>
+      </select>
+      <button id="todayBtn" class="btn alt">Hôm nay</button>
+    </div>
+
+    <div id="orders" class="orders"></div>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  const SUPABASE_URL="https://eswrqkhsvlqndjbrgsqo.supabase.co";
+  const SUPABASE_KEY="sb_publishable_-6iIwPaZQRMkkWAROdfvxg_dmVB81E2";
+  const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
+    auth:{persistSession:true,detectSessionInUrl:true,autoRefreshToken:true}
+  });
+
+  const loginView=document.getElementById("loginView");
+  const appView=document.getElementById("appView");
+  const loginEmail=document.getElementById("loginEmail");
+  const sendLinkBtn=document.getElementById("sendLinkBtn");
+  const loginMsg=document.getElementById("loginMsg");
+  const adminEmail=document.getElementById("adminEmail");
+  const ordersEl=document.getElementById("orders");
+  const searchBox=document.getElementById("searchBox");
+  const statusFilter=document.getElementById("statusFilter");
+  const todayBtn=document.getElementById("todayBtn");
+  let orders=[];
+  let todayOnly=false;
+
+  const labels={
+    new:"Mới",confirmed:"Đã xác nhận",preparing:"Đang chuẩn bị",
+    ready:"Sẵn sàng",completed:"Hoàn tất",cancelled:"Đã huỷ"
+  };
+
+  function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+  function money(v){if(v===null||v===undefined||v==="")return "—";return "$"+Number(v).toFixed(2).replace(".00","");}
+  function fmtDate(v){if(!v)return "";return new Date(v).toLocaleString("en-AU",{timeZone:"Australia/Melbourne",dateStyle:"medium",timeStyle:"short"});}
+  function isTodayMelbourne(v){
+    if(!v)return false;
+    const now=new Date();
+    const a=new Intl.DateTimeFormat("en-CA",{timeZone:"Australia/Melbourne",year:"numeric",month:"2-digit",day:"2-digit"}).format(now);
+    const b=new Intl.DateTimeFormat("en-CA",{timeZone:"Australia/Melbourne",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(v));
+    return a===b;
+  }
+
+  async function checkAdmin(){
+    const {data,error}=await client.rpc("is_order_admin");
+    if(error||data!==true) return false;
+    return true;
+  }
+
+  async function showSession(){
+    const {data:{session}}=await client.auth.getSession();
+    if(!session){loginView.classList.remove("hidden");appView.classList.add("hidden");return;}
+    const ok=await checkAdmin();
+    if(!ok){
+      await client.auth.signOut();
+      loginMsg.textContent="Email này không có quyền quản lý đơn hàng.";
+      loginMsg.classList.remove("hidden");
+      loginView.classList.remove("hidden");appView.classList.add("hidden");
+      return;
+    }
+    loginView.classList.add("hidden");appView.classList.remove("hidden");
+    adminEmail.textContent="Đăng nhập: "+(session.user.email||"");
+    await loadOrders();
+  }
+
+  async function loadOrders(){
+    ordersEl.innerHTML='<div class="empty">Đang tải đơn...</div>';
+    const {data,error}=await client
+      .from("order_commits")
+      .select("order_token,order_number,status,created_at,customer_name,phone,fulfilment_method,pickup_date,pickup_time,recipient_name,shipping_address,payment_method,customer_note,subtotal,delivery_fee,total,language,order_items,order_text,email_queued_at")
+      .order("created_at",{ascending:false})
+      .limit(500);
+    if(error){
+      ordersEl.innerHTML='<div class="empty">Không tải được đơn hàng.</div>';
+      console.error(error);return;
+    }
+    orders=data||[];
+    render();
+  }
+
+  function updateStats(){
+    Object.keys(labels).forEach(k=>{
+      const el=document.getElementById("s-"+k);
+      if(el)el.textContent=String(orders.filter(o=>o.status===k).length);
+    });
+  }
+
+  function render(){
+    updateStats();
+    const q=searchBox.value.trim().toLowerCase();
+    const st=statusFilter.value;
+    const list=orders.filter(o=>{
+      if(st!=="all"&&o.status!==st)return false;
+      if(todayOnly&&!isTodayMelbourne(o.created_at))return false;
+      if(!q)return true;
+      const hay=[o.order_number,o.customer_name,o.phone,o.recipient_name,o.shipping_address,o.order_text].join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+    if(!list.length){ordersEl.innerHTML='<div class="empty panel">Không tìm thấy đơn phù hợp.</div>';return;}
+
+    ordersEl.innerHTML=list.map(o=>{
+      const items=Array.isArray(o.order_items)?o.order_items:[];
+      const itemHtml=items.length?items.map(it=>
+        '<div class="item"><b>'+esc(it.qty)+' × '+esc(it.name)+'</b>'+
+        (it.option_text?'<div>'+esc(it.option_text)+'</div>':'')+
+        '<div>'+money(it.line_total)+'</div></div>'
+      ).join(""):'<div class="item">'+esc(o.order_text||"Chưa có chi tiết cấu trúc")+'</div>';
+
+      const totalDisplay=o.total!==null?money(o.total):(o.subtotal!==null?money(o.subtotal)+" + phí chưa chốt":"—");
+      return '<article class="order" data-token="'+esc(o.order_token)+'">'+
+        '<div class="order-head"><div><div class="order-no">'+esc(o.order_number||o.order_token)+'</div>'+
+        '<div class="meta">'+esc(fmtDate(o.created_at))+' • '+esc(labels[o.status]||o.status)+'</div></div>'+
+        '<div class="amount">'+esc(totalDisplay)+'</div></div>'+
+        '<div class="grid">'+
+          '<div class="cell"><b>Khách</b><span>'+esc(o.customer_name||"—")+'</span></div>'+
+          '<div class="cell"><b>SĐT</b><span>'+esc(o.phone||"—")+'</span></div>'+
+          '<div class="cell"><b>Nhận hàng</b><span>'+esc(o.fulfilment_method||"—")+'</span></div>'+
+          '<div class="cell"><b>Thanh toán</b><span>'+esc(o.payment_method||"—")+'</span></div>'+
+          (o.pickup_date?'<div class="cell"><b>Pick up</b><span>'+esc(o.pickup_date+(o.pickup_time?" • "+o.pickup_time.slice(0,5):""))+'</span></div>':'')+
+          (o.shipping_address?'<div class="cell"><b>Địa chỉ</b><span>'+esc(o.shipping_address)+'</span></div>':'')+
+          '<div class="cell"><b>Tiền món</b><span>'+esc(money(o.subtotal))+'</span></div>'+
+          '<div class="cell"><b>Delivery</b><span>'+esc(o.delivery_fee===null?"Chờ báo giá":money(o.delivery_fee))+'</span></div>'+
+        '</div>'+
+        '<div class="actions"><select class="status-select" data-status-token="'+esc(o.order_token)+'">'+
+          Object.keys(labels).map(k=>'<option value="'+k+'" '+(k===o.status?'selected':'')+'>'+labels[k]+'</option>').join("")+
+        '</select><button class="btn small alt" data-copy-token="'+esc(o.order_token)+'">Copy đơn</button></div>'+
+        '<details><summary>Xem chi tiết món</summary><div class="items">'+itemHtml+'</div>'+
+        (o.customer_note?'<div class="item"><b>Ghi chú:</b> '+esc(o.customer_note)+'</div>':'')+
+        '</details></article>';
+    }).join("");
+  }
+
+  ordersEl.addEventListener("change",async e=>{
+    const sel=e.target.closest("[data-status-token]");if(!sel)return;
+    const token=sel.dataset.statusToken;
+    const newStatus=sel.value;
+    sel.disabled=true;
+    const {error}=await client.rpc("admin_update_order_status_v1",{p_order_token:token,p_status:newStatus});
+    sel.disabled=false;
+    if(error){alert("Không cập nhật được trạng thái.");console.error(error);await loadOrders();return;}
+    const o=orders.find(x=>x.order_token===token);if(o)o.status=newStatus;
+    render();
+  });
+
+  ordersEl.addEventListener("click",async e=>{
+    const btn=e.target.closest("[data-copy-token]");if(!btn)return;
+    const o=orders.find(x=>x.order_token===btn.dataset.copyToken);if(!o)return;
+    try{await navigator.clipboard.writeText(o.order_text||"");btn.textContent="Đã copy ✓";setTimeout(()=>btn.textContent="Copy đơn",1200);}
+    catch(err){alert("Không copy được tự động.");}
+  });
+
+  sendLinkBtn.addEventListener("click",async()=>{
+    const email=loginEmail.value.trim();
+    if(!email){loginMsg.textContent="Vui lòng nhập email quản trị.";loginMsg.classList.remove("hidden");return;}
+    sendLinkBtn.disabled=true;sendLinkBtn.textContent="Đang gửi...";
+    const redirectTo=location.origin+location.pathname;
+    const {error}=await client.auth.signInWithOtp({email,options:{emailRedirectTo:redirectTo,shouldCreateUser:true}});
+    sendLinkBtn.disabled=false;sendLinkBtn.textContent="Gửi link đăng nhập";
+    loginMsg.textContent=error?"Không gửi được link đăng nhập: "+error.message:"Đã gửi link đăng nhập. Kiểm tra email rồi bấm vào link để mở trang quản lý.";
+    loginMsg.classList.remove("hidden");
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click",async()=>{await client.auth.signOut();location.reload();});
+  document.getElementById("reloadBtn").addEventListener("click",loadOrders);
+  searchBox.addEventListener("input",render);
+  statusFilter.addEventListener("change",render);
+  todayBtn.addEventListener("click",()=>{todayOnly=!todayOnly;todayBtn.textContent=todayOnly?"✓ Hôm nay":"Hôm nay";render();});
+
+  client.auth.onAuthStateChange(()=>{setTimeout(showSession,0);});
+  showSession();
+})();
+</script>
+</body>
+</html>
