@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Order Manager v3 | Có Cái Tiệm</title>
+<style>
+:root{--ink:#2f241b;--muted:#7c6c5d;--line:#e6dcd1;--bg:#fff8ef;--accent:#f2a51b;--dark:#2b251f}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+button,input,select{font:inherit}
+.wrap{max-width:1380px;margin:auto;padding:18px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px}
+.hidden{display:none!important}
+.login{max-width:520px;margin:70px auto;padding:22px}
+.login h1{margin:0 0 6px;font-size:34px}
+.muted{color:var(--muted);font-size:13px}
+.login input,.toolbar input,.toolbar select,.pricing input,.preview-tools select{width:100%;padding:11px 12px;border:1px solid #d8cec3;border-radius:10px;background:#fff}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;background:var(--dark);color:#fff}
+.btn.alt{background:#efe8df;color:var(--ink)}
+.btn.primary{background:var(--dark);color:#fff}
+.wide{width:100%;margin-top:10px}
+.notice{margin-top:12px;padding:10px 12px;border-radius:10px;background:#fff3cd;border:1px solid #efd98f;font-size:13px;line-height:1.4}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}
+.top h1{margin:0;font-size:30px}
+.layout{display:grid;grid-template-columns:minmax(420px,1fr) 390px;gap:18px;align-items:start}
+.left{padding:14px}
+.toolbar{display:grid;grid-template-columns:1fr 180px;gap:8px;margin-bottom:10px}
+.orders{display:grid;gap:8px;max-height:70vh;overflow:auto;padding-right:3px}
+.order{border:1px solid var(--line);border-radius:12px;padding:11px;cursor:pointer;background:#fff}
+.order:hover,.order.active{border-color:#c88d20;background:#fffaf0}
+.order-head{display:flex;justify-content:space-between;gap:10px}
+.order-no{font-weight:900}
+.order-meta{font-size:12px;color:var(--muted);margin-top:3px}
+.order-name{font-size:13px;margin-top:5px}
+.preview-card{padding:12px}
+.preview-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.preview-tools select{width:auto;min-width:150px}
+.pricing{padding:12px;margin-bottom:10px}
+.pricing h3{margin:0 0 8px;font-size:15px}
+.price-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.price-box{background:#faf7f3;border-radius:10px;padding:9px}
+.price-box b{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
+.price-value{font-size:18px;font-weight:900}
+.delivery-editor{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:9px}
+.save-msg{font-size:12px;margin-top:7px;color:#4f6b42}
+.order-actions{padding:12px;margin-bottom:10px}
+.order-actions h3{margin:0 0 8px;font-size:15px}
+.status-editor{display:grid;grid-template-columns:1fr auto;gap:8px}
+.status-editor select{width:100%;padding:11px 12px;border:1px solid #d8cec3;border-radius:10px;background:#fff}
+.selected-controls{display:grid;grid-template-columns:1.25fr 1fr .9fr;gap:10px;margin-bottom:14px;align-items:stretch}
+.selected-controls .pricing,.selected-controls .order-actions,.top-print{margin:0;padding:12px}
+.top-print h3{margin:0 0 8px;font-size:15px}
+.top-print .preview-tools{margin:0}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:14px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px;text-align:center}
+.stat b{display:block;font-size:19px}.stat span{font-size:11px;color:var(--muted)}
+@media(max-width:1050px){.selected-controls{grid-template-columns:1fr 1fr}.top-print{grid-column:1/-1}}
+@media(max-width:900px){.stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:650px){.selected-controls{grid-template-columns:1fr}.top-print{grid-column:auto}}
+@media(max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}}
+.raw{margin-top:10px}
+.raw summary{cursor:pointer;font-size:12px;color:var(--muted)}
+.raw pre{white-space:pre-wrap;word-break:break-word;font-size:11px;background:#faf7f3;padding:9px;border-radius:9px}
+.paper{width:80mm;min-height:120mm;background:#fff;padding:5mm 4mm;box-shadow:0 4px 24px #0002;color:#111;margin:auto}
+.receipt-title{text-align:center;font-size:10px;font-weight:800;letter-spacing:.8px;margin-top:5px}
+.center{text-align:center}
+.logo{font-size:20px;font-weight:900}
+.sub{font-size:10px;margin-top:2px}
+.rule{border-top:1px dashed #111;margin:7px 0}
+.meta{font-size:10px;line-height:1.45}
+.meta .row span:last-child,.meta .row b:last-child{text-align:right;max-width:62%}
+.row{display:flex;justify-content:space-between;gap:7px}
+.section-title{font-size:9px;font-weight:900;letter-spacing:.7px;margin-bottom:5px}
+.items{font-size:11px}
+.item{margin:7px 0}
+.item-main{display:flex;justify-content:space-between;gap:7px;font-weight:700}
+.item-main span:first-child{max-width:72%}
+.item-opt{font-size:9px;margin-top:2px;padding-left:9px}
+.total{font-size:13px;font-weight:900}
+.note{font-size:10px;white-space:pre-wrap}
+.footer{font-size:9px;line-height:1.45;margin-top:8px}
+.kitchen .price-only,.kitchen .payment-only,.kitchen .customer-footer{display:none!important}
+.kitchen .logo:after{content:" • KITCHEN"}
+.kitchen .receipt-title{display:none}
+.kitchen .item-main{font-size:13px}
+.kitchen .item-opt{font-size:11px}
+.kitchen .note{font-size:12px;font-weight:700}
+@media(max-width:930px){.layout{grid-template-columns:1fr}.orders{max-height:none}.toolbar{grid-template-columns:1fr}.paper{margin-top:4px}.preview-card{overflow-x:auto}}
+@media(max-width:520px){.wrap{padding:10px}.price-grid{grid-template-columns:1fr 1fr}.delivery-editor{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
+@media print{
+  body{background:#fff}
+  .top,.selected-controls,.stats,.left,.preview-tools,.pricing,.order-actions,.top-print,.raw{display:none!important}
+  .layout{display:block}
+  .preview-card{border:0;padding:0}
+  .paper{box-shadow:none;margin:0;width:80mm;min-height:0;padding:4mm}
+  @page{size:80mm auto;margin:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<section id="login" class="login card">
+  <h1>Order Manager</h1>
+  <div class="muted">Có Cái Tiệm • quản lý đơn, báo phí và in bill tại một nơi</div>
+  <input id="passcode" type="password" placeholder="Mã quản trị">
+  <button id="unlock" class="btn wide">Mở Order Manager</button>
+  <div id="loginMsg" class="notice hidden"></div>
+</section>
+
+<section id="app" class="hidden">
+  <div class="top">
+    <div><h1>Order Manager</h1><div class="muted">Xem đơn → báo phí → đổi trạng thái → in bill hoặc phiếu bếp</div></div>
+    <div><button id="reload" class="btn alt">↻ Tải lại</button> <button id="lock" class="btn alt">Khoá</button></div>
+  </div>
+
+  <div style="font-size:14px;font-weight:900;margin:4px 0 8px">ĐƠN ĐANG CHỌN — XỬ LÝ NHANH</div>
+  <div class="selected-controls">
+    <div class="pricing card">
+      <h3>Giá đơn đang chọn</h3>
+      <div class="price-grid">
+        <div class="price-box"><b>Tiền món</b><div id="panelSubtotal" class="price-value">—</div></div>
+        <div class="price-box"><b>Tổng sau phí</b><div id="panelTotal" class="price-value">—</div></div>
+      </div>
+      <div id="deliveryEditor" class="hidden">
+        <div class="delivery-editor">
+          <input id="deliveryInput" inputmode="decimal" placeholder="Nhập phí delivery, ví dụ 8">
+          <button id="savePrice" class="btn primary">Lưu giá</button>
+        </div>
+        <div class="muted" style="margin-top:5px">Nhập số tiền, ví dụ <b>8</b> = $8. Tổng đơn sẽ tự tính.</div>
+      </div>
+      <div id="saveMsg" class="save-msg"></div>
+    </div>
+
+    <div class="order-actions card">
+      <h3>Quản lý đơn</h3>
+      <div class="status-editor">
+        <select id="orderStatus">
+          <option value="new">Mới</option>
+          <option value="confirmed">Đã xác nhận</option>
+          <option value="preparing">Đang chuẩn bị</option>
+          <option value="ready">Sẵn sàng</option>
+          <option value="completed">Hoàn tất</option>
+          <option value="cancelled">Đã huỷ</option>
+        </select>
+        <button id="saveStatus" class="btn primary">Lưu trạng thái</button>
+      </div>
+      <div id="statusMsg" class="save-msg"></div>
+    </div>
+
+    <div class="top-print card">
+      <h3>In & sao chép</h3>
+    <div class="preview-tools top-preview-tools">
+      <select id="mode"><option value="receipt">Bill khách</option><option value="kitchen">Phiếu bếp</option></select>
+      <button id="copyBtn" class="btn alt">Copy đơn</button>
+      <button id="printBtn" class="btn">🖨️ Print</button>
+    </div>
+
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="s-new">0</b><span>Mới</span></div>
+    <div class="stat"><b id="s-confirmed">0</b><span>Đã xác nhận</span></div>
+    <div class="stat"><b id="s-preparing">0</b><span>Đang chuẩn bị</span></div>
+    <div class="stat"><b id="s-ready">0</b><span>Sẵn sàng</span></div>
+    <div class="stat"><b id="s-completed">0</b><span>Hoàn tất</span></div>
+    <div class="stat"><b id="s-cancelled">0</b><span>Đã huỷ</span></div>
+  </div>
+
+  <div class="layout">
+    <div class="left card">
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Tìm mã đơn, tên khách, SĐT...">
+        <select id="status">
+          <option value="all">Tất cả trạng thái</option>
+          <option value="new">Mới</option>
+          <option value="confirmed">Đã xác nhận</option>
+          <option value="preparing">Đang chuẩn bị</option>
+          <option value="ready">Sẵn sàng</option>
+          <option value="completed">Hoàn tất</option>
+          <option value="cancelled">Đã huỷ</option>
+        </select>
+      </div>
+      <div id="orders" class="orders"></div>
+    </div>
+
+    <div>
+      <div class="preview-card card">
+        <main id="paper" class="paper">
+          <div class="center">
+            <div class="logo">CÓ CÁI TIỆM</div>
+            <div class="sub">Ăn Vặt Melbourne</div>
+            <div class="sub">Pick up Springvale • Delivery • AusPost</div>
+            <div class="receipt-title">ORDER RECEIPT</div>
+          </div>
+
+          <div class="rule"></div>
+          <div class="section-title">THÔNG TIN ĐƠN</div>
+          <div class="meta">
+            <div class="row"><span>Mã đơn</span><b id="orderNumber">—</b></div>
+            <div class="row"><span>Thời gian</span><span id="createdAt">—</span></div>
+            <div class="row"><span>Khách</span><span id="customerName">—</span></div>
+            <div class="row"><span>SĐT</span><span id="phone">—</span></div>
+          </div>
+
+          <div class="rule"></div>
+          <div class="section-title">MÓN HÀNG</div>
+          <div id="items" class="items"></div>
+
+          <div class="rule"></div>
+          <div class="section-title">GIAO NHẬN</div>
+          <div class="meta">
+            <div class="row"><span>Hình thức</span><span id="fulfilment">—</span></div>
+            <div id="recipientRow" class="row"><span>Người nhận</span><span id="recipient">—</span></div>
+            <div id="pickupRow" class="row"><span>Pick up</span><span id="pickup">—</span></div>
+            <div id="addressRow" class="row"><span>Địa chỉ</span><span id="address">—</span></div>
+          </div>
+
+          <div class="rule price-only"></div>
+          <div class="price-only">
+            <div class="section-title">THANH TOÁN</div>
+            <div class="row"><span>Tiền món</span><span id="subtotal">—</span></div>
+            <div id="feeRow" class="row"><span id="feeLabel">Delivery</span><span id="deliveryFee">—</span></div>
+            <div class="row total"><span id="totalLabel">TỔNG</span><span id="total">—</span></div>
+            <div class="row payment-only"><span>Phương thức</span><b id="payment">—</b></div>
+          </div>
+
+          <div class="rule"></div>
+          <div class="section-title">GHI CHÚ</div>
+          <div class="note" id="note">—</div>
+
+          <div class="rule customer-footer"></div>
+          <div class="center footer customer-footer">
+            Cảm ơn bạn đã ủng hộ Có Cái Tiệm ♡<br>
+            Facebook & TikTok: @cocaitiem.o.melbourne<br>
+            Website: cocaitiemomelbourne.github.io/cocaitiemomelbourne
+          </div>
+        </main>
+
+        <details class="raw">
+          <summary>Xem nội dung đơn gốc</summary>
+          <pre id="rawText"></pre>
+        </details>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+<script>
+(function(){
+const URL="https://eswrqkhsvlqndjbrgsqo.supabase.co";
+const KEY="sb_publishable_-6iIwPaZQRMkkWAROdfvxg_dmVB81E2";
+const login=document.getElementById("login"),app=document.getElementById("app"),passcode=document.getElementById("passcode"),unlock=document.getElementById("unlock"),loginMsg=document.getElementById("loginMsg"),ordersEl=document.getElementById("orders"),search=document.getElementById("search"),status=document.getElementById("status"),paper=document.getElementById("paper"),mode=document.getElementById("mode"),deliveryEditor=document.getElementById("deliveryEditor"),deliveryInput=document.getElementById("deliveryInput"),savePrice=document.getElementById("savePrice"),saveMsg=document.getElementById("saveMsg"),orderStatus=document.getElementById("orderStatus"),saveStatus=document.getElementById("saveStatus"),statusMsg=document.getElementById("statusMsg"),copyBtn=document.getElementById("copyBtn");
+let code="",orders=[],selectedToken=null,currentView=null;
+
+const statusLabels={new:"Mới",confirmed:"Đã xác nhận",preparing:"Đang chuẩn bị",ready:"Sẵn sàng",completed:"Hoàn tất",cancelled:"Đã huỷ"};
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function money(v){if(v===null||v===undefined||v==="")return "Chưa chốt";return "$"+Number(v).toFixed(2).replace(".00","")}
+function fmt(v){return v?new Date(v).toLocaleString("en-AU",{timeZone:"Australia/Melbourne",dateStyle:"medium",timeStyle:"short"}):"—"}
+function setText(id,v){const el=document.getElementById(id);if(el)el.textContent=v===null||v===undefined||v===""?"—":String(v)}
+function firstMatch(text,re){const m=String(text||"").match(re);return m?m[1].trim():""}
+
+function parseLegacy(o){
+  const raw=String(o.order_text||"");
+  const lines=raw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  const p={items:[],customer_name:"",phone:"",recipient_name:"",shipping_address:"",payment_method:"",customer_note:"",fulfilment_method:"",subtotal:null};
+  if(lines.length&&!/^\d+\s*x\s+/i.test(lines[0])&&!/^(Tổng|Total|Tiền món|Items):/i.test(lines[0]))p.customer_name=lines[0];
+
+  lines.forEach(line=>{
+    const item=line.match(/^(\d+)\s*x\s+(.+?)\s+\$([0-9]+(?:\.[0-9]+)?)$/i);
+    if(item){
+      const qty=Number(item[1]),name=item[2].replace(/\s+—\s+.*$/,"").trim(),optionText=item[2].includes(" — ")?item[2].split(" — ").slice(1).join(" — ").trim():"",lineTotal=Number(item[3]);
+      p.items.push({qty:qty,name:name,option_text:optionText,line_total:lineTotal});
+      return;
+    }
+    let m;
+    if((m=line.match(/^(?:Tiền món|Items|Tổng|Subtotal):\s*\$?([0-9]+(?:\.[0-9]+)?)/i))&&p.subtotal===null)p.subtotal=Number(m[1]);
+    if((m=line.match(/^(?:Nhận hàng|Fulfilment):\s*(.+)$/i))){
+      const val=m[1].toLowerCase();
+      p.fulfilment_method=val.includes("delivery")?"delivery":val.includes("auspost")?"auspost":val.includes("pick")?"pickup":m[1];
+    }
+    if((m=line.match(/^(?:Tên người nhận|Recipient):\s*(.+)$/i)))p.recipient_name=m[1];
+    if((m=line.match(/^(?:SĐT|Phone):\s*(.+)$/i)))p.phone=m[1];
+    if((m=line.match(/^(?:Địa chỉ|Address):\s*(.+)$/i)))p.shipping_address=m[1];
+    if((m=line.match(/^(?:Thanh toán|Payment):\s*(.+)$/i)))p.payment_method=m[1];
+    if((m=line.match(/^(?:Ghi chú|Note):\s*(.+)$/i)))p.customer_note=m[1];
+  });
+
+  if(!p.subtotal&&p.items.length)p.subtotal=p.items.reduce((s,it)=>s+Number(it.line_total||0),0);
+  return p;
+}
+
+function viewOf(o){
+  const legacy=parseLegacy(o);
+  const structuredItems=Array.isArray(o.order_items)&&o.order_items.length?o.order_items:null;
+  const fulfil=o.fulfilment_method||legacy.fulfilment_method||"";
+  const subtotal=o.subtotal!==null&&o.subtotal!==undefined?Number(o.subtotal):(legacy.subtotal!==null?Number(legacy.subtotal):null);
+  return {
+    order_token:o.order_token,
+    order_number:o.order_number||o.order_token,
+    created_at:o.created_at,
+    customer_name:o.customer_name||legacy.customer_name||o.recipient_name||legacy.recipient_name||"",
+    phone:o.phone||legacy.phone||"",
+    recipient_name:o.recipient_name||legacy.recipient_name||"",
+    shipping_address:o.shipping_address||legacy.shipping_address||"",
+    payment_method:o.payment_method||legacy.payment_method||"",
+    customer_note:(o.customer_note&&o.customer_note!=="Không có")?o.customer_note:(legacy.customer_note||o.customer_note||""),
+    fulfilment_method:fulfil,
+    pickup_date:o.pickup_date||"",
+    pickup_time:o.pickup_time||"",
+    subtotal:subtotal,
+    delivery_fee:o.delivery_fee!==null&&o.delivery_fee!==undefined?Number(o.delivery_fee):null,
+    total:o.total!==null&&o.total!==undefined?Number(o.total):null,
+    items:structuredItems||legacy.items||[],
+    raw:o.order_text||"",
+    status:o.status||""
+  };
+}
+
+async function rpc(name,body){
+  const r=await fetch(URL+"/rest/v1/rpc/"+name,{method:"POST",headers:{apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json"},body:JSON.stringify(body)});
+  if(!r.ok){let msg="request_failed";try{const x=await r.json();msg=x.message||msg}catch(e){}throw new Error(msg)}
+  return r.json();
+}
+
+async function fetchOrders(){
+  const data=await rpc("get_print_orders_v2",{p_passcode:code,p_limit:500});
+  orders=Array.isArray(data)?data:[];
+  renderList();
+  if(!selectedToken&&orders.length)selectOrder(orders[0].order_token);
+  else if(selectedToken){const current=orders.find(o=>o.order_token===selectedToken);if(current)renderOrder(current)}
+}
+
+function updateStats(){
+  Object.keys(statusLabels).forEach(function(k){
+    const el=document.getElementById("s-"+k);
+    if(el) el.textContent=String(orders.filter(o=>o.status===k).length);
+  });
+}
+function renderList(){
+  updateStats();
+  const q=search.value.trim().toLowerCase(),st=status.value;
+  const list=orders.filter(o=>(st==="all"||o.status===st)&&(!q||[o.order_number,o.customer_name,o.phone,o.recipient_name,o.shipping_address,o.order_text].join(" ").toLowerCase().includes(q)));
+  if(!list.length){ordersEl.innerHTML='<div class="muted" style="padding:20px;text-align:center">Không tìm thấy đơn phù hợp.</div>';return}
+  ordersEl.innerHTML=list.map(o=>{
+    const v=viewOf(o);
+    const amount=v.total!==null?v.total:v.subtotal;
+    return '<div class="order '+(o.order_token===selectedToken?'active':'')+'" data-token="'+esc(o.order_token)+'">'+
+      '<div class="order-head"><div class="order-no">'+esc(v.order_number)+'</div><b>'+esc(money(amount))+'</b></div>'+
+      '<div class="order-meta">'+esc(fmt(v.created_at))+' • '+esc(statusLabels[o.status]||o.status||"")+'</div>'+
+      '<div class="order-name">'+esc(v.customer_name||"—")+(v.phone?' • '+esc(v.phone):'')+'</div></div>';
+  }).join("");
+}
+
+function selectOrder(token){selectedToken=token;const o=orders.find(x=>x.order_token===token);if(o){renderOrder(o);renderList()}}
+
+function renderOrder(o){
+  const v=viewOf(o);currentView=v;
+  orderStatus.value=v.status||"new";
+  statusMsg.textContent="";
+  setText("orderNumber",v.order_number);setText("createdAt",fmt(v.created_at));setText("customerName",v.customer_name);setText("phone",v.phone);
+  const fulfilLabels={pickup:"Pick up Springvale",delivery:"Delivery Melbourne",auspost:"AusPost"};
+  setText("fulfilment",fulfilLabels[v.fulfilment_method]||v.fulfilment_method||"—");
+  setText("recipient",v.recipient_name);setText("address",v.shipping_address);
+  setText("pickup",v.pickup_date?(v.pickup_date+(v.pickup_time?" • "+String(v.pickup_time).slice(0,5):"")):"");
+  document.getElementById("recipientRow").style.display=v.recipient_name&&v.recipient_name!==v.customer_name?"flex":"none";
+  document.getElementById("pickupRow").style.display=v.pickup_date?"flex":"none";
+  document.getElementById("addressRow").style.display=v.shipping_address?"flex":"none";
+
+  const box=document.getElementById("items");box.innerHTML="";
+  if(v.items.length){
+    v.items.forEach(it=>{
+      const w=document.createElement("div");w.className="item";
+      const m=document.createElement("div");m.className="item-main";
+      const l=document.createElement("span");l.textContent=(it.qty||1)+" × "+(it.name||"Món");
+      const r=document.createElement("span");r.className="price-only";r.textContent=money(it.line_total!==undefined?it.line_total:Number(it.unit_price||0)*Number(it.qty||1));
+      m.appendChild(l);m.appendChild(r);w.appendChild(m);
+      if(it.option_text){const op=document.createElement("div");op.className="item-opt";op.textContent="↳ "+it.option_text;w.appendChild(op)}
+      box.appendChild(w);
+    });
+  }else{
+    const d=document.createElement("div");d.className="item";d.textContent="Không đọc được danh sách món từ đơn cũ.";box.appendChild(d);
+  }
+
+  setText("subtotal",money(v.subtotal));
+  const isShipping=v.fulfilment_method==="delivery"||v.fulfilment_method==="auspost";
+  document.getElementById("feeRow").style.display=isShipping?"flex":"none";
+  setText("feeLabel",v.fulfilment_method==="auspost"?"AusPost":"Delivery");
+  setText("deliveryFee",money(v.delivery_fee));
+
+  let displayTotal=v.total;
+  if(displayTotal===null&&v.subtotal!==null&&v.delivery_fee!==null)displayTotal=v.subtotal+v.delivery_fee;
+  if(!isShipping&&v.subtotal!==null)displayTotal=v.subtotal;
+  setText("total",money(displayTotal));
+  setText("totalLabel",isShipping&&v.delivery_fee===null?"TẠM TÍNH":"TỔNG");
+  setText("payment",v.payment_method);
+  setText("note",v.customer_note||"Không có");
+  setText("rawText",v.raw);
+
+  setText("panelSubtotal",money(v.subtotal));setText("panelTotal",money(displayTotal));
+  if(isShipping){
+    deliveryEditor.classList.remove("hidden");
+    deliveryInput.value=v.delivery_fee===null?"":String(v.delivery_fee);
+    deliveryInput.placeholder=v.fulfilment_method==="auspost"?"Nhập phí AusPost":"Nhập phí delivery";
+  }else{
+    deliveryEditor.classList.add("hidden");deliveryInput.value="";
+  }
+  saveMsg.textContent="";
+}
+
+async function saveOrderStatus(){
+  if(!currentView)return;
+  saveStatus.disabled=true;saveStatus.textContent="Đang lưu...";
+  try{
+    await rpc("update_order_manager_status_v1",{p_passcode:code,p_order_token:currentView.order_token,p_status:orderStatus.value});
+    statusMsg.textContent="Đã cập nhật trạng thái ✓";
+    await fetchOrders();
+  }catch(e){
+    statusMsg.textContent="Không cập nhật được trạng thái.";
+  }
+  saveStatus.disabled=false;saveStatus.textContent="Lưu trạng thái";
+}
+
+async function savePricing(){
+  if(!currentView)return;
+  const raw=deliveryInput.value.trim();
+  if(raw===""){saveMsg.textContent="Vui lòng nhập phí giao hàng.";return}
+  const fee=Number(raw);
+  if(!Number.isFinite(fee)||fee<0){saveMsg.textContent="Phí giao hàng không hợp lệ.";return}
+  if(currentView.subtotal===null){saveMsg.textContent="Không xác định được tiền món của đơn này.";return}
+  savePrice.disabled=true;savePrice.textContent="Đang lưu...";
+  try{
+    await rpc("update_print_order_pricing_v1",{p_passcode:code,p_order_token:currentView.order_token,p_subtotal:currentView.subtotal,p_delivery_fee:fee});
+    saveMsg.textContent="Đã lưu phí và cập nhật tổng đơn ✓";
+    await fetchOrders();
+  }catch(e){saveMsg.textContent="Không lưu được giá. Vui lòng thử lại."}
+  savePrice.disabled=false;savePrice.textContent="Lưu giá";
+}
+
+async function openManager(){
+  code=passcode.value.trim();if(!code){loginMsg.textContent="Vui lòng nhập mã quản trị.";loginMsg.classList.remove("hidden");return}
+  unlock.disabled=true;unlock.textContent="Đang mở...";
+  try{
+    await fetchOrders();
+    sessionStorage.setItem("cct_print_code",code);
+    login.classList.add("hidden");app.classList.remove("hidden");loginMsg.classList.add("hidden");
+  }catch(e){
+    loginMsg.textContent=e&&e.message==="not_authorized"?"Mã quản trị không đúng.":"Không tải được danh sách đơn. Vui lòng thử lại.";
+    loginMsg.classList.remove("hidden");
+  }
+  unlock.disabled=false;unlock.textContent="Mở Order Manager";
+}
+
+unlock.addEventListener("click",openManager);
+passcode.addEventListener("keydown",e=>{if(e.key==="Enter")openManager()});
+ordersEl.addEventListener("click",e=>{const row=e.target.closest("[data-token]");if(row)selectOrder(row.dataset.token)});
+search.addEventListener("input",renderList);status.addEventListener("change",renderList);
+mode.addEventListener("change",()=>paper.classList.toggle("kitchen",mode.value==="kitchen"));
+savePrice.addEventListener("click",savePricing);
+saveStatus.addEventListener("click",saveOrderStatus);
+copyBtn.addEventListener("click",async function(){
+  if(!currentView)return;
+  try{
+    await navigator.clipboard.writeText(currentView.raw||"");
+    copyBtn.textContent="Đã copy ✓";
+    setTimeout(()=>copyBtn.textContent="Copy đơn",1200);
+  }catch(e){alert("Không copy được tự động.");}
+});
+deliveryInput.addEventListener("keydown",e=>{if(e.key==="Enter")savePricing()});
+document.getElementById("printBtn").addEventListener("click",()=>window.print());
+document.getElementById("reload").addEventListener("click",fetchOrders);
+document.getElementById("lock").addEventListener("click",()=>{sessionStorage.removeItem("cct_print_code");code="";orders=[];selectedToken=null;currentView=null;app.classList.add("hidden");login.classList.remove("hidden");passcode.value=""});
+const saved=sessionStorage.getItem("cct_print_code");if(saved){passcode.value=saved;openManager()}
+})();
+</script>
+</body>
+</html>
