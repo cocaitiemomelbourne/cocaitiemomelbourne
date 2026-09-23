@@ -165,6 +165,16 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-ra
       color:#8d642f;
     }
   </style>
+  <script>
+(function(){
+  try{
+    const params=new URLSearchParams(location.hash.slice(1));
+    if(params.get("access_token")){
+      location.replace("orders-admin.html"+location.hash);
+    }
+  }catch(e){}
+})();
+  </script>
 </head>
 <body>
   <div class="topbar">Hàng có sẵn • Pick up Springvale • Delivery Melbourne • AusPost từ $12</div>
@@ -811,9 +821,9 @@ document.addEventListener("DOMContentLoaded", function () {
   window.CCT_updateCart = updateCart;
   window.CCT_resetOrderReservation = resetOrderReservation;
 
-  async function saveOrderDetails(orderText, customerName) {
+  async function saveOrderDetails(orderText, customerName, details) {
     const response = await fetch(
-      SUPABASE_URL + "/rest/v1/rpc/save_order_details",
+      SUPABASE_URL + "/rest/v1/rpc/save_order_full_v1",
       {
         method: "POST",
         headers: {
@@ -824,7 +834,8 @@ document.addEventListener("DOMContentLoaded", function () {
         body: JSON.stringify({
           p_order_token: currentOrderToken,
           p_customer_name: customerName,
-          p_order_text: orderText
+          p_order_text: orderText,
+          p_details: details || {}
         })
       }
     );
@@ -1232,8 +1243,51 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       });
 
+      const orderDetails = {
+        phone:
+          deliveryMethod.value === "pickup"
+            ? (pickupPhone && pickupPhone.value.trim() ? pickupPhone.value.trim() : "")
+            : recipientPhone.value.trim(),
+        fulfilment_method: deliveryMethod.value,
+        pickup_date: deliveryMethod.value === "pickup" ? pickupDate.value : "",
+        pickup_time: deliveryMethod.value === "pickup" ? pickupTime.value : "",
+        recipient_name:
+          deliveryMethod.value === "pickup"
+            ? customerName
+            : recipientName.value.trim(),
+        shipping_address:
+          deliveryMethod.value === "pickup"
+            ? ""
+            : shippingAddress.value.trim(),
+        payment_method: payment,
+        customer_note: note,
+        subtotal: Number(itemTotal),
+        delivery_fee:
+          deliveryMethod.value === "delivery" && currentDeliveryRate
+            ? Number(deliveryFee)
+            : null,
+        total:
+          deliveryMethod.value === "pickup"
+            ? Number(itemTotal)
+            : (deliveryMethod.value === "delivery" && currentDeliveryRate
+                ? Number(grandTotal)
+                : null),
+        language: isEnglish() ? "en" : "vi",
+        order_items: cart.map(function (item) {
+          return {
+            id: item.id,
+            name: item.name,
+            qty: item.qty,
+            unit_price: Number(item.price),
+            line_total: Number(item.price * item.qty),
+            option_text: item.option_text || "",
+            options: Array.isArray(item.options) ? item.options : []
+          };
+        })
+      };
+
       try {
-        await saveOrderDetails(text, customerName);
+        await saveOrderDetails(text, customerName, orderDetails);
       } catch (saveError) {
         console.error(saveError);
       }
