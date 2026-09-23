@@ -48,10 +48,16 @@ button,input,select{font:inherit}
 .order-actions h3{margin:0 0 8px;font-size:15px}
 .status-editor{display:grid;grid-template-columns:1fr auto;gap:8px}
 .status-editor select{width:100%;padding:11px 12px;border:1px solid #d8cec3;border-radius:10px;background:#fff}
+.selected-controls{display:grid;grid-template-columns:1.25fr 1fr .9fr;gap:10px;margin-bottom:14px;align-items:stretch}
+.selected-controls .pricing,.selected-controls .order-actions,.top-print{margin:0;padding:12px}
+.top-print h3{margin:0 0 8px;font-size:15px}
+.top-print .preview-tools{margin:0}
 .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:14px}
 .stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px;text-align:center}
 .stat b{display:block;font-size:19px}.stat span{font-size:11px;color:var(--muted)}
+@media(max-width:1050px){.selected-controls{grid-template-columns:1fr 1fr}.top-print{grid-column:1/-1}}
 @media(max-width:900px){.stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:650px){.selected-controls{grid-template-columns:1fr}.top-print{grid-column:auto}}
 @media(max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}}
 .raw{margin-top:10px}
 .raw summary{cursor:pointer;font-size:12px;color:var(--muted)}
@@ -84,7 +90,7 @@ button,input,select{font:inherit}
 @media(max-width:520px){.wrap{padding:10px}.price-grid{grid-template-columns:1fr 1fr}.delivery-editor{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
 @media print{
   body{background:#fff}
-  .top,.stats,.left,.preview-tools,.pricing,.order-actions,.raw{display:none!important}
+  .top,.selected-controls,.stats,.left,.preview-tools,.pricing,.order-actions,.top-print,.raw{display:none!important}
   .layout{display:block}
   .preview-card{border:0;padding:0}
   .paper{box-shadow:none;margin:0;width:80mm;min-height:0;padding:4mm}
@@ -106,6 +112,50 @@ button,input,select{font:inherit}
   <div class="top">
     <div><h1>Order Manager</h1><div class="muted">Xem đơn → báo phí → đổi trạng thái → in bill hoặc phiếu bếp</div></div>
     <div><button id="reload" class="btn alt">↻ Tải lại</button> <button id="lock" class="btn alt">Khoá</button></div>
+  </div>
+
+  <div class="selected-controls">
+    <div class="pricing card">
+      <h3>Giá đơn đang chọn</h3>
+      <div class="price-grid">
+        <div class="price-box"><b>Tiền món</b><div id="panelSubtotal" class="price-value">—</div></div>
+        <div class="price-box"><b>Tổng sau phí</b><div id="panelTotal" class="price-value">—</div></div>
+      </div>
+      <div id="deliveryEditor" class="hidden">
+        <div class="delivery-editor">
+          <input id="deliveryInput" inputmode="decimal" placeholder="Nhập phí delivery, ví dụ 8">
+          <button id="savePrice" class="btn primary">Lưu giá</button>
+        </div>
+        <div class="muted" style="margin-top:5px">Nhập số tiền, ví dụ <b>8</b> = $8. Tổng đơn sẽ tự tính.</div>
+      </div>
+      <div id="saveMsg" class="save-msg"></div>
+    </div>
+
+    <div class="order-actions card">
+      <h3>Quản lý đơn</h3>
+      <div class="status-editor">
+        <select id="orderStatus">
+          <option value="new">Mới</option>
+          <option value="confirmed">Đã xác nhận</option>
+          <option value="preparing">Đang chuẩn bị</option>
+          <option value="ready">Sẵn sàng</option>
+          <option value="completed">Hoàn tất</option>
+          <option value="cancelled">Đã huỷ</option>
+        </select>
+        <button id="saveStatus" class="btn primary">Lưu trạng thái</button>
+      </div>
+      <div id="statusMsg" class="save-msg"></div>
+    </div>
+
+    <div class="top-print card">
+      <h3>In & sao chép</h3>
+    <div class="preview-tools top-preview-tools">
+      <select id="mode"><option value="receipt">Bill khách</option><option value="kitchen">Phiếu bếp</option></select>
+      <button id="copyBtn" class="btn alt">Copy đơn</button>
+      <button id="printBtn" class="btn">🖨️ Print</button>
+    </div>
+
+    </div>
   </div>
 
   <div class="stats">
@@ -135,45 +185,7 @@ button,input,select{font:inherit}
     </div>
 
     <div>
-      <div class="pricing card">
-        <h3>Giá đơn đang chọn</h3>
-        <div class="price-grid">
-          <div class="price-box"><b>Tiền món</b><div id="panelSubtotal" class="price-value">—</div></div>
-          <div class="price-box"><b>Tổng sau phí</b><div id="panelTotal" class="price-value">—</div></div>
-        </div>
-        <div id="deliveryEditor" class="hidden">
-          <div class="delivery-editor">
-            <input id="deliveryInput" inputmode="decimal" placeholder="Nhập phí delivery, ví dụ 8">
-            <button id="savePrice" class="btn primary">Lưu giá</button>
-          </div>
-          <div class="muted" style="margin-top:5px">Nhập số tiền, ví dụ <b>8</b> = $8. Tổng đơn sẽ tự tính.</div>
-        </div>
-        <div id="saveMsg" class="save-msg"></div>
-      </div>
-
-      <div class="order-actions card">
-        <h3>Quản lý đơn</h3>
-        <div class="status-editor">
-          <select id="orderStatus">
-            <option value="new">Mới</option>
-            <option value="confirmed">Đã xác nhận</option>
-            <option value="preparing">Đang chuẩn bị</option>
-            <option value="ready">Sẵn sàng</option>
-            <option value="completed">Hoàn tất</option>
-            <option value="cancelled">Đã huỷ</option>
-          </select>
-          <button id="saveStatus" class="btn primary">Lưu trạng thái</button>
-        </div>
-        <div id="statusMsg" class="save-msg"></div>
-      </div>
-
       <div class="preview-card card">
-        <div class="preview-tools">
-          <select id="mode"><option value="receipt">Bill khách</option><option value="kitchen">Phiếu bếp</option></select>
-          <button id="copyBtn" class="btn alt">Copy đơn</button>
-          <button id="printBtn" class="btn">🖨️ Print</button>
-        </div>
-
         <main id="paper" class="paper">
           <div class="center">
             <div class="logo">CÓ CÁI TIỆM</div>
