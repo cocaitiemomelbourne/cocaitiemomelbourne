@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Print Manager | Có Cái Tiệm</title>
+<style>
+:root{--ink:#2f241b;--muted:#796b5d;--line:#e7ddd3;--bg:#fff8ef;--accent:#f2a51b}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+button,input,select{font:inherit}.wrap{max-width:1320px;margin:auto;padding:18px}.card{background:#fff;border:1px solid var(--line);border-radius:16px}
+.login{max-width:520px;margin:70px auto;padding:20px}.login input{width:100%;padding:12px;border:1px solid #d9cec3;border-radius:10px;margin-top:12px}
+.btn{border:0;border-radius:10px;padding:10px 13px;font-weight:800;cursor:pointer;background:#2b251f;color:#fff}.btn.alt{background:#efe8df;color:#2f241b}.wide{width:100%;margin-top:10px}
+.hidden{display:none!important}.notice{margin-top:12px;padding:10px;border-radius:10px;background:#fff3cd;border:1px solid #efd98f;font-size:13px}
+.top{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:14px}.muted{color:var(--muted);font-size:13px}
+.layout{display:grid;grid-template-columns:minmax(360px,1fr) 360px;gap:18px;align-items:start}.left{padding:14px}.tools{display:grid;grid-template-columns:1fr 170px;gap:8px;margin-bottom:10px}.tools input,.tools select{width:100%;padding:10px;border:1px solid #d9cec3;border-radius:10px}
+.orders{display:grid;gap:8px;max-height:72vh;overflow:auto}.order{border:1px solid var(--line);border-radius:12px;padding:11px;cursor:pointer;background:#fff}.order:hover,.order.active{border-color:#c98c21;background:#fffaf0}.order-head{display:flex;justify-content:space-between;gap:8px}.order-no{font-weight:900}.order-meta{font-size:12px;color:var(--muted);margin-top:3px}.order-name{font-size:13px;margin-top:5px}.preview-tools{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px}.preview-tools select{padding:8px;border:1px solid #d9cec3;border-radius:9px}
+.paper{width:80mm;min-height:120mm;background:#fff;padding:5mm 4mm;box-shadow:0 4px 24px #0002;color:#111;margin:auto}.center{text-align:center}.logo{font-size:20px;font-weight:900}.sub{font-size:10px;margin-top:2px}.rule{border-top:1px dashed #111;margin:7px 0}.meta{font-size:10px;line-height:1.45}.row{display:flex;justify-content:space-between;gap:7px}.items{font-size:11px}.item{margin:7px 0}.item-main{display:flex;justify-content:space-between;gap:7px;font-weight:700}.item-opt{font-size:9px;margin-top:2px;padding-left:9px}.total{font-size:13px;font-weight:900}.note{font-size:10px;white-space:pre-wrap}.footer{font-size:9px;line-height:1.4;margin-top:8px}.kitchen .price-only,.kitchen .payment-only,.kitchen .customer-footer{display:none!important}.kitchen .logo:after{content:" • KITCHEN"}.kitchen .item-main{font-size:13px}.kitchen .item-opt{font-size:11px}.kitchen .note{font-size:12px;font-weight:700}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.orders{max-height:none}.paper{margin-top:4px}.tools{grid-template-columns:1fr}}
+@media print{body{background:#fff}.wrap>.top,.left,.preview-tools{display:none!important}.layout{display:block}.paper{box-shadow:none;margin:0;width:80mm;min-height:0;padding:4mm}@page{size:80mm auto;margin:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<section id="login" class="login card">
+<h1>Print Manager</h1>
+<div class="muted">Có Cái Tiệm • nhập mã quản trị để xem và in đơn</div>
+<input id="passcode" type="password" placeholder="Mã quản trị">
+<button id="unlock" class="btn wide">Mở Print Manager</button>
+<div id="loginMsg" class="notice hidden"></div>
+</section>
+
+<section id="app" class="hidden">
+<div class="top">
+  <div><h1 style="margin:0">Print Manager</h1><div class="muted">Chọn bất kỳ đơn nào để in hoặc in lại</div></div>
+  <div><button id="reload" class="btn alt">↻ Tải lại</button> <button id="lock" class="btn alt">Khoá</button></div>
+</div>
+
+<div class="layout">
+  <div class="left card">
+    <div class="tools">
+      <input id="search" type="search" placeholder="Tìm mã đơn, tên khách, SĐT...">
+      <select id="status">
+        <option value="all">Tất cả trạng thái</option>
+        <option value="new">Mới</option><option value="confirmed">Đã xác nhận</option>
+        <option value="preparing">Đang chuẩn bị</option><option value="ready">Sẵn sàng</option>
+        <option value="completed">Hoàn tất</option><option value="cancelled">Đã huỷ</option>
+      </select>
+    </div>
+    <div id="orders" class="orders"></div>
+  </div>
+
+  <div>
+    <div class="preview-tools">
+      <select id="mode"><option value="receipt">Bill khách</option><option value="kitchen">Phiếu bếp</option></select>
+      <button id="printBtn" class="btn">🖨️ Print</button>
+    </div>
+    <main id="paper" class="paper">
+      <div class="center">
+        <div class="logo">CÓ CÁI TIỆM</div>
+        <div class="sub">Ăn Vặt Melbourne</div>
+        <div class="sub">Pick up Springvale • Delivery • AusPost</div>
+      </div>
+      <div class="rule"></div>
+      <div class="meta">
+        <div class="row"><span>Mã đơn</span><b id="orderNumber">—</b></div>
+        <div class="row"><span>Thời gian</span><span id="createdAt">—</span></div>
+        <div class="row"><span>Khách</span><span id="customerName">—</span></div>
+        <div class="row"><span>SĐT</span><span id="phone">—</span></div>
+        <div class="row"><span>Nhận hàng</span><span id="fulfilment">—</span></div>
+        <div id="pickupRow" class="row"><span>Pick up</span><span id="pickup">—</span></div>
+        <div id="addressRow" class="row"><span>Địa chỉ</span><span id="address">—</span></div>
+      </div>
+      <div class="rule"></div>
+      <div id="items" class="items"></div>
+      <div class="rule price-only"></div>
+      <div class="price-only">
+        <div class="row"><span>Tiền món</span><span id="subtotal">—</span></div>
+        <div class="row"><span>Delivery</span><span id="deliveryFee">—</span></div>
+        <div class="row total"><span>TỔNG</span><span id="total">—</span></div>
+      </div>
+      <div class="rule"></div>
+      <div class="meta payment-only"><div class="row"><span>Thanh toán</span><b id="payment">—</b></div></div>
+      <div class="note" id="note">Ghi chú: —</div>
+      <div class="rule customer-footer"></div>
+      <div class="center footer customer-footer">
+        Cảm ơn bạn đã ủng hộ Có Cái Tiệm ♡<br>
+        Facebook & TikTok: @cocaitiem.o.melbourne<br>
+        Website: cocaitiemomelbourne.github.io/cocaitiemomelbourne
+      </div>
+    </main>
+  </div>
+</div>
+</section>
+</div>
+
+<script>
+(function(){
+const URL="https://eswrqkhsvlqndjbrgsqo.supabase.co";
+const KEY="sb_publishable_-6iIwPaZQRMkkWAROdfvxg_dmVB81E2";
+const login=document.getElementById("login"),app=document.getElementById("app"),passcode=document.getElementById("passcode"),unlock=document.getElementById("unlock"),loginMsg=document.getElementById("loginMsg"),ordersEl=document.getElementById("orders"),search=document.getElementById("search"),status=document.getElementById("status"),paper=document.getElementById("paper"),mode=document.getElementById("mode");
+let code="",orders=[],selectedToken=null;
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function money(v){if(v===null||v===undefined||v==="")return "Chờ báo giá";return "$"+Number(v).toFixed(2).replace(".00","")}
+function fmt(v){return v?new Date(v).toLocaleString("en-AU",{timeZone:"Australia/Melbourne",dateStyle:"medium",timeStyle:"short"}):"—"}
+function setText(id,v){const el=document.getElementById(id);if(el)el.textContent=v===null||v===undefined||v===""?"—":String(v)}
+
+async function fetchOrders(){
+  const r=await fetch(URL+"/rest/v1/rpc/get_print_orders_v1",{method:"POST",headers:{apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json"},body:JSON.stringify({p_passcode:code,p_limit:500})});
+  if(!r.ok)throw new Error("not_authorized");
+  const data=await r.json();
+  orders=Array.isArray(data)?data:[];
+  renderList();
+  if(!selectedToken&&orders.length)selectOrder(orders[0].order_token);
+  else if(selectedToken){const current=orders.find(o=>o.order_token===selectedToken);if(current)renderOrder(current)}
+}
+
+function renderList(){
+  const q=search.value.trim().toLowerCase(),st=status.value;
+  const list=orders.filter(o=>(st==="all"||o.status===st)&&(!q||[o.order_number,o.customer_name,o.phone,o.recipient_name,o.shipping_address].join(" ").toLowerCase().includes(q)));
+  if(!list.length){ordersEl.innerHTML='<div class="muted" style="padding:20px;text-align:center">Không tìm thấy đơn phù hợp.</div>';return}
+  ordersEl.innerHTML=list.map(o=>'<div class="order '+(o.order_token===selectedToken?'active':'')+'" data-token="'+esc(o.order_token)+'"><div class="order-head"><div class="order-no">'+esc(o.order_number||o.order_token)+'</div><b>'+esc(o.total!==null?money(o.total):money(o.subtotal))+'</b></div><div class="order-meta">'+esc(fmt(o.created_at))+' • '+esc(o.status||"")+'</div><div class="order-name">'+esc(o.customer_name||"—")+(o.phone?' • '+esc(o.phone):'')+'</div></div>').join("");
+}
+
+function selectOrder(token){selectedToken=token;const o=orders.find(x=>x.order_token===token);if(o){renderOrder(o);renderList()}}
+
+function renderOrder(o){
+  setText("orderNumber",o.order_number||o.order_token);
+  setText("createdAt",fmt(o.created_at));
+  setText("customerName",o.customer_name||o.recipient_name);
+  setText("phone",o.phone);
+  const fulfil={pickup:"Pick up Springvale",delivery:"Delivery Melbourne",auspost:"AusPost"};
+  setText("fulfilment",fulfil[o.fulfilment_method]||o.fulfilment_method);
+  setText("pickup",o.pickup_date?(o.pickup_date+(o.pickup_time?" • "+String(o.pickup_time).slice(0,5):"")):"");
+  setText("address",o.shipping_address);
+  document.getElementById("pickupRow").style.display=o.pickup_date?"flex":"none";
+  document.getElementById("addressRow").style.display=o.shipping_address?"flex":"none";
+  setText("subtotal",money(o.subtotal));setText("deliveryFee",money(o.delivery_fee));setText("total",money(o.total!==null&&o.total!==undefined?o.total:o.subtotal));setText("payment",o.payment_method);setText("note","Ghi chú: "+(o.customer_note||"—"));
+  const box=document.getElementById("items");box.innerHTML="";
+  const items=Array.isArray(o.order_items)?o.order_items:[];
+  if(!items.length&&o.order_text){const d=document.createElement("div");d.className="item";d.textContent=o.order_text;box.appendChild(d)}
+  items.forEach(it=>{const w=document.createElement("div");w.className="item";const m=document.createElement("div");m.className="item-main";const l=document.createElement("span");l.textContent=(it.qty||1)+" × "+(it.name||"Món");const r=document.createElement("span");r.className="price-only";r.textContent=money(it.line_total!==undefined?it.line_total:Number(it.unit_price||0)*Number(it.qty||1));m.appendChild(l);m.appendChild(r);w.appendChild(m);if(it.option_text){const op=document.createElement("div");op.className="item-opt";op.textContent="↳ "+it.option_text;w.appendChild(op)}box.appendChild(w)});
+}
+
+async function openManager(){
+  code=passcode.value.trim();if(!code){loginMsg.textContent="Vui lòng nhập mã quản trị.";loginMsg.classList.remove("hidden");return}
+  unlock.disabled=true;unlock.textContent="Đang mở...";
+  try{await fetchOrders();sessionStorage.setItem("cct_print_code",code);login.classList.add("hidden");app.classList.remove("hidden");loginMsg.classList.add("hidden")}
+  catch(e){loginMsg.textContent="Mã quản trị không đúng.";loginMsg.classList.remove("hidden")}
+  unlock.disabled=false;unlock.textContent="Mở Print Manager";
+}
+
+unlock.addEventListener("click",openManager);passcode.addEventListener("keydown",e=>{if(e.key==="Enter")openManager()});
+ordersEl.addEventListener("click",e=>{const row=e.target.closest("[data-token]");if(row)selectOrder(row.dataset.token)});
+search.addEventListener("input",renderList);status.addEventListener("change",renderList);
+mode.addEventListener("change",()=>paper.classList.toggle("kitchen",mode.value==="kitchen"));
+document.getElementById("printBtn").addEventListener("click",()=>window.print());
+document.getElementById("reload").addEventListener("click",fetchOrders);
+document.getElementById("lock").addEventListener("click",()=>{sessionStorage.removeItem("cct_print_code");code="";orders=[];selectedToken=null;app.classList.add("hidden");login.classList.remove("hidden");passcode.value=""});
+const saved=sessionStorage.getItem("cct_print_code");if(saved){passcode.value=saved;openManager()}
+})();
+</script>
+</body>
+</html>
