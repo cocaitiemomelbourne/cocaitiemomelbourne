@@ -1,0 +1,1613 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Có Cái Tiệm | Checkout Test</title>
+  <meta name="cct-version" content="checkout-test-v3-compact-payid">
+  <meta name="description" content="Có Cái Tiệm - ăn vặt Việt Nam tại Melbourne. Pick up Springvale, delivery Melbourne và AusPost từ $12.">
+  <meta name="robots" content="index,follow">
+  <style>
+:root{
+  --bg:#fffaf3;
+  --ink:#2f241b;
+  --muted:#806f61;
+  --accent:#f2a51b;
+  --dark:#2b251f;
+  --line:#eadfd3;
+  --white:#fff;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.topbar{background:var(--dark);color:#fff;text-align:center;padding:8px 12px;font-size:13px}
+.site-header{position:sticky;top:0;z-index:20;background:rgba(255,250,243,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.nav{max-width:1180px;margin:auto;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.brand{font-size:21px;font-weight:900}
+.cart-btn{border:0;background:var(--dark);color:#fff;border-radius:12px;padding:11px 14px;font-weight:800}
+.hero{max-width:1180px;margin:24px auto;padding:0 16px}
+.hero-card{padding:34px;border-radius:28px;background:linear-gradient(135deg,#f6a719 0%,#ffc95f 58%,#ffe4aa 100%);overflow:hidden;position:relative}
+.hero-card:after{content:"";position:absolute;width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,.18);right:-85px;top:-90px}
+.hero-top{position:relative;z-index:1;display:flex;justify-content:space-between;gap:24px}
+.hero-title{font-size:clamp(44px,6vw,72px);font-weight:900;line-height:.95}
+.hero-subtitle{font-size:clamp(20px,2.2vw,30px);font-weight:800;margin-top:10px}
+.hero-tagline{max-width:280px;text-align:right;font-weight:800;line-height:1.5;color:#5a3a1e}
+.service-grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:28px}
+.service-card{background:rgba(255,255,255,.86);border:1px solid rgba(255,255,255,.9);border-radius:18px;padding:16px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 18px rgba(95,55,10,.08)}
+.service-icon{font-size:30px}
+.service-label{font-size:13px;font-weight:800;color:#7b634f}
+.service-value{font-size:20px;font-weight:900;margin-top:2px}
+.hero-note{position:relative;z-index:1;margin-top:18px;font-size:14px;font-weight:800}
+.main{max-width:1180px;margin:0 auto;padding:0 16px}
+.filters{display:flex;gap:8px;overflow:auto;margin:12px 0 18px}
+.filter{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 14px;font-weight:800}
+.filter.active{background:var(--dark);color:#fff}
+.product-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.product-card{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.product-visual{aspect-ratio:4/3;background:#ffe9bf;display:grid;place-items:center;font-size:64px}
+.product-body{padding:14px}
+.product-body h3{margin:0 0 7px;font-size:17px}
+.product-desc{font-size:13px;color:var(--muted);min-height:36px}
+.product-bottom{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px}
+.price{font-size:19px;font-weight:900}
+.add-btn{width:40px;height:40px;border-radius:50%;border:0;background:var(--accent);font-size:22px;font-weight:900}
+footer{margin-top:48px;background:var(--dark);color:#fff;padding:28px 16px}
+.footer-inner{max-width:1180px;margin:auto}
+.overlay{display:none;position:fixed;inset:0;background:#0006;z-index:40}
+.overlay.show{display:block}
+.cart-drawer{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:#fff;z-index:50;transform:translateX(100%);transition:.25s;display:flex;flex-direction:column}
+.cart-drawer.show{transform:translateX(0)}
+.drawer-head{padding:18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.close-btn{border:0;background:#f3eee8;border-radius:10px;padding:8px 10px}
+.cart-list{padding:10px 18px;overflow:auto;flex:1}
+.cart-row{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.qty-btns button{border:0;background:#f4efe9;border-radius:8px;padding:7px 10px}
+.checkout{border-top:1px solid var(--line);padding:16px 18px;overflow:auto;max-height:68vh}
+.total-row{display:flex;justify-content:space-between;font-size:21px;font-weight:900}
+label{display:block;margin:10px 0 5px;font-size:12px;font-weight:800}
+input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-radius:9px;background:#fff}
+.pay-options{display:flex;gap:8px}
+.pay-option{flex:1;border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:0}
+.pay-option input{width:auto}
+.shipping-fields{display:none}
+.primary-btn{width:100%;border:0;border-radius:10px;background:var(--dark);color:#fff;padding:12px;font-weight:900;margin-top:12px}
+.order-box{display:none;white-space:pre-wrap;background:#f7f4f1;padding:12px;border-radius:10px;margin-top:10px}
+.order-help{display:none;margin-top:12px;padding:12px 14px;border-radius:10px;background:#fff3cd;border:1px solid #f1d98a;font-size:13px;line-height:1.5;color:#5c4615}
+.copy-btn{display:none;background:#2d7a40}
+.messenger-btn{display:none;background:#0084ff}
+@media(max-width:900px){
+  .product-grid{grid-template-columns:repeat(2,1fr)}
+  .service-grid{grid-template-columns:1fr}
+  .hero-top{flex-direction:column}
+  .hero-tagline{text-align:left}
+}
+@media(max-width:560px){
+  .product-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .hero-card{padding:24px}
+  .product-body{padding:11px}
+  .product-body h3{font-size:15px}
+  .product-visual{font-size:52px}
+}
+.option-modal-backdrop{position:fixed;inset:0;background:#0008;z-index:100;display:grid;place-items:center;padding:16px}
+.option-modal{width:min(520px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:18px;box-shadow:0 18px 60px #0004}
+.option-modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px;border-bottom:1px solid var(--line)}
+.option-modal-head strong{font-size:20px}.option-modal-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.option-modal-close{border:0;background:#f4efe9;border-radius:9px;padding:7px 10px}
+.option-modal-body{padding:16px 18px}.option-group+.option-group{margin-top:18px}
+.option-group-title{font-weight:900;margin-bottom:8px}
+.option-choice{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin:7px 0;cursor:pointer}
+.option-choice input{width:auto;margin:0}
+.option-modal-actions{display:flex;gap:10px;padding:16px 18px;border-top:1px solid var(--line)}
+.option-cancel-btn,.option-confirm-btn{flex:1;border:0;border-radius:10px;padding:12px;font-weight:900}
+.option-cancel-btn{background:#f4efe9}.option-confirm-btn{background:var(--dark);color:#fff}
+
+.order-success{display:none;margin-top:12px;padding:13px 14px;border-radius:10px;background:#eaf6ec;border:1px solid #b8dfbf;color:#235d2d;font-size:13px;line-height:1.5;font-weight:700}
+
+.optional-text{font-weight:600;color:var(--muted)}
+.field-note{font-size:11px;color:var(--muted);margin-top:5px}
+.send-option{margin-top:10px;padding:10px 12px;border-radius:9px;background:rgba(255,255,255,.55)}
+.email-btn{display:none;background:#9b5c12}
+.email-btn:disabled{opacity:.65;cursor:not-allowed}
+#copyOrderBtn,#messengerBtn{display:none!important}
+.payid-panel{display:none;margin-top:12px;padding:0;border:0;background:transparent}
+.payid-panel.show{display:block}
+.payid-panel img{display:block;width:100%;max-width:620px;height:auto;object-fit:contain;margin:0 auto;border-radius:12px}
+
+.product-card.selected{border-color:#e6a11c;box-shadow:0 0 0 2px rgba(242,165,27,.14)}
+.card-qty-control{display:flex;align-items:center;gap:7px;background:#fff5df;border:1px solid #f0c46b;border-radius:999px;padding:4px}
+.card-qty-btn{width:34px;height:34px;border:0;border-radius:50%;background:#f2a51b;font-size:20px;font-weight:900;line-height:1}
+.card-qty-center{min-width:52px;text-align:center;line-height:1.05}
+.card-qty-center strong{display:block;font-size:16px}
+.card-selected-label{display:block;font-size:9px;font-weight:800;color:#806f61;text-transform:uppercase;letter-spacing:.03em}
+@media(max-width:560px){
+  .card-qty-control{gap:4px;padding:3px}
+  .card-qty-btn{width:30px;height:30px;font-size:18px}
+  .card-qty-center{min-width:44px}
+  .card-selected-label{font-size:8px}
+}
+
+.language-switcher{position:relative;z-index:1;display:flex;align-items:center;gap:10px;margin-top:12px}
+.language-btn{border:0;background:transparent;padding:0;font-weight:800;color:#6f4b20;font-size:14px}
+.language-btn.active{text-decoration:underline;text-underline-offset:4px;color:#2f241b}
+.language-separator{font-weight:800;color:#8d642f}
+
+</style>
+  <style>
+    .language-switcher-v4{
+      position:relative;
+      z-index:5;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-top:14px;
+      min-height:26px;
+    }
+    .language-switcher-v4 .language-btn{
+      display:inline-block;
+      border:0;
+      background:transparent;
+      padding:3px 0;
+      margin:0;
+      font:inherit;
+      font-size:14px;
+      font-weight:800;
+      line-height:20px;
+      color:#5d3d18;
+      cursor:pointer;
+    }
+    .language-switcher-v4 .language-btn.active{
+      color:#2f241b;
+      text-decoration:underline;
+      text-underline-offset:4px;
+    }
+    .language-switcher-v4 .language-separator{
+      display:inline-block;
+      font-weight:800;
+      color:#8d642f;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">Hàng có sẵn • Pick up Springvale • Delivery Melbourne • AusPost từ $12</div>
+
+  <header class="site-header">
+    <div class="nav">
+      <div class="brand">🍋 Có Cái Tiệm</div>
+      <button id="openCartBtn" class="cart-btn" type="button">
+        🛒 Giỏ hàng <span id="cartCount">0</span>
+      </button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-card">
+      <div class="hero-top">
+        <div>
+          <div class="hero-title">Có Cái Tiệm</div>
+          <div class="hero-subtitle">Ăn vặt Melbourne</div>
+        </div>
+        <div class="hero-tagline">Món ngon cho những ngày thêm vui ♡</div>
+      </div>
+
+      <div class="service-grid">
+        <div class="service-card">
+          <div class="service-icon">📍</div>
+          <div>
+            <div class="service-label">Pick up</div>
+            <div class="service-value">Springvale</div>
+          </div>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">🛵</div>
+          <div>
+            <div class="service-label">Delivery</div>
+            <div class="service-value">Melbourne</div>
+          </div>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">📮</div>
+          <div>
+            <div class="service-label">AusPost</div>
+            <div class="service-value">từ $12</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-note">🛒 Order dễ dàng • Cash hoặc PayID</div>
+      <div class="language-switcher-v4" aria-label="Language selector">
+        <button type="button" class="language-btn active" data-lang="vi">Vietnamese</button>
+        <span class="language-separator">|</span>
+        <button type="button" class="language-btn" data-lang="en">English</button>
+      </div>
+    </div>
+  </section>
+
+  <main class="main">
+    <h2>Menu</h2>
+
+    <div class="filters" id="filters"></div>
+
+    <div id="productGrid" class="product-grid"></div>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <strong>Có Cái Tiệm — Ăn Vặt Melbourne</strong><br>
+      Facebook & TikTok: @cocaitiem.o.melbourne
+    </div>
+  </footer>
+
+  <div id="overlay" class="overlay"></div>
+
+  <aside id="cartDrawer" class="cart-drawer" aria-hidden="true">
+    <div class="drawer-head">
+      <strong>Giỏ hàng</strong>
+      <button id="closeCartBtn" class="close-btn" type="button">✕</button>
+    </div>
+
+    <div id="cartList" class="cart-list"></div>
+
+    <div class="checkout">
+      <div class="total-row">
+        <span>Tổng</span>
+        <span>$<span id="cartTotal">0</span></span>
+      </div>
+
+      <label for="customerName">Tên khách</label>
+      <input id="customerName" type="text" placeholder="Tên của bạn">
+
+      <label for="contactEmail">Email liên hệ <span class="optional-text">(không bắt buộc)</span></label>
+      <input id="contactEmail" type="email" placeholder="email@example.com">
+
+      <label for="deliveryMethod">Nhận hàng</label>
+      <select id="deliveryMethod">
+        <option value="pickup">Pick up Springvale</option>
+        <option value="delivery">Delivery Melbourne</option>
+        <option value="auspost">AusPost</option>
+      </select>
+
+      <div id="pickupFields">
+        <label for="pickupDate">Chọn ngày pick up</label>
+        <input id="pickupDate" type="date">
+
+        <label for="pickupTime">Chọn giờ pick up</label>
+        <input id="pickupTime" type="time">
+
+        <label for="pickupPhone">Số điện thoại <span class="optional-text">(không bắt buộc)</span></label>
+        <input id="pickupPhone" type="tel" placeholder="04xx xxx xxx">
+        <div class="field-note">Chỉ bắt buộc nếu bạn chọn gửi đơn qua Email.</div>
+      </div>
+
+      <div id="shippingFields" class="shipping-fields">
+        <div id="recipientNameField">
+          <label for="recipientName">Tên người nhận</label>
+          <input id="recipientName" type="text" placeholder="Tên người nhận">
+        </div>
+
+        <label for="recipientPhone">Số điện thoại</label>
+        <input id="recipientPhone" type="tel" placeholder="04xx xxx xxx">
+
+        <label for="shippingAddress">Địa chỉ nhận hàng</label>
+        <textarea id="shippingAddress" rows="3" placeholder="Số nhà, tên đường, suburb, postcode"></textarea>
+      </div>
+
+      <label>Thanh toán</label>
+      <div class="pay-options">
+        <label class="pay-option">
+          <input type="radio" name="payment" value="Cash" checked>
+          💵 Cash
+        </label>
+        <label class="pay-option">
+          <input type="radio" name="payment" value="PayID">
+          📱 PayID
+        </label>
+      </div>
+
+      <div id="payidPanel" class="payid-panel">
+        <img src="payid-payment-card-compact.svg" alt="Thông tin thanh toán Có Cái Tiệm">
+      </div>
+
+      <label for="customerNote">Ghi chú</label>
+      <textarea id="customerNote" rows="2" placeholder="Ví dụ: ít cay, gọi trước khi giao..."></textarea>
+
+      <button id="makeOrderBtn" class="primary-btn" type="button">Tạo đơn hàng</button>
+
+      <div id="orderBox" class="order-box"></div>
+
+      <div id="orderSuccess" class="order-success" role="status" aria-live="polite"></div>
+
+      <div id="orderHelp" class="order-help">
+        <strong>Gửi đơn qua Email</strong>
+        <div class="send-option">Bấm nút <strong>Gửi đơn hàng qua Email</strong> bên dưới và chờ Tiệm xác nhận.</div>
+      </div>
+
+      <button id="copyOrderBtn" class="primary-btn copy-btn" type="button">📋 Copy đơn hàng</button>
+      <button id="messengerBtn" class="primary-btn messenger-btn" type="button">💬 Gửi qua Messenger @cocaitiem.o.melbourne</button>
+      <button id="emailOrderBtn" class="primary-btn email-btn" type="button">✉️ Gửi đơn hàng qua Email</button>
+    </div>
+  </aside>
+
+  <script>
+document.addEventListener("DOMContentLoaded", function () {
+  const SUPABASE_URL = "https://eswrqkhsvlqndjbrgsqo.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_-6iIwPaZQRMkkWAROdfvxg_dmVB81E2";
+  const MESSENGER_PAGE = "cocaitiem.o.melbourne";
+  const MESSENGER_PAGE_ID = "1204366336096979";
+  const PAYID = "ĐIỀN PAYID CỦA TIỆM";
+
+  function isEnglish() {
+    return window.CCT_LANG === "en";
+  }
+
+  function ui(key, arg) {
+    const vi = {
+      all:"Tất cả",
+      menuLoadFail:"Không tải được menu. Vui lòng thử lại sau.",
+      noItems:"Hiện chưa có món trong mục này.",
+      stockPrefix:"Còn ",
+      cartEmpty:"Giỏ hàng đang trống.",
+      optionSub:"Chọn option trước khi thêm vào giỏ",
+      cancel:"Huỷ",
+      addToCart:"Thêm vào giỏ",
+      choose:"Vui lòng chọn ",
+      stockOnly:"Món này chỉ còn {n} phần.",
+      reserveFail:"Không thể giữ tồn kho cho đơn này.",
+      insufficient:"Một món trong giỏ không còn đủ số lượng. Vui lòng tải lại menu và chọn lại.",
+      unavailable:"Một món trong giỏ vừa hết hàng hoặc đã ngừng bán. Vui lòng tải lại menu.",
+      cartRequired:"Vui lòng thêm sản phẩm vào giỏ hàng.",
+      nameRequired:"Vui lòng nhập tên khách.",
+      pickupRequired:"Vui lòng chọn ngày và giờ pick up.",
+      shippingRequired:"Vui lòng nhập tên người nhận, số điện thoại và địa chỉ nhận hàng.",
+      copied:"Đã copy đơn hàng. Tiếp theo bấm Gửi qua Messenger, dán nội dung đơn vào khung chat rồi bấm Send.",
+      copyFail:"Trình duyệt không cho copy tự động. Vui lòng chọn nội dung đơn và copy thủ công."
+    };
+    const en = {
+      all:"All",
+      menuLoadFail:"Unable to load the menu. Please try again later.",
+      noItems:"There are no items in this category yet.",
+      stockPrefix:"In stock: ",
+      cartEmpty:"Your cart is empty.",
+      optionSub:"Choose options before adding to cart",
+      cancel:"Cancel",
+      addToCart:"Add to cart",
+      choose:"Please choose ",
+      stockOnly:"Only {n} left in stock.",
+      reserveFail:"Unable to reserve stock for this order.",
+      insufficient:"One item no longer has enough stock. Please refresh the menu and choose again.",
+      unavailable:"One item has just sold out or is no longer available. Please refresh the menu.",
+      cartRequired:"Please add a product to your cart.",
+      nameRequired:"Please enter your name.",
+      pickupRequired:"Please choose a pickup date and time.",
+      shippingRequired:"Please enter the recipient name, phone number and delivery address.",
+      copied:"Order copied. Next, tap Send via Messenger, paste the order into the chat and send it.",
+      copyFail:"Your browser could not copy automatically. Please select and copy the order manually."
+    };
+    let value = (isEnglish() ? en : vi)[key] || key;
+    if (arg !== undefined) value = value.replace("{n}", String(arg));
+    return value;
+  }
+
+  let PRODUCTS = [];
+  let CATEGORIES = [];
+  const cart = [];
+  window.CCT_CART = cart;
+  let currentOrderToken = null;
+  let currentOrderCommitted = false;
+
+  const productGrid = document.getElementById("productGrid");
+  const cartCount = document.getElementById("cartCount");
+  const cartDrawer = document.getElementById("cartDrawer");
+  const overlay = document.getElementById("overlay");
+  const cartList = document.getElementById("cartList");
+  const cartTotal = document.getElementById("cartTotal");
+  const deliveryMethod = document.getElementById("deliveryMethod");
+  const pickupFields = document.getElementById("pickupFields");
+  const pickupDate = document.getElementById("pickupDate");
+  const pickupTime = document.getElementById("pickupTime");
+  const pickupPhone = document.getElementById("pickupPhone");
+  const shippingFields = document.getElementById("shippingFields");
+  const recipientNameField = document.getElementById("recipientNameField");
+  const recipientName = document.getElementById("recipientName");
+  const recipientPhone = document.getElementById("recipientPhone");
+  const shippingAddress = document.getElementById("shippingAddress");
+  const orderBox = document.getElementById("orderBox");
+  const orderHelp = document.getElementById("orderHelp");
+  const copyOrderBtn = document.getElementById("copyOrderBtn");
+  const messengerBtn = document.getElementById("messengerBtn");
+  const contactEmail = document.getElementById("contactEmail");
+  const payidPanel = document.getElementById("payidPanel");
+
+  function money(value) {
+    return Number(value || 0).toFixed(2).replace(".00", "");
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, function (char) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char];
+    });
+  }
+
+  async function loadCategories() {
+    try {
+      const response = await fetch(
+        SUPABASE_URL + "/rest/v1/product_categories?select=slug,label,sort_order,is_active&is_active=eq.true&order=sort_order.asc,slug.asc",
+        {
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: "Bearer " + SUPABASE_KEY
+          }
+        }
+      );
+
+      if (!response.ok) throw new Error("Không tải được category");
+      CATEGORIES = await response.json();
+    } catch (error) {
+      console.error(error);
+      CATEGORIES = [];
+    }
+  }
+
+  function renderFilters() {
+    const filters = document.getElementById("filters");
+    const seen = new Set();
+    const inferred = PRODUCTS.map(function (p) { return p.category; }).filter(Boolean);
+
+    const categoryList = CATEGORIES.slice();
+
+    inferred.forEach(function (slug) {
+      if (!categoryList.some(function (c) { return c.slug === slug; })) {
+        categoryList.push({
+          slug: slug,
+          label: slug.charAt(0).toUpperCase() + slug.slice(1),
+          sort_order: 999
+        });
+      }
+    });
+
+    const buttons = ['<button class="filter active" type="button" data-category="all">' + escapeHtml(ui("all")) + '</button>'];
+
+    categoryList.forEach(function (category) {
+      if (seen.has(category.slug)) return;
+      seen.add(category.slug);
+      buttons.push(
+        '<button class="filter" type="button" data-category="' +
+        escapeHtml(category.slug) +
+        '">' +
+        escapeHtml(category.label) +
+        '</button>'
+      );
+    });
+
+    filters.innerHTML = buttons.join("");
+
+    filters.querySelectorAll(".filter").forEach(function (button) {
+      button.addEventListener("click", function () {
+        filters.querySelectorAll(".filter").forEach(function (item) {
+          item.classList.remove("active");
+        });
+        button.classList.add("active");
+        renderProducts(button.dataset.category);
+      });
+    });
+  }
+
+  async function loadProducts() {
+    try {
+      const url =
+        SUPABASE_URL +
+        "/rest/v1/products" +
+        "?select=id,name,price,category,emoji,description,image_url,sort_order,is_active,stock_qty,option_groups" +
+        "&is_active=eq.true" +
+        "&or=(stock_qty.is.null,stock_qty.gt.0)" +
+        "&order=sort_order.asc,id.asc";
+
+      const response = await fetch(url, {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: "Bearer " + SUPABASE_KEY
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("Không tải được menu");
+      }
+
+      const data = await response.json();
+
+      PRODUCTS = data.map(function (p) {
+        return {
+          id: p.id,
+          name: p.name,
+          price: Number(p.price),
+          category: p.category,
+          emoji: p.emoji || "🍋",
+          description: p.description || "",
+          image_url: p.image_url || "",
+          sort_order: Number(p.sort_order || 0),
+          stock_qty: p.stock_qty === null ? null : Number(p.stock_qty),
+          option_groups: Array.isArray(p.option_groups) ? p.option_groups : []
+        };
+      });
+      window.CCT_PRODUCTS = PRODUCTS;
+    } catch (error) {
+      console.error(error);
+      productGrid.innerHTML = '<div style="grid-column:1/-1;padding:20px;background:#fff;border-radius:14px">' + escapeHtml(ui("menuLoadFail")) + '</div>';
+    }
+  }
+
+  function renderProducts(category) {
+    const selected =
+      category === "all"
+        ? PRODUCTS.slice().sort(function (a, b) {
+            return String(a.name || "").localeCompare(
+              String(b.name || ""),
+              window.CCT_LANG === "en" ? "en" : "vi",
+              { sensitivity: "base" }
+            );
+          })
+        : PRODUCTS.filter(function (product) {
+            return product.category === category;
+          });
+
+    if (!selected.length) {
+      productGrid.innerHTML = '<div style="grid-column:1/-1;padding:20px;background:#fff;border-radius:14px">' + escapeHtml(ui("noItems")) + '</div>';
+      return;
+    }
+
+    productGrid.innerHTML = selected
+      .map(function (product) {
+        const index = PRODUCTS.indexOf(product);
+        const visual = product.image_url
+          ? '<img src="' +
+            escapeHtml(product.image_url) +
+            '" alt="' +
+            escapeHtml(product.name) +
+            '" style="width:100%;height:100%;object-fit:cover">'
+          : product.emoji;
+
+        const stockText =
+          product.stock_qty === null
+            ? ""
+            : '<div style="font-size:12px;color:#806f61;margin-top:6px">' + escapeHtml(ui("stockPrefix")) +
+              product.stock_qty +
+              "</div>";
+
+        return [
+          '<div class="product-card">',
+          '<div class="product-visual">',
+          visual,
+          "</div>",
+          '<div class="product-body">',
+          "<h3>",
+          escapeHtml(product.name),
+          "</h3>",
+          '<div class="product-desc">',
+          escapeHtml(product.description),
+          "</div>",
+          stockText,
+          '<div class="product-bottom">',
+          '<span class="price">$',
+          money(product.price),
+          "</span>",
+          '<button class="add-btn" type="button" data-add-index="',
+          index,
+          '">+</button>',
+          "</div>",
+          "</div>",
+          "</div>"
+        ].join("");
+      })
+      .join("");
+  }
+
+  function updateCart() {
+    const totalQty = cart.reduce(function (sum, item) {
+      return sum + item.qty;
+    }, 0);
+
+    const totalPrice = cart.reduce(function (sum, item) {
+      return sum + item.price * item.qty;
+    }, 0);
+
+    cartCount.textContent = totalQty;
+    cartTotal.textContent = money(totalPrice);
+
+    if (cart.length === 0) {
+      cartList.innerHTML = ui("cartEmpty");
+      return;
+    }
+
+    cartList.innerHTML = cart
+      .map(function (item, index) {
+        return [
+          '<div class="cart-row">',
+          "<div>",
+          "<b>",
+          escapeHtml(item.name),
+          "</b>",
+          item.option_text ? "<br><small>" + escapeHtml(item.option_text) + "</small>" : "",
+          "<br>",
+          "<small>$",
+          money(item.price),
+          " × ",
+          item.qty,
+          "</small>",
+          "</div>",
+          '<div class="qty-btns">',
+          '<button type="button" data-cart-index="',
+          index,
+          '" data-delta="-1">−</button> ',
+          '<button type="button" data-cart-index="',
+          index,
+          '" data-delta="1">＋</button>',
+          "</div>",
+          "</div>"
+        ].join("");
+      })
+      .join("");
+  }
+
+  function openCart() {
+    overlay.classList.add("show");
+    cartDrawer.classList.add("show");
+    cartDrawer.setAttribute("aria-hidden", "false");
+    updateCart();
+  }
+
+  function closeCart() {
+    overlay.classList.remove("show");
+    cartDrawer.classList.remove("show");
+    cartDrawer.setAttribute("aria-hidden", "true");
+  }
+
+  function syncShippingFields() {
+    const isPickup = deliveryMethod.value === "pickup";
+    const isAusPost = deliveryMethod.value === "auspost";
+
+    pickupFields.style.display = isPickup ? "block" : "none";
+    shippingFields.style.display = isPickup ? "none" : "block";
+    if (recipientNameField) {
+      recipientNameField.style.display = isAusPost ? "block" : "none";
+    }
+
+    if (isPickup) {
+      recipientName.value = "";
+      recipientPhone.value = "";
+      shippingAddress.value = "";
+    } else {
+      pickupDate.value = "";
+      pickupTime.value = "";
+      if (!isAusPost) recipientName.value = "";
+    }
+  }
+
+  function syncPaymentDetails() {
+    const selected = document.querySelector('input[name="payment"]:checked');
+    if (!payidPanel) return;
+    payidPanel.classList.toggle("show", !!selected && selected.value === "PayID");
+  }
+
+  function resetOrderReservation() {
+    currentOrderToken = null;
+    currentOrderCommitted = false;
+  }
+
+  window.CCT_updateCart = updateCart;
+  window.CCT_resetOrderReservation = resetOrderReservation;
+
+  async function saveOrderDetails(orderText, customerName) {
+    const response = await fetch(
+      SUPABASE_URL + "/rest/v1/rpc/save_order_details",
+      {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: "Bearer " + SUPABASE_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          p_order_token: currentOrderToken,
+          p_customer_name: customerName,
+          p_order_text: orderText
+        })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Không lưu được nội dung đơn hàng.");
+    }
+  }
+
+  function makeOrderToken() {
+    if (window.crypto && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+    return "order-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+  }
+
+  async function commitStockForCurrentCart() {
+    if (currentOrderCommitted) {
+      return { ok: true, duplicate: true };
+    }
+
+    if (!currentOrderToken) {
+      currentOrderToken = makeOrderToken();
+    }
+
+    const items = cart.map(function (item) {
+      return { id: item.id, qty: item.qty };
+    });
+
+    const response = await fetch(
+      SUPABASE_URL + "/rest/v1/rpc/commit_order_stock",
+      {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: "Bearer " + SUPABASE_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          p_order_token: currentOrderToken,
+          p_items: items
+        })
+      }
+    );
+
+    const bodyText = await response.text();
+
+    if (!response.ok) {
+      let message = ui("reserveFail");
+
+      if (bodyText.includes("insufficient_stock")) {
+        message = ui("insufficient");
+      } else if (bodyText.includes("product_unavailable")) {
+        message = ui("unavailable");
+      }
+
+      throw new Error(message);
+    }
+
+    currentOrderCommitted = true;
+
+    if (!bodyText) {
+      return { ok: true };
+    }
+
+    try {
+      return JSON.parse(bodyText);
+    } catch (error) {
+      return { ok: true };
+    }
+  }
+
+  document.getElementById("openCartBtn").addEventListener("click", openCart);
+  document.getElementById("closeCartBtn").addEventListener("click", closeCart);
+  overlay.addEventListener("click", closeCart);
+
+  function chooseProductOptions(product) {
+    return new Promise(function (resolve) {
+      const groups = Array.isArray(product.option_groups) ? product.option_groups : [];
+      if (!groups.length) {
+        resolve([]);
+        return;
+      }
+
+      const backdrop = document.createElement("div");
+      backdrop.className = "option-modal-backdrop";
+
+      const modal = document.createElement("div");
+      modal.className = "option-modal";
+
+      let html =
+        '<div class="option-modal-head">' +
+          '<div><strong>' + escapeHtml(product.name) + '</strong><div class="option-modal-sub">' + escapeHtml(ui("optionSub")) + '</div></div>' +
+          '<button type="button" class="option-modal-close">✕</button>' +
+        '</div>' +
+        '<div class="option-modal-body">';
+
+      groups.forEach(function (group, groupIndex) {
+        html += '<div class="option-group">' +
+          '<div class="option-group-title">' + escapeHtml(group.name || ("Option " + (groupIndex + 1))) + '</div>';
+
+        (group.choices || []).forEach(function (choice, choiceIndex) {
+          const id = "opt-" + groupIndex + "-" + choiceIndex + "-" + Date.now();
+          html +=
+            '<label class="option-choice" for="' + id + '">' +
+              '<input id="' + id + '" type="radio" name="option-group-' + groupIndex + '" value="' + escapeHtml(choice) + '">' +
+              '<span>' + escapeHtml(choice) + '</span>' +
+            '</label>';
+        });
+
+        html += '</div>';
+      });
+
+      html +=
+        '</div>' +
+        '<div class="option-modal-actions">' +
+          '<button type="button" class="option-cancel-btn">' + escapeHtml(ui("cancel")) + '</button>' +
+          '<button type="button" class="option-confirm-btn">' + escapeHtml(ui("addToCart")) + '</button>' +
+        '</div>';
+
+      modal.innerHTML = html;
+      backdrop.appendChild(modal);
+      document.body.appendChild(backdrop);
+
+      function close(result) {
+        backdrop.remove();
+        resolve(result);
+      }
+
+      modal.querySelector(".option-modal-close").addEventListener("click", function () { close(null); });
+      modal.querySelector(".option-cancel-btn").addEventListener("click", function () { close(null); });
+      backdrop.addEventListener("click", function (e) {
+        if (e.target === backdrop) close(null);
+      });
+
+      modal.querySelector(".option-confirm-btn").addEventListener("click", function () {
+        const selected = [];
+
+        for (let i = 0; i < groups.length; i += 1) {
+          const checked = modal.querySelector('input[name="option-group-' + i + '"]:checked');
+          if (!checked && groups[i].required !== false) {
+            alert(ui("choose") + (groups[i].name || "option") + ".");
+            return;
+          }
+
+          if (checked) {
+            selected.push({
+              group: groups[i].name || ("Option " + (i + 1)),
+              choice: checked.value
+            });
+          }
+        }
+
+        close(selected);
+      });
+    });
+  }
+
+  productGrid.addEventListener("click", async function (event) {
+    const button = event.target.closest("[data-add-index]");
+    if (!button) {
+      return;
+    }
+
+    const product = PRODUCTS[Number(button.dataset.addIndex)];
+    if (!product) {
+      return;
+    }
+
+    const selectedOptions = await chooseProductOptions(product);
+    if (selectedOptions === null) {
+      return;
+    }
+
+    const optionText = selectedOptions.map(function (opt) {
+      return opt.choice;
+    }).join(" • ");
+
+    const variantKey = product.id + "::" + optionText;
+
+    const existing = cart.find(function (item) {
+      return item.variant_key === variantKey;
+    });
+
+    const totalForProduct = cart
+      .filter(function (item) { return item.id === product.id; })
+      .reduce(function (sum, item) { return sum + item.qty; }, 0);
+
+    if (
+      product.stock_qty !== null &&
+      totalForProduct >= product.stock_qty
+    ) {
+      alert(ui("stockOnly", product.stock_qty));
+      return;
+    }
+
+    if (existing) {
+      existing.qty += 1;
+    } else {
+      cart.push({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        qty: 1,
+        stock_qty: product.stock_qty,
+        options: selectedOptions,
+        option_text: optionText,
+        variant_key: variantKey
+      });
+    }
+
+    resetOrderReservation();
+    updateCart();
+  });
+
+  cartList.addEventListener("click", function (event) {
+    const button = event.target.closest("[data-cart-index]");
+    if (!button) {
+      return;
+    }
+
+    const index = Number(button.dataset.cartIndex);
+    const delta = Number(button.dataset.delta);
+    const item = cart[index];
+
+    if (!item) {
+      return;
+    }
+
+    if (delta > 0 && item.stock_qty !== null) {
+      const totalForProduct = cart
+        .filter(function (cartItem) { return cartItem.id === item.id; })
+        .reduce(function (sum, cartItem) { return sum + cartItem.qty; }, 0);
+
+      if (totalForProduct >= item.stock_qty) {
+        alert(ui("stockOnly", item.stock_qty));
+        return;
+      }
+    }
+
+    item.qty += delta;
+
+    if (item.qty <= 0) {
+      cart.splice(index, 1);
+    }
+
+    resetOrderReservation();
+    updateCart();
+  });
+
+  deliveryMethod.addEventListener("change", syncShippingFields);
+  document.querySelectorAll('input[name="payment"]').forEach(function (radio) {
+    radio.addEventListener("change", syncPaymentDetails);
+  });
+
+  document
+    .getElementById("makeOrderBtn")
+    .addEventListener("click", async function () {
+      if (cart.length === 0) {
+        alert(ui("cartRequired"));
+        return;
+      }
+
+      const customerName = document
+        .getElementById("customerName")
+        .value.trim();
+
+      const payment = document.querySelector(
+        'input[name="payment"]:checked'
+      ).value;
+
+      const contactEmailValue = contactEmail ? contactEmail.value.trim() : "";
+      if (contactEmailValue && !contactEmail.checkValidity()) {
+        alert(isEnglish() ? "Please enter a valid contact email address." : "Email liên hệ chưa đúng định dạng.");
+        contactEmail.focus();
+        return;
+      }
+
+      const note =
+        document.getElementById("customerNote").value.trim() || "Không có";
+
+      if (!customerName) {
+        alert(ui("nameRequired"));
+        return;
+      }
+
+      if (deliveryMethod.value === "pickup") {
+        if (!pickupDate.value || !pickupTime.value) {
+          alert(ui("pickupRequired"));
+          return;
+        }
+      } else if (deliveryMethod.value === "delivery") {
+        if (!recipientPhone.value.trim() || !shippingAddress.value.trim()) {
+          alert(isEnglish()
+            ? "Please enter a phone number and delivery address."
+            : "Vui lòng nhập số điện thoại và địa chỉ nhận hàng.");
+          return;
+        }
+      } else {
+        if (!recipientName.value.trim() || !recipientPhone.value.trim() || !shippingAddress.value.trim()) {
+          alert(ui("shippingRequired"));
+          return;
+        }
+      }
+
+      try {
+        await commitStockForCurrentCart();
+      } catch (error) {
+        alert(error.message);
+        await loadProducts();
+        renderFilters();
+        renderProducts("all");
+        return;
+      }
+
+      const deliveryLabels = {
+        pickup: "Pick up Springvale",
+        delivery: "Delivery Melbourne",
+        auspost: "AusPost"
+      };
+
+      const totalPrice = cart.reduce(function (sum, item) {
+        return sum + item.price * item.qty;
+      }, 0);
+
+      const lines = cart
+        .map(function (item) {
+          return (
+            item.qty +
+            " x " +
+            item.name +
+            (item.option_text ? " — " + item.option_text : "") +
+            " $" +
+            money(item.price * item.qty)
+          );
+        })
+        .join("\n");
+
+      let text =
+        customerName +
+        "\n" +
+        lines +
+        "\n" +
+        "Tổng: $" +
+        money(totalPrice) +
+        "\n";
+
+      if (deliveryMethod.value === "pickup") {
+        text +=
+          "Nhận hàng: Pick up Springvale" +
+          "\nNgày pick up: " +
+          pickupDate.value +
+          "\nGiờ pick up: " +
+          pickupTime.value +
+          (pickupPhone && pickupPhone.value.trim()
+            ? "\nSĐT: " + pickupPhone.value.trim()
+            : "");
+      } else if (deliveryMethod.value === "delivery") {
+        text +=
+          "Nhận hàng: Delivery Melbourne (báo giá sau khi tạo đơn)" +
+          "\nSĐT: " +
+          recipientPhone.value.trim() +
+          "\nĐịa chỉ: " +
+          shippingAddress.value.trim();
+      } else {
+        text +=
+          "Nhận hàng: AusPost (báo giá sau khi tạo đơn)" +
+          "\nTên người nhận: " +
+          recipientName.value.trim() +
+          "\nSĐT: " +
+          recipientPhone.value.trim() +
+          "\nĐịa chỉ: " +
+          shippingAddress.value.trim();
+      }
+
+      if (contactEmailValue) {
+        text += "\nEmail liên hệ: " + contactEmailValue;
+      }
+
+      text +=
+        "\nThanh toán: " + payment + "\nGhi chú: " + note;
+
+      if (payment === "PayID") {
+        text += "\n\nPayID: " + PAYID;
+      }
+
+      orderBox.textContent = text;
+      orderBox.style.display = "block";
+      orderHelp.style.display = "block";
+      copyOrderBtn.style.display = "none";
+      messengerBtn.style.display = "none";
+
+      requestAnimationFrame(function () {
+        orderBox.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      });
+
+      try {
+        await saveOrderDetails(text, customerName);
+      } catch (saveError) {
+        console.error(saveError);
+      }
+
+      await loadProducts();
+      renderFilters();
+      renderProducts("all");
+    });
+
+  copyOrderBtn.addEventListener("click", async function () {
+    try {
+      await navigator.clipboard.writeText(orderBox.textContent);
+      alert(ui("copied"));
+    } catch (error) {
+      alert(ui("copyFail"));
+    }
+  });
+
+  messengerBtn.addEventListener("click", function () {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const webUrl = "https://m.me/" + encodeURIComponent(MESSENGER_PAGE);
+
+    if (!isMobile) {
+      window.open(webUrl, "_blank");
+      return;
+    }
+
+    const appUrl = "fb-messenger://user-thread/" + encodeURIComponent(MESSENGER_PAGE_ID);
+    const started = Date.now();
+
+    window.location.href = appUrl;
+
+    setTimeout(function () {
+      if (Date.now() - started < 1800) {
+        window.location.href = webUrl;
+      }
+    }, 900);
+  });
+
+
+  window.CCT_API = {
+    getProducts: function () { return PRODUCTS; },
+    getCategories: function () { return CATEGORIES; },
+    getCart: function () { return cart; },
+    renderFilters: renderFilters,
+    renderProducts: renderProducts,
+    updateCart: updateCart,
+    syncShippingFields: syncShippingFields,
+    resetOrderReservation: resetOrderReservation,
+    loadProducts: loadProducts,
+    loadCategories: loadCategories,
+    commitStockForCurrentCart: commitStockForCurrentCart,
+    saveOrderDetails: saveOrderDetails,
+    money: money
+  };
+
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+  pickupDate.min = yyyy + "-" + mm + "-" + dd;
+
+  Promise.all([loadCategories(), loadProducts()]).then(function () {
+    renderFilters();
+    renderProducts("all");
+  });
+
+  updateCart();
+  syncShippingFields();
+  syncPaymentDetails();
+});
+</script>
+  <script>
+
+document.addEventListener("DOMContentLoaded", function () {
+  var SUPABASE_URL = "https://eswrqkhsvlqndjbrgsqo.supabase.co";
+  var SUPABASE_KEY = "sb_publishable_-6iIwPaZQRMkkWAROdfvxg_dmVB81E2";
+  var api = window.CCT_API;
+  if (!api) return;
+
+  var currentLang = localStorage.getItem("cct_lang") === "en" ? "en" : "vi";
+  window.CCT_LANG = currentLang;
+  var productTranslations = new Map();
+  var categoryTranslations = new Map();
+
+  var staticText = {
+    vi: {
+      topbar:"Hàng có sẵn • Pick up Springvale • Delivery Melbourne • AusPost từ $12",
+      subtitle:"Ăn vặt Melbourne", tagline:"Món ngon cho những ngày thêm vui ♡",
+      note:"🛒 Order dễ dàng • Cash hoặc PayID", cart:"🛒 Giỏ hàng ", drawer:"Giỏ hàng",
+      total:"Tổng", customer:"Tên khách", customerPh:"Tên của bạn", contactEmail:"Email liên hệ", fulfilment:"Nhận hàng",
+      pickupDate:"Chọn ngày pick up", pickupTime:"Chọn giờ pick up", phone:"Số điện thoại ",
+      optional:"(không bắt buộc)", phoneNote:"Chỉ bắt buộc nếu bạn chọn gửi đơn qua Email.",
+      recipient:"Tên người nhận", recipientPh:"Tên người nhận", address:"Địa chỉ nhận hàng",
+      addressPh:"Số nhà, tên đường, suburb, postcode", payment:"Thanh toán",
+      noteLabel:"Ghi chú", notePh:"Ví dụ: ít cay, gọi trước khi giao...", create:"Tạo đơn hàng",
+      copy:"", messenger:"",
+      email:"✉️ Gửi đơn hàng qua Email",
+      help:'<strong>Gửi đơn qua Email</strong><div class="send-option">Bấm nút <strong>Gửi đơn hàng qua Email</strong> bên dưới và chờ Tiệm xác nhận.</div>'
+    },
+    en: {
+      topbar:"In stock • Pick up Springvale • Melbourne delivery • AusPost from $12",
+      subtitle:"Melbourne Vietnamese Snacks", tagline:"Tasty bites for brighter days ♡",
+      note:"🛒 Easy ordering • Cash or PayID", cart:"🛒 Cart ", drawer:"Cart",
+      total:"Total", customer:"Customer name", customerPh:"Your name", contactEmail:"Contact email", fulfilment:"Fulfilment",
+      pickupDate:"Pickup date", pickupTime:"Pickup time", phone:"Phone number ", optional:"(optional)",
+      phoneNote:"Only required if you choose to send the order by Email.", recipient:"Recipient name",
+      recipientPh:"Recipient name", address:"Delivery address", addressPh:"Street, suburb, postcode",
+      payment:"Payment", noteLabel:"Note", notePh:"E.g. mild spice, call before delivery...",
+      create:"Create order", copy:"", messenger:"", email:"✉️ Send order by Email",
+      help:'<strong>Send order by Email</strong><div class="send-option">Tap <strong>Send order by Email</strong> below and wait for confirmation.</div>'
+    }
+  };
+
+  function headers(){ return {apikey:SUPABASE_KEY, Authorization:"Bearer " + SUPABASE_KEY}; }
+
+  async function loadTranslations(){
+    var rs = await Promise.all([
+      fetch(SUPABASE_URL + "/rest/v1/products?select=id,name,name_en,description,description_en,option_groups,option_groups_en&is_active=eq.true",{headers:headers()}),
+      fetch(SUPABASE_URL + "/rest/v1/product_categories?select=slug,label,label_en,is_active&is_active=eq.true",{headers:headers()})
+    ]);
+    if(!rs[0].ok || !rs[1].ok) throw new Error("translation_load_failed");
+    var ps=await rs[0].json(), cs=await rs[1].json();
+    productTranslations=new Map(ps.map(function(p){return [Number(p.id),p];}));
+    categoryTranslations=new Map(cs.map(function(c){return [c.slug,c];}));
+  }
+
+  function translateOptions(options,tr,lang){
+    if(!Array.isArray(options)||!options.length||!tr) return options||[];
+    var vi=Array.isArray(tr.option_groups)?tr.option_groups:[];
+    var en=Array.isArray(tr.option_groups_en)&&tr.option_groups_en.length?tr.option_groups_en:vi;
+    var target=lang==="en"?en:vi;
+    return options.map(function(opt,i){
+      var viG=vi[i]||{}, enG=en[i]||{}, targetG=target[i]||{};
+      var viC=Array.isArray(viG.choices)?viG.choices:[];
+      var enC=Array.isArray(enG.choices)?enG.choices:[];
+      var idx=viC.indexOf(opt.choice); if(idx<0) idx=enC.indexOf(opt.choice);
+      var targetC=lang==="en"?enC:viC;
+      return {group:targetG.name||opt.group,choice:(idx>=0&&targetC[idx])?targetC[idx]:opt.choice};
+    });
+  }
+
+  function applyProducts(){
+    api.getProducts().forEach(function(p){
+      var tr=productTranslations.get(Number(p.id)); if(!tr) return;
+      p.name=currentLang==="en"?(tr.name_en||tr.name):tr.name;
+      p.description=currentLang==="en"?(tr.description_en||tr.description||""):(tr.description||"");
+      var vi=Array.isArray(tr.option_groups)?tr.option_groups:[];
+      var en=Array.isArray(tr.option_groups_en)&&tr.option_groups_en.length?tr.option_groups_en:vi;
+      p.option_groups=currentLang==="en"?en:vi;
+    });
+    api.getCart().forEach(function(item){
+      var tr=productTranslations.get(Number(item.id)); if(!tr) return;
+      item.name=currentLang==="en"?(tr.name_en||tr.name):tr.name;
+      if(Array.isArray(item.options)&&item.options.length){
+        item.options=translateOptions(item.options,tr,currentLang);
+        item.option_text=item.options.map(function(o){return o.choice;}).join(" • ");
+        item.variant_key=item.id+"::"+item.option_text;
+      }
+    });
+  }
+
+  function labelFor(id,value,htmlMode){
+    var el=document.querySelector('label[for="'+id+'"]'); if(!el)return;
+    if(htmlMode)el.innerHTML=value;else el.textContent=value;
+  }
+
+  function applyStatic(){
+    var s=staticText[currentLang], en=currentLang==="en";
+    document.documentElement.lang=en?"en":"vi";
+    var q=function(sel){return document.querySelector(sel);};
+    if(q(".topbar"))q(".topbar").textContent=s.topbar;
+    if(q(".hero-subtitle"))q(".hero-subtitle").textContent=s.subtitle;
+    if(q(".hero-tagline"))q(".hero-tagline").textContent=s.tagline;
+    if(q(".hero-note"))q(".hero-note").textContent=s.note;
+    var sv=document.querySelectorAll(".service-value");
+    if(sv[0])sv[0].textContent="Springvale";
+    if(sv[1])sv[1].textContent="Melbourne";
+    if(sv[2])sv[2].textContent=en?"from $12":"từ $12";
+    var cartBtn=document.getElementById("openCartBtn");
+    if(cartBtn&&cartBtn.firstChild)cartBtn.firstChild.nodeValue=s.cart;
+    if(q(".drawer-head strong"))q(".drawer-head strong").textContent=s.drawer;
+    if(q(".total-row span:first-child"))q(".total-row span:first-child").textContent=s.total;
+    labelFor("customerName",s.customer);
+    var contactLabel=document.querySelector('label[for="contactEmail"]');
+    if(contactLabel) contactLabel.innerHTML=s.contactEmail+' <span class="optional-text">'+s.optional+'</span>';
+    labelFor("deliveryMethod",s.fulfilment);
+    labelFor("pickupDate",s.pickupDate); labelFor("pickupTime",s.pickupTime);
+    labelFor("pickupPhone",s.phone+'<span class="optional-text">'+s.optional+"</span>",true);
+    labelFor("recipientName",s.recipient); labelFor("recipientPhone",en?"Phone number":"Số điện thoại");
+    labelFor("shippingAddress",s.address); labelFor("customerNote",s.noteLabel);
+    if(q(".field-note"))q(".field-note").textContent=s.phoneNote;
+    if(document.getElementById("customerName"))document.getElementById("customerName").placeholder=s.customerPh;
+    if(document.getElementById("contactEmail"))document.getElementById("contactEmail").placeholder="email@example.com";
+
+    if(document.getElementById("recipientName"))document.getElementById("recipientName").placeholder=s.recipientPh;
+    if(document.getElementById("shippingAddress"))document.getElementById("shippingAddress").placeholder=s.addressPh;
+    if(document.getElementById("customerNote"))document.getElementById("customerNote").placeholder=s.notePh;
+    var pay=document.querySelector(".pay-options"); if(pay&&pay.previousElementSibling)pay.previousElementSibling.textContent=s.payment;
+    if(document.getElementById("makeOrderBtn"))document.getElementById("makeOrderBtn").textContent=s.create;
+    if(document.getElementById("copyOrderBtn"))document.getElementById("copyOrderBtn").style.display="none";
+    if(document.getElementById("messengerBtn"))document.getElementById("messengerBtn").style.display="none";
+    var emailBtn=document.getElementById("emailOrderBtn"); if(emailBtn&&!emailBtn.disabled)emailBtn.textContent=s.email;
+    if(document.getElementById("orderHelp"))document.getElementById("orderHelp").innerHTML=s.help;
+    document.querySelectorAll(".language-btn").forEach(function(btn){btn.classList.toggle("active",btn.dataset.lang===currentLang);});
+    document.querySelectorAll(".card-selected-label").forEach(function(el){el.textContent=en?"Selected":"Đã chọn";});
+    document.querySelectorAll("#filters .filter").forEach(function(btn){
+      if(btn.dataset.category==="all"){btn.textContent=en?"All":"Tất cả";return;}
+      var c=categoryTranslations.get(btn.dataset.category); if(c)btn.textContent=en?(c.label_en||c.label):c.label;
+    });
+  }
+
+  function renderAll(){
+    api.renderFilters(); api.renderProducts("all"); api.updateCart(); applyStatic();
+  }
+
+  function switchLanguage(lang){
+    currentLang=lang==="en"?"en":"vi"; window.CCT_LANG=currentLang;
+    localStorage.setItem("cct_lang",currentLang);
+    applyProducts(); renderAll();
+  }
+
+  window.CCT_setLanguage=switchLanguage;
+  document.querySelectorAll(".language-btn").forEach(function(btn){
+    btn.addEventListener("click",function(){switchLanguage(btn.dataset.lang);});
+  });
+
+  loadTranslations().then(function(){applyProducts();renderAll();}).catch(function(e){console.error(e);applyStatic();});
+});
+
+</script>
+  <script>
+document.addEventListener("DOMContentLoaded", function () {
+  const productGrid = document.getElementById("productGrid");
+  const cartCount = document.getElementById("cartCount");
+
+  if (!productGrid) return;
+
+  function getQty(productId) {
+    const cart = Array.isArray(window.CCT_CART) ? window.CCT_CART : [];
+    return cart
+      .filter(function (item) { return Number(item.id) === Number(productId); })
+      .reduce(function (sum, item) { return sum + Number(item.qty || 0); }, 0);
+  }
+
+  function restoreCard(card) {
+    const control = card.querySelector(".card-qty-control");
+    if (!control) {
+      card.classList.remove("selected");
+      return;
+    }
+
+    const plus = control.querySelector("[data-add-index]");
+    if (plus) {
+      plus.className = "add-btn";
+      plus.textContent = "+";
+      plus.removeAttribute("aria-label");
+      control.parentNode.appendChild(plus);
+    }
+
+    control.remove();
+    card.classList.remove("selected");
+  }
+
+  function decorateCards() {
+    const products = Array.isArray(window.CCT_PRODUCTS) ? window.CCT_PRODUCTS : [];
+    if (!products.length) return;
+
+    productGrid.querySelectorAll(".product-card").forEach(function (card) {
+      let plus = card.querySelector("[data-add-index]");
+      const existingControl = card.querySelector(".card-qty-control");
+
+      if (!plus && existingControl) {
+        plus = existingControl.querySelector("[data-add-index]");
+      }
+
+      if (!plus) return;
+
+      const index = Number(plus.dataset.addIndex);
+      const product = products[index];
+      if (!product) return;
+
+      const qty = getQty(product.id);
+
+      if (qty <= 0) {
+        restoreCard(card);
+        return;
+      }
+
+      card.classList.add("selected");
+
+      let control = card.querySelector(".card-qty-control");
+
+      if (!control) {
+        control = document.createElement("div");
+        control.className = "card-qty-control";
+
+        const minus = document.createElement("button");
+        minus.type = "button";
+        minus.className = "card-qty-btn";
+        minus.dataset.cardMinusId = String(product.id);
+        minus.textContent = "−";
+        minus.setAttribute("aria-label", "Giảm số lượng");
+
+        const center = document.createElement("div");
+        center.className = "card-qty-center";
+        center.innerHTML = '<span class="card-selected-label"></span><strong class="card-selected-qty"></strong>';
+
+        plus.className = "card-qty-btn";
+        plus.setAttribute("aria-label", "Tăng số lượng");
+
+        control.appendChild(minus);
+        control.appendChild(center);
+        control.appendChild(plus);
+
+        const bottom = card.querySelector(".product-bottom");
+        if (bottom) bottom.appendChild(control);
+      }
+
+      const qtyNode = control.querySelector(".card-selected-qty");
+      if (qtyNode) qtyNode.textContent = String(qty);
+      const labelNode = control.querySelector(".card-selected-label");
+      if (labelNode) labelNode.textContent = window.CCT_LANG === "en" ? "Selected" : "Đã chọn";
+    });
+  }
+
+  productGrid.addEventListener("click", function (event) {
+    const minus = event.target.closest("[data-card-minus-id]");
+    if (!minus) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const productId = Number(minus.dataset.cardMinusId);
+    const cart = Array.isArray(window.CCT_CART) ? window.CCT_CART : [];
+
+    for (let i = cart.length - 1; i >= 0; i -= 1) {
+      if (Number(cart[i].id) === productId) {
+        cart[i].qty -= 1;
+        if (cart[i].qty <= 0) cart.splice(i, 1);
+        break;
+      }
+    }
+
+    if (typeof window.CCT_resetOrderReservation === "function") {
+      window.CCT_resetOrderReservation();
+    }
+
+    if (typeof window.CCT_updateCart === "function") {
+      window.CCT_updateCart();
+    }
+
+    requestAnimationFrame(decorateCards);
+  });
+
+  const gridObserver = new MutationObserver(function () {
+    requestAnimationFrame(decorateCards);
+  });
+
+  gridObserver.observe(productGrid, {
+    childList: true,
+    subtree: true
+  });
+
+  if (cartCount) {
+    const cartObserver = new MutationObserver(function () {
+      requestAnimationFrame(decorateCards);
+    });
+
+    cartObserver.observe(cartCount, {
+      childList: true,
+      characterData: true,
+      subtree: true
+    });
+  }
+
+  requestAnimationFrame(decorateCards);
+});
+</script>
+  <script>
+document.addEventListener("DOMContentLoaded", function () {
+  const SUPABASE_URL = "https://eswrqkhsvlqndjbrgsqo.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_-6iIwPaZQRMkkWAROdfvxg_dmVB81E2";
+
+  const orderBox = document.getElementById("orderBox");
+  const successBox = document.getElementById("orderSuccess");
+  const emailBtn = document.getElementById("emailOrderBtn");
+  const deliveryMethod = document.getElementById("deliveryMethod");
+  const pickupPhone = document.getElementById("pickupPhone");
+  const recipientPhone = document.getElementById("recipientPhone");
+  const customerName = document.getElementById("customerName");
+
+  if (!orderBox || !successBox || !emailBtn) return;
+
+  function isEnglish() {
+    return window.CCT_LANG === "en";
+  }
+
+  function resetButton() {
+    successBox.style.display = "none";
+    successBox.textContent = "";
+    emailBtn.style.display = "block";
+    emailBtn.disabled = false;
+    emailBtn.textContent = isEnglish()
+      ? "✉️ Send order by Email"
+      : "✉️ Gửi đơn hàng qua Email";
+  }
+
+  const observer = new MutationObserver(function () {
+    if (!orderBox.textContent.trim() || orderBox.style.display === "none") return;
+    resetButton();
+  });
+
+  observer.observe(orderBox, { childList:true, characterData:true, subtree:true });
+
+  document.querySelectorAll(".language-btn").forEach(function (button) {
+    button.addEventListener("click", function () {
+      setTimeout(function () {
+        if (!emailBtn.disabled) {
+          emailBtn.textContent = isEnglish()
+            ? "✉️ Send order by Email"
+            : "✉️ Gửi đơn hàng qua Email";
+        }
+      }, 0);
+    });
+  });
+
+  emailBtn.addEventListener("click", async function () {
+    if (!orderBox.textContent.trim()) {
+      alert(isEnglish() ? "Please create your order first." : "Vui lòng tạo đơn hàng trước.");
+      return;
+    }
+
+    const phone = deliveryMethod.value === "pickup"
+      ? pickupPhone.value.trim()
+      : recipientPhone.value.trim();
+
+    if (!phone) {
+      alert(
+        isEnglish()
+          ? "Please enter a phone number so the shop can confirm your order."
+          : "Vui lòng nhập số điện thoại để Tiệm liên hệ xác nhận đơn qua Email."
+      );
+      (deliveryMethod.value === "pickup" ? pickupPhone : recipientPhone).focus();
+      return;
+    }
+
+    emailBtn.disabled = true;
+    emailBtn.textContent = isEnglish() ? "Sending Email..." : "Đang gửi Email...";
+
+    try {
+      const response = await fetch(
+        SUPABASE_URL + "/rest/v1/rpc/send_order_email_choice",
+        {
+          method:"POST",
+          headers:{
+            apikey:SUPABASE_KEY,
+            Authorization:"Bearer " + SUPABASE_KEY,
+            "Content-Type":"application/json"
+          },
+          body:JSON.stringify({
+            p_customer_name:customerName.value.trim(),
+            p_order_text:orderBox.textContent,
+            p_phone:phone
+          })
+        }
+      );
+
+      if (!response.ok) throw new Error(await response.text());
+
+      successBox.textContent = isEnglish()
+        ? "Your order has been sent by Email and is awaiting confirmation. The shop will contact you using the phone number you provided."
+        : "Đơn hàng của bạn đã được gửi qua Email và chờ xác nhận, tiệm sẽ liên hệ xác nhận sớm nhất thông qua số điện thoại bạn đã điền.";
+      successBox.style.display = "block";
+      emailBtn.textContent = isEnglish()
+        ? "✓ Order sent by Email"
+        : "✓ Đã gửi đơn qua Email";
+    } catch (error) {
+      console.error(error);
+      emailBtn.disabled = false;
+      emailBtn.textContent = isEnglish()
+        ? "✉️ Send order by Email"
+        : "✉️ Gửi đơn hàng qua Email";
+      alert(
+        isEnglish()
+          ? "Email could not be sent. Please try again."
+          : "Chưa gửi được Email. Vui lòng thử lại."
+      );
+    }
+  });
+});
+</script>
+</body>
+</html>
