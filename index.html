@@ -4,7 +4,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Có Cái Tiệm | Ăn Vặt Melbourne</title>
-<meta name="cct-version" content="checkout-rebuild-v1">
   <meta name="description" content="Có Cái Tiệm - ăn vặt Việt Nam tại Melbourne. Pick up Springvale, delivery Melbourne và AusPost từ $12.">
   <meta name="robots" content="index,follow">
   <style>
@@ -109,11 +108,6 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-ra
 .send-option{margin-top:10px;padding:10px 12px;border-radius:9px;background:rgba(255,255,255,.55)}
 .email-btn{display:none;background:#9b5c12}
 .email-btn:disabled{opacity:.65;cursor:not-allowed}
-#copyOrderBtn,#messengerBtn{display:none!important}
-.payid-panel{display:none;margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fffaf0}
-.payid-panel.show{display:block}
-.payid-panel-title{font-size:12px;font-weight:900;margin-bottom:8px}
-.payid-panel img{display:block;width:100%;height:auto;border-radius:10px}
 
 .product-card.selected{border-color:#e6a11c;box-shadow:0 0 0 2px rgba(242,165,27,.14)}
 .card-qty-control{display:flex;align-items:center;gap:7px;background:#fff5df;border:1px solid #f0c46b;border-radius:999px;padding:4px}
@@ -271,9 +265,6 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-ra
       <label for="customerName">Tên khách</label>
       <input id="customerName" type="text" placeholder="Tên của bạn">
 
-      <label for="contactEmail">Email liên hệ <span class="optional-text">(không bắt buộc)</span></label>
-      <input id="contactEmail" type="email" placeholder="email@example.com">
-
       <label for="deliveryMethod">Nhận hàng</label>
       <select id="deliveryMethod">
         <option value="pickup">Pick up Springvale</option>
@@ -294,10 +285,8 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-ra
       </div>
 
       <div id="shippingFields" class="shipping-fields">
-        <div id="recipientNameField">
-          <label for="recipientName">Tên người nhận</label>
-          <input id="recipientName" type="text" placeholder="Tên người nhận">
-        </div>
+        <label for="recipientName">Tên người nhận</label>
+        <input id="recipientName" type="text" placeholder="Tên người nhận">
 
         <label for="recipientPhone">Số điện thoại</label>
         <input id="recipientPhone" type="tel" placeholder="04xx xxx xxx">
@@ -319,11 +308,6 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-ra
         </label>
       </div>
 
-      <div id="payidPanel" class="payid-panel">
-        <div id="payidPanelTitle" class="payid-panel-title">Thông tin thanh toán PayID / chuyển khoản</div>
-        <img src="data:image/jpeg;base64,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" alt="Thông tin thanh toán Có Cái Tiệm">
-      </div>
-
       <label for="customerNote">Ghi chú</label>
       <textarea id="customerNote" rows="2" placeholder="Ví dụ: ít cay, gọi trước khi giao..."></textarea>
 
@@ -334,8 +318,15 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-ra
       <div id="orderSuccess" class="order-success" role="status" aria-live="polite"></div>
 
       <div id="orderHelp" class="order-help">
-        <strong>Gửi đơn qua Email</strong>
-        <div class="send-option">Bấm nút bên dưới để gửi đơn trực tiếp cho Tiệm và chờ xác nhận.</div>
+        <strong>Chọn 1 cách gửi đơn:</strong>
+        <div class="send-option">
+          <strong>1. Gửi qua Messenger</strong><br>
+          Copy đơn hàng → mở Messenger <strong>@cocaitiem.o.melbourne</strong> → Paste và Send.
+        </div>
+        <div class="send-option">
+          <strong>2. Gửi qua Email</strong><br>
+          Gửi đơn trực tiếp cho Tiệm và chờ xác nhận qua số điện thoại.
+        </div>
       </div>
 
       <button id="copyOrderBtn" class="primary-btn copy-btn" type="button">📋 Copy đơn hàng</button>
@@ -1786,119 +1777,6 @@ document.addEventListener("DOMContentLoaded", function () {
       );
     }
   });
-});
-</script>
-
-<script>
-document.addEventListener("DOMContentLoaded",function(){
-  var method=document.getElementById("deliveryMethod");
-  var customer=document.getElementById("customerName");
-  var email=document.getElementById("contactEmail");
-  var recipientField=document.getElementById("recipientNameField");
-  var recipient=document.getElementById("recipientName");
-  var note=document.getElementById("customerNote");
-  var make=document.getElementById("makeOrderBtn");
-  var box=document.getElementById("orderBox");
-  var help=document.getElementById("orderHelp");
-  var panel=document.getElementById("payidPanel");
-  var panelTitle=document.getElementById("payidPanelTitle");
-
-  function en(){return window.CCT_LANG==="en";}
-
-  function hideLegacy(){
-    var copy=document.getElementById("copyOrderBtn");
-    var msg=document.getElementById("messengerBtn");
-    if(copy) copy.style.setProperty("display","none","important");
-    if(msg) msg.style.setProperty("display","none","important");
-    if(help&&help.style.display!=="none"){
-      help.innerHTML=en()
-        ? '<strong>Send order by Email</strong><div class="send-option">Tap the button below to send your order directly to the shop and wait for confirmation.</div>'
-        : '<strong>Gửi đơn qua Email</strong><div class="send-option">Bấm nút bên dưới để gửi đơn trực tiếp cho Tiệm và chờ xác nhận.</div>';
-    }
-  }
-
-  function syncMethod(){
-    if(!method||!recipientField)return;
-    var aus=method.value==="auspost";
-    recipientField.style.display=aus?"block":"none";
-    if(method.value==="delivery"&&recipient&&customer){
-      recipient.value=customer.value.trim()||"Khách";
-    }else if(method.value==="pickup"&&recipient){
-      recipient.value="";
-    }
-  }
-
-  function syncPay(){
-    if(!panel)return;
-    var p=document.querySelector('input[name="payment"]:checked');
-    panel.classList.toggle("show",!!p&&p.value==="PayID");
-  }
-
-  function syncLanguage(){
-    var label=document.querySelector('label[for="contactEmail"]');
-    if(label) label.innerHTML=en()
-      ? 'Contact email <span class="optional-text">(optional)</span>'
-      : 'Email liên hệ <span class="optional-text">(không bắt buộc)</span>';
-    if(panelTitle) panelTitle.textContent=en()
-      ?"PayID / bank transfer details"
-      :"Thông tin thanh toán PayID / chuyển khoản";
-    hideLegacy();
-  }
-
-  if(method)method.addEventListener("change",syncMethod);
-  if(customer)customer.addEventListener("input",function(){
-    if(method&&method.value==="delivery"&&recipient)recipient.value=customer.value.trim()||"Khách";
-  });
-  document.querySelectorAll('input[name="payment"]').forEach(function(r){r.addEventListener("change",syncPay);});
-
-  if(make)make.addEventListener("click",function(e){
-    var ev=email?email.value.trim():"";
-    if(email&&ev&&!email.checkValidity()){
-      e.preventDefault();e.stopImmediatePropagation();
-      alert(en()?"Please enter a valid contact email address.":"Email liên hệ chưa đúng định dạng.");
-      email.focus();return;
-    }
-    if(method&&method.value==="delivery"&&recipient&&customer){
-      recipient.value=customer.value.trim()||"Khách";
-    }
-    if(ev&&note){
-      var old=note.value;
-      note.value=(en()?"Contact email: ":"Email liên hệ: ")+ev+" | "+(old.trim()||(en()?"None":"Không có"));
-      setTimeout(function(){note.value=old;},80);
-    }
-  },true);
-
-  if(box)new MutationObserver(function(){
-    if(!box.textContent.trim())return;
-    var lines=box.textContent.split(/\r?\n/);
-    if(method&&method.value==="delivery"){
-      lines=lines.filter(function(x){return !/^(Tên người nhận|Recipient):/i.test(x.trim());});
-    }
-    var out=[];
-    lines.forEach(function(x){
-      var m=x.match(/^(Ghi chú|Note):\s*(Email liên hệ|Contact email):\s*([^|]+)\|\s*(.*)$/i);
-      if(m){
-        out.push((en()?"Contact email: ":"Email liên hệ: ")+m[3].trim());
-        out.push((en()?"Note: ":"Ghi chú: ")+(m[4].trim()||(en()?"None":"Không có")));
-      }else out.push(x);
-    });
-    var clean=out.join("\n");
-    if(clean!==box.textContent)box.textContent=clean;
-    hideLegacy();
-  }).observe(box,{childList:true,characterData:true,subtree:true});
-
-  if(help)new MutationObserver(hideLegacy).observe(help,{childList:true,subtree:true});
-  document.querySelectorAll(".language-btn").forEach(function(b){b.addEventListener("click",function(){setTimeout(syncLanguage,20);});});
-
-  var nativeAlert=window.alert;
-  window.alert=function(m){
-    var s=String(m==null?"":m)
-      .replace("Please try again or use Messenger.","Please try again.")
-      .replace("Vui lòng thử lại hoặc gửi đơn qua Messenger.","Vui lòng thử lại.");
-    return nativeAlert.call(window,s);
-  };
-
-  syncMethod();syncPay();syncLanguage();hideLegacy();
 });
 </script>
 </body>
