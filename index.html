@@ -115,9 +115,6 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-ra
 .card-qty-center{min-width:52px;text-align:center;line-height:1.05}
 .card-qty-center strong{display:block;font-size:16px}
 .card-selected-label{display:block;font-size:9px;font-weight:800;color:#806f61;text-transform:uppercase;letter-spacing:.03em}
-.delivery-fee-status{margin-top:8px;padding:10px 12px;border-radius:9px;background:#f7f4f1;border:1px solid var(--line);font-size:12px;line-height:1.45;color:var(--muted)}
-.delivery-fee-status.matched{background:#eaf6ec;border-color:#b8dfbf;color:#235d2d}
-.delivery-fee-status.quote{background:#fff3cd;border-color:#f1d98a;color:#5c4615}
 @media(max-width:560px){
   .card-qty-control{gap:4px;padding:3px}
   .card-qty-btn{width:30px;height:30px;font-size:18px}
@@ -165,16 +162,6 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-ra
       color:#8d642f;
     }
   </style>
-  <script>
-(function(){
-  try{
-    const params=new URLSearchParams(location.hash.slice(1));
-    if(params.get("access_token")){
-      location.replace("orders-admin.html"+location.hash);
-    }
-  }catch(e){}
-})();
-  </script>
 </head>
 <body>
   <div class="topbar">Hàng có sẵn • Pick up Springvale • Delivery Melbourne • AusPost từ $12</div>
@@ -293,7 +280,6 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-ra
 
         <label for="shippingAddress">Địa chỉ nhận hàng</label>
         <textarea id="shippingAddress" rows="3" placeholder="Số nhà, tên đường, suburb, postcode"></textarea>
-        <div id="deliveryFeeStatus" class="delivery-fee-status" style="display:none"></div>
       </div>
 
       <label>Thanh toán</label>
@@ -367,11 +353,7 @@ document.addEventListener("DOMContentLoaded", function () {
       pickupRequired:"Vui lòng chọn ngày và giờ pick up.",
       shippingRequired:"Vui lòng nhập tên người nhận, số điện thoại và địa chỉ nhận hàng.",
       copied:"Đã copy đơn hàng. Tiếp theo bấm Gửi qua Messenger, dán nội dung đơn vào khung chat rồi bấm Send.",
-      copyFail:"Trình duyệt không cho copy tự động. Vui lòng chọn nội dung đơn và copy thủ công.",
-      deliveryMatched:"Phí delivery {suburb}: AUD {fee}",
-      deliveryUnknown:"Khu vực này chưa có giá delivery tự động. Tiệm sẽ báo phí sau.",
-      deliveryPrompt:"Nhập địa chỉ để xem phí delivery.",
-      auspostQuote:"Phí AusPost sẽ được báo sau."
+      copyFail:"Trình duyệt không cho copy tự động. Vui lòng chọn nội dung đơn và copy thủ công."
     };
     const en = {
       all:"All",
@@ -392,11 +374,7 @@ document.addEventListener("DOMContentLoaded", function () {
       pickupRequired:"Please choose a pickup date and time.",
       shippingRequired:"Please enter the recipient name, phone number and delivery address.",
       copied:"Order copied. Next, tap Send via Messenger, paste the order into the chat and send it.",
-      copyFail:"Your browser could not copy automatically. Please select and copy the order manually.",
-      deliveryMatched:"Delivery to {suburb}: AUD {fee}",
-      deliveryUnknown:"This area does not have an automatic delivery rate yet. The shop will quote the fee.",
-      deliveryPrompt:"Enter your address to see the delivery fee.",
-      auspostQuote:"AusPost fee will be quoted separately."
+      copyFail:"Your browser could not copy automatically. Please select and copy the order manually."
     };
     let value = (isEnglish() ? en : vi)[key] || key;
     if (arg !== undefined) value = value.replace("{n}", String(arg));
@@ -409,8 +387,6 @@ document.addEventListener("DOMContentLoaded", function () {
   window.CCT_CART = cart;
   let currentOrderToken = null;
   let currentOrderCommitted = false;
-  let DELIVERY_RATES = [];
-  let currentDeliveryRate = null;
 
   const productGrid = document.getElementById("productGrid");
   const cartCount = document.getElementById("cartCount");
@@ -427,7 +403,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const recipientName = document.getElementById("recipientName");
   const recipientPhone = document.getElementById("recipientPhone");
   const shippingAddress = document.getElementById("shippingAddress");
-  const deliveryFeeStatus = document.getElementById("deliveryFeeStatus");
   const orderBox = document.getElementById("orderBox");
   const orderHelp = document.getElementById("orderHelp");
   const copyOrderBtn = document.getElementById("copyOrderBtn");
@@ -469,110 +444,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  async function loadDeliveryRates() {
-    try {
-      const response = await fetch(
-        SUPABASE_URL + "/rest/v1/delivery_rates?select=id,zone,suburb,fee,aliases,is_active&is_active=eq.true&order=sort_order.asc,id.asc",
-        {
-          headers: {
-            apikey: SUPABASE_KEY,
-            Authorization: "Bearer " + SUPABASE_KEY
-          }
-        }
-      );
-      if (!response.ok) throw new Error("delivery_rates_load_failed");
-      DELIVERY_RATES = await response.json();
-      DELIVERY_RATES.sort(function (a, b) {
-        return String(b.suburb || "").length - String(a.suburb || "").length;
-      });
-    } catch (error) {
-      console.error(error);
-      DELIVERY_RATES = [];
-    }
-  }
-
-  function normalizePlace(value) {
-    return String(value || "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
-
-  function findDeliveryRate(address) {
-    const normalized = " " + normalizePlace(address) + " ";
-    if (!normalizePlace(address)) return null;
-
-    let best = null;
-    let bestLength = -1;
-
-    DELIVERY_RATES.forEach(function (rate) {
-      const names = [rate.suburb].concat(Array.isArray(rate.aliases) ? rate.aliases : []);
-      names.forEach(function (name) {
-        const n = normalizePlace(name);
-        if (!n) return;
-        if (normalized.includes(" " + n + " ") && n.length > bestLength) {
-          best = rate;
-          bestLength = n.length;
-        }
-      });
-    });
-
-    return best;
-  }
-
-  function updateDeliveryFeeStatus() {
-    currentDeliveryRate = null;
-
-    if (!deliveryFeeStatus) {
-      updateCart();
-      return;
-    }
-
-    deliveryFeeStatus.classList.remove("matched", "quote");
-
-    if (deliveryMethod.value === "delivery") {
-      deliveryFeeStatus.style.display = "block";
-      const address = shippingAddress.value.trim();
-
-      if (!address) {
-        deliveryFeeStatus.textContent = ui("deliveryPrompt");
-      } else {
-        const rate = findDeliveryRate(address);
-        if (rate) {
-          currentDeliveryRate = rate;
-          deliveryFeeStatus.classList.add("matched");
-          deliveryFeeStatus.textContent = ui("deliveryMatched")
-            .replace("{suburb}", rate.suburb)
-            .replace("{fee}", money(rate.fee));
-        } else {
-          deliveryFeeStatus.classList.add("quote");
-          deliveryFeeStatus.textContent = ui("deliveryUnknown");
-        }
-      }
-    } else if (deliveryMethod.value === "auspost") {
-      deliveryFeeStatus.style.display = "block";
-      deliveryFeeStatus.classList.add("quote");
-      deliveryFeeStatus.textContent = ui("auspostQuote");
-    } else {
-      deliveryFeeStatus.style.display = "none";
-      deliveryFeeStatus.textContent = "";
-    }
-
-    updateCart();
-  }
-
-  window.CCT_updateDeliveryFeeStatus = updateDeliveryFeeStatus;
-
   function renderFilters() {
     const filters = document.getElementById("filters");
     const seen = new Set();
-    const inferred = PRODUCTS.reduce(function (all, p) {
-      const list = Array.isArray(p.categories) && p.categories.length
-        ? p.categories
-        : (p.category ? [p.category] : []);
-      return all.concat(list);
-    }, []).filter(Boolean);
+    const inferred = PRODUCTS.map(function (p) { return p.category; }).filter(Boolean);
 
     const categoryList = CATEGORIES.slice();
 
@@ -618,7 +493,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const url =
         SUPABASE_URL +
         "/rest/v1/products" +
-        "?select=id,name,price,category,categories,emoji,description,image_url,sort_order,is_active,stock_qty,option_groups" +
+        "?select=id,name,price,category,emoji,description,image_url,sort_order,is_active,stock_qty,option_groups" +
         "&is_active=eq.true" +
         "&or=(stock_qty.is.null,stock_qty.gt.0)" +
         "&order=sort_order.asc,id.asc";
@@ -642,9 +517,6 @@ document.addEventListener("DOMContentLoaded", function () {
           name: p.name,
           price: Number(p.price),
           category: p.category,
-          categories: Array.isArray(p.categories) && p.categories.length
-            ? p.categories
-            : (p.category ? [p.category] : []),
           emoji: p.emoji || "🍋",
           description: p.description || "",
           image_url: p.image_url || "",
@@ -671,10 +543,7 @@ document.addEventListener("DOMContentLoaded", function () {
             );
           })
         : PRODUCTS.filter(function (product) {
-            const list = Array.isArray(product.categories) && product.categories.length
-              ? product.categories
-              : (product.category ? [product.category] : []);
-            return list.includes(category);
+            return product.category === category;
           });
 
     if (!selected.length) {
@@ -737,15 +606,8 @@ document.addEventListener("DOMContentLoaded", function () {
       return sum + item.price * item.qty;
     }, 0);
 
-    const deliveryFee =
-      deliveryMethod &&
-      deliveryMethod.value === "delivery" &&
-      currentDeliveryRate
-        ? Number(currentDeliveryRate.fee || 0)
-        : 0;
-
     cartCount.textContent = totalQty;
-    cartTotal.textContent = money(totalPrice + deliveryFee);
+    cartTotal.textContent = money(totalPrice);
 
     if (cart.length === 0) {
       cartList.innerHTML = ui("cartEmpty");
@@ -809,8 +671,6 @@ document.addEventListener("DOMContentLoaded", function () {
       pickupDate.value = "";
       pickupTime.value = "";
     }
-
-    updateDeliveryFeeStatus();
   }
 
   function resetOrderReservation() {
@@ -821,9 +681,9 @@ document.addEventListener("DOMContentLoaded", function () {
   window.CCT_updateCart = updateCart;
   window.CCT_resetOrderReservation = resetOrderReservation;
 
-  async function saveOrderDetails(orderText, customerName, details) {
+  async function saveOrderDetails(orderText, customerName) {
     const response = await fetch(
-      SUPABASE_URL + "/rest/v1/rpc/save_order_full_v1",
+      SUPABASE_URL + "/rest/v1/rpc/save_order_details",
       {
         method: "POST",
         headers: {
@@ -834,8 +694,7 @@ document.addEventListener("DOMContentLoaded", function () {
         body: JSON.stringify({
           p_order_token: currentOrderToken,
           p_customer_name: customerName,
-          p_order_text: orderText,
-          p_details: details || {}
+          p_order_text: orderText
         })
       }
     );
@@ -1087,7 +946,6 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   deliveryMethod.addEventListener("change", syncShippingFields);
-  shippingAddress.addEventListener("input", updateDeliveryFeeStatus);
 
   document
     .getElementById("makeOrderBtn")
@@ -1145,17 +1003,9 @@ document.addEventListener("DOMContentLoaded", function () {
         auspost: "AusPost"
       };
 
-      const itemTotal = cart.reduce(function (sum, item) {
+      const totalPrice = cart.reduce(function (sum, item) {
         return sum + item.price * item.qty;
       }, 0);
-
-      const deliveryFee =
-        deliveryMethod.value === "delivery" && currentDeliveryRate
-          ? Number(currentDeliveryRate.fee || 0)
-          : null;
-
-      const grandTotal =
-        deliveryFee === null ? itemTotal : itemTotal + deliveryFee;
 
       const lines = cart
         .map(function (item) {
@@ -1175,56 +1025,35 @@ document.addEventListener("DOMContentLoaded", function () {
         "\n" +
         lines +
         "\n" +
-        (isEnglish() ? "Items: $" : "Tiền món: $") +
-        money(itemTotal) +
+        "Tổng: $" +
+        money(totalPrice) +
         "\n";
 
       if (deliveryMethod.value === "pickup") {
         text +=
-          (isEnglish() ? "Total: $" : "Tổng: $") + money(itemTotal) +
-          (isEnglish() ? "\nFulfilment: Pick up Springvale" : "\nNhận hàng: Pick up Springvale") +
-          (isEnglish() ? "\nPickup date: " : "\nNgày pick up: ") +
+          "Nhận hàng: Pick up Springvale" +
+          "\nNgày pick up: " +
           pickupDate.value +
-          (isEnglish() ? "\nPickup time: " : "\nGiờ pick up: ") +
+          "\nGiờ pick up: " +
           pickupTime.value +
           (pickupPhone && pickupPhone.value.trim()
-            ? (isEnglish() ? "\nPhone: " : "\nSĐT: ") + pickupPhone.value.trim()
+            ? "\nSĐT: " + pickupPhone.value.trim()
             : "");
-      } else if (deliveryMethod.value === "delivery") {
-        if (currentDeliveryRate) {
-          text +=
-            "Delivery fee (" + currentDeliveryRate.suburb + "): $" + money(deliveryFee) +
-            (isEnglish() ? "\nTotal: $" : "\nTổng: $") + money(grandTotal);
-        } else {
-          text +=
-            (isEnglish() ? "Delivery fee: Quote required" : "Delivery fee: Chờ báo giá") +
-            (isEnglish() ? "\nSubtotal: $" : "\nTổng tạm tính: $") + money(itemTotal);
-        }
-
-        text +=
-          (isEnglish() ? "\nFulfilment: Delivery Melbourne" : "\nNhận hàng: Delivery Melbourne") +
-          (isEnglish() ? "\nRecipient: " : "\nTên người nhận: ") +
-          recipientName.value.trim() +
-          (isEnglish() ? "\nPhone: " : "\nSĐT: ") +
-          recipientPhone.value.trim() +
-          (isEnglish() ? "\nAddress: " : "\nĐịa chỉ: ") +
-          shippingAddress.value.trim();
       } else {
         text +=
-          (isEnglish() ? "AusPost fee: Quote required" : "AusPost fee: Chờ báo giá") +
-          (isEnglish() ? "\nSubtotal: $" : "\nTổng tạm tính: $") + money(itemTotal) +
-          (isEnglish() ? "\nFulfilment: AusPost" : "\nNhận hàng: AusPost") +
-          (isEnglish() ? "\nRecipient: " : "\nTên người nhận: ") +
+          "Nhận hàng: " +
+          deliveryLabels[deliveryMethod.value] +
+          " (báo giá sau khi tạo đơn)" +
+          "\nTên người nhận: " +
           recipientName.value.trim() +
-          (isEnglish() ? "\nPhone: " : "\nSĐT: ") +
+          "\nSĐT: " +
           recipientPhone.value.trim() +
-          (isEnglish() ? "\nAddress: " : "\nĐịa chỉ: ") +
+          "\nĐịa chỉ: " +
           shippingAddress.value.trim();
       }
 
       text +=
-        (isEnglish() ? "\nPayment: " : "\nThanh toán: ") + payment +
-        (isEnglish() ? "\nNote: " : "\nGhi chú: ") + note;
+        "\nThanh toán: " + payment + "\nGhi chú: " + note;
 
       if (payment === "PayID") {
         text += "\n\nPayID: " + PAYID;
@@ -1243,51 +1072,8 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       });
 
-      const orderDetails = {
-        phone:
-          deliveryMethod.value === "pickup"
-            ? (pickupPhone && pickupPhone.value.trim() ? pickupPhone.value.trim() : "")
-            : recipientPhone.value.trim(),
-        fulfilment_method: deliveryMethod.value,
-        pickup_date: deliveryMethod.value === "pickup" ? pickupDate.value : "",
-        pickup_time: deliveryMethod.value === "pickup" ? pickupTime.value : "",
-        recipient_name:
-          deliveryMethod.value === "pickup"
-            ? customerName
-            : recipientName.value.trim(),
-        shipping_address:
-          deliveryMethod.value === "pickup"
-            ? ""
-            : shippingAddress.value.trim(),
-        payment_method: payment,
-        customer_note: note,
-        subtotal: Number(itemTotal),
-        delivery_fee:
-          deliveryMethod.value === "delivery" && currentDeliveryRate
-            ? Number(deliveryFee)
-            : null,
-        total:
-          deliveryMethod.value === "pickup"
-            ? Number(itemTotal)
-            : (deliveryMethod.value === "delivery" && currentDeliveryRate
-                ? Number(grandTotal)
-                : null),
-        language: isEnglish() ? "en" : "vi",
-        order_items: cart.map(function (item) {
-          return {
-            id: item.id,
-            name: item.name,
-            qty: item.qty,
-            unit_price: Number(item.price),
-            line_total: Number(item.price * item.qty),
-            option_text: item.option_text || "",
-            options: Array.isArray(item.options) ? item.options : []
-          };
-        })
-      };
-
       try {
-        await saveOrderDetails(text, customerName, orderDetails);
+        await saveOrderDetails(text, customerName);
       } catch (saveError) {
         console.error(saveError);
       }
@@ -1350,10 +1136,9 @@ document.addEventListener("DOMContentLoaded", function () {
   const dd = String(today.getDate()).padStart(2, "0");
   pickupDate.min = yyyy + "-" + mm + "-" + dd;
 
-  Promise.all([loadCategories(), loadProducts(), loadDeliveryRates()]).then(function () {
+  Promise.all([loadCategories(), loadProducts()]).then(function () {
     renderFilters();
     renderProducts("all");
-    updateDeliveryFeeStatus();
   });
 
   updateCart();
@@ -1504,9 +1289,6 @@ document.addEventListener("DOMContentLoaded", function () {
     currentLang=lang==="en"?"en":"vi"; window.CCT_LANG=currentLang;
     localStorage.setItem("cct_lang",currentLang);
     applyProducts(); renderAll();
-    if (typeof window.CCT_updateDeliveryFeeStatus === "function") {
-      window.CCT_updateDeliveryFeeStatus();
-    }
   }
 
   window.CCT_setLanguage=switchLanguage;
