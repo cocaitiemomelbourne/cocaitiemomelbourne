@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+<title id="title">Có Cái Tiệm payment details</title>
+<desc id="desc">Bank transfer details for Có Cái Tiệm</desc>
+<defs>
+  <linearGradient id="bg" x1="0" x2="1"><stop offset="0" stop-color="#fff9db"/><stop offset="1" stop-color="#fff1c7"/></linearGradient>
+  <style>
+    .t{font-family:Arial,Helvetica,sans-serif;fill:#173c1e}.h{font-size:64px;font-weight:900}.s{font-size:32px;font-weight:800}
+    .l{font-size:34px;font-weight:800}.v{font-size:38px;font-weight:900}.n{font-size:28px}.box{fill:#ffffff;stroke:#8fb06b;stroke-width:4}
+  </style>
+</defs>
+<rect width="1200" height="800" rx="36" fill="url(#bg)"/>
+<circle cx="150" cy="150" r="105" fill="#f7a91a" stroke="#285e2d" stroke-width="10"/>
+<text x="150" y="130" text-anchor="middle" class="t h" font-size="42">CÓ</text>
+<text x="150" y="182" text-anchor="middle" class="t h" font-size="36">CÁI TIỆM</text>
+<text x="350" y="105" class="t h">CÓ CÁI TIỆM</text>
+<text x="350" y="155" class="t s">ĂN VẶT Ở MELBOURNE</text>
+<rect x="280" y="205" width="820" height="390" rx="28" class="box"/>
+<text x="330" y="285" class="t l">BSB:</text><text x="720" y="285" class="t v">772-772</text>
+<text x="330" y="370" class="t l">Account No.:</text><text x="720" y="370" class="t v">101838548</text>
+<text x="330" y="455" class="t l">Account Name:</text><text x="720" y="455" class="t v">Hoang Hai Ha</text>
+<text x="330" y="540" class="t l">Ghi chú:</text><text x="720" y="540" class="t v">Tap Hoa / An Vat / Food</text>
+<rect x="250" y="630" width="900" height="105" rx="26" fill="#fff" stroke="#efb6b6" stroke-width="4"/>
+<text x="700" y="680" text-anchor="middle" class="t n">Sau khi chuyển khoản, vui lòng gửi ảnh chụp màn hình</text>
+<text x="700" y="716" text-anchor="middle" class="t n">để tiệm xác nhận.</text>
+</svg>
