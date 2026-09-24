@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Có Cái Tiệm | Ăn Vặt Melbourne</title>
+  <meta name="cct-version" content="checkout-email-v13">
   <meta name="description" content="Có Cái Tiệm - ăn vặt Việt Nam tại Melbourne. Pick up Springvale, delivery Melbourne và AusPost từ $12.">
   <meta name="robots" content="index,follow">
   <style>
@@ -108,6 +109,10 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-ra
 .send-option{margin-top:10px;padding:10px 12px;border-radius:9px;background:rgba(255,255,255,.55)}
 .email-btn{display:none;background:#9b5c12}
 .email-btn:disabled{opacity:.65;cursor:not-allowed}
+.payid-panel{display:none;margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fffaf0}
+.payid-panel.show{display:block}
+.payid-panel-title{font-size:12px;font-weight:900;margin-bottom:8px}
+.payid-panel img{display:block;width:100%;height:auto;border-radius:10px}
 
 .product-card.selected{border-color:#e6a11c;box-shadow:0 0 0 2px rgba(242,165,27,.14)}
 .card-qty-control{display:flex;align-items:center;gap:7px;background:#fff5df;border:1px solid #f0c46b;border-radius:999px;padding:4px}
@@ -265,6 +270,9 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-ra
       <label for="customerName">Tên khách</label>
       <input id="customerName" type="text" placeholder="Tên của bạn">
 
+      <label for="contactEmail">Email liên hệ <span class="optional-text">(không bắt buộc)</span></label>
+      <input id="contactEmail" type="email" placeholder="email@example.com">
+
       <label for="deliveryMethod">Nhận hàng</label>
       <select id="deliveryMethod">
         <option value="pickup">Pick up Springvale</option>
@@ -285,8 +293,10 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-ra
       </div>
 
       <div id="shippingFields" class="shipping-fields">
-        <label for="recipientName">Tên người nhận</label>
-        <input id="recipientName" type="text" placeholder="Tên người nhận">
+        <div id="recipientNameField">
+          <label for="recipientName">Tên người nhận</label>
+          <input id="recipientName" type="text" placeholder="Tên người nhận">
+        </div>
 
         <label for="recipientPhone">Số điện thoại</label>
         <input id="recipientPhone" type="tel" placeholder="04xx xxx xxx">
@@ -308,6 +318,11 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-ra
         </label>
       </div>
 
+      <div id="payidPanel" class="payid-panel">
+        <div id="payidPanelTitle" class="payid-panel-title">Thông tin thanh toán PayID / chuyển khoản</div>
+        <img src="payid-payment-card.svg" alt="Thông tin thanh toán Có Cái Tiệm">
+      </div>
+
       <label for="customerNote">Ghi chú</label>
       <textarea id="customerNote" rows="2" placeholder="Ví dụ: ít cay, gọi trước khi giao..."></textarea>
 
@@ -318,19 +333,12 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #d8cec4;border-ra
       <div id="orderSuccess" class="order-success" role="status" aria-live="polite"></div>
 
       <div id="orderHelp" class="order-help">
-        <strong>Chọn 1 cách gửi đơn:</strong>
-        <div class="send-option">
-          <strong>1. Gửi qua Messenger</strong><br>
-          Copy đơn hàng → mở Messenger <strong>@cocaitiem.o.melbourne</strong> → Paste và Send.
-        </div>
-        <div class="send-option">
-          <strong>2. Gửi qua Email</strong><br>
-          Gửi đơn trực tiếp cho Tiệm và chờ xác nhận qua số điện thoại.
-        </div>
+        <strong>Gửi đơn qua Email</strong>
+        <div class="send-option">Bấm nút bên dưới để gửi đơn trực tiếp cho Tiệm và chờ xác nhận.</div>
       </div>
 
-      <button id="copyOrderBtn" class="primary-btn copy-btn" type="button">📋 Copy đơn hàng</button>
-      <button id="messengerBtn" class="primary-btn messenger-btn" type="button">💬 Gửi qua Messenger @cocaitiem.o.melbourne</button>
+      <button id="copyOrderBtn" class="primary-btn copy-btn" type="button" style="display:none!important">📋 Copy đơn hàng</button>
+      <button id="messengerBtn" class="primary-btn messenger-btn" type="button" style="display:none!important">💬 Messenger</button>
       <button id="emailOrderBtn" class="primary-btn email-btn" type="button">✉️ Gửi đơn hàng qua Email</button>
     </div>
   </aside>
@@ -1779,5 +1787,6 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 </script>
+  <script src="checkout-email-v13.js"></script>
 </body>
 </html>
