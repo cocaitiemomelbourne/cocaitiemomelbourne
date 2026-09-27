@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Có Cái Tiệm | Checkout Test v14</title>
+</head>
+<body>
+  <div style="font-family:Arial,sans-serif;padding:24px;text-align:center">Đang tải Có Cái Tiệm…</div>
+  <script>
+  (async function () {
+    try {
+      const response = await fetch('./checkout-v13.html?v=14-base', { cache: 'no-cache' });
+      if (!response.ok) throw new Error('Không tải được bản nền v13');
+      let html = await response.text();
+
+      // Mark this as the performance test version without changing v13 itself.
+      html = html.replace('checkout-test-v13-dom-search-safe-banners', 'checkout-test-v14-lazy-images');
+
+      // Add native lazy loading + async decode to every image tag produced from HTML/string templates.
+      html = html.replace(/<img(?![^>]*\\bloading=)/g, '<img loading="lazy" decoding="async" fetchpriority="low"');
+
+      // Featured cards create IMG nodes with document.createElement, so set their loading behaviour too.
+      html = html.replace(
+        'img.src=p.image_url;',
+        'img.loading="lazy";img.decoding="async";img.fetchPriority="low";img.src=p.image_url;'
+      );
+
+      document.open();
+      document.write(html);
+      document.close();
+    } catch (error) {
+      console.error(error);
+      document.body.innerHTML = '<div style="font-family:Arial,sans-serif;padding:24px;text-align:center"><strong>Không tải được bản test v14.</strong><br>Vui lòng thử lại sau.</div>';
+    }
+  })();
+  </script>
+</body>
+</html>
