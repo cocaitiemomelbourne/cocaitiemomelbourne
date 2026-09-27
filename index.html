@@ -3,23 +3,39 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Có Cái Tiệm | Checkout Test v17</title>
+  <title>Có Cái Tiệm | Checkout Test v19</title>
 </head>
 <body>
   <div style="font-family:Arial,sans-serif;padding:24px;text-align:center">Đang tải Có Cái Tiệm…</div>
   <script>
   (async function () {
     try {
-      const response = await fetch('./checkout-v13.html?v=17-base', { cache: 'no-cache' });
+      const response = await fetch('./checkout-v13.html?v=19-base', { cache: 'no-cache' });
       if (!response.ok) throw new Error('Không tải được bản nền v13');
       let html = await response.text();
 
-      html = html.replace('checkout-test-v13-dom-search-safe-banners', 'checkout-test-v17-full-order-lookup');
+      html = html.replace('checkout-test-v13-dom-search-safe-banners', 'checkout-test-v19-dynamic-featured');
       html = html.replace(/<img(?![^>]*\\bloading=)/g, '<img loading="lazy" decoding="async" fetchpriority="low"');
       html = html.replace(
         'img.src=p.image_url;',
         'img.loading="lazy";img.decoding="async";img.fetchPriority="low";img.src=p.image_url;'
       );
+
+      const cartLayoutStyle = `
+<style>
+@media (max-width: 560px) {
+  .cart-drawer {height:100dvh;max-height:100dvh;}
+  .drawer-head {flex:0 0 auto;}
+  .cart-list {flex:0 0 34dvh;min-height:220px;max-height:34dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 18px 14px;background:#fff;}
+  .checkout {flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 18px 28px;border-top:2px solid var(--line);background:#fff;}
+  .total-row {position:sticky;top:-14px;z-index:4;background:#fff;padding:14px 0 12px;margin-top:-14px;border-bottom:1px solid var(--line);}
+  .cart-row {padding:14px 0;}
+}
+@media (max-width: 390px) {
+  .cart-list {flex-basis:31dvh;max-height:31dvh;min-height:190px;}
+}
+</style>`;
+      html = html.replace('</head>', cartLayoutStyle + '</head>');
 
       const featuredQtyScript = `
 <script>
@@ -29,9 +45,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (!api || !featuredGrid) return;
 
   function qtyForProduct(productId) {
-    return api.getCart()
-      .filter(function (item) { return Number(item.id) === Number(productId); })
-      .reduce(function (sum, item) { return sum + Number(item.qty || 0); }, 0);
+    return api.getCart().filter(function (item) { return Number(item.id) === Number(productId); }).reduce(function (sum, item) { return sum + Number(item.qty || 0); }, 0);
   }
 
   function syncFeaturedQty() {
@@ -104,18 +118,18 @@ document.addEventListener("DOMContentLoaded", function () {
   var cartCount = document.getElementById("cartCount");
   if (cartCount) new MutationObserver(syncFeaturedQty).observe(cartCount, { childList:true, characterData:true, subtree:true });
   new MutationObserver(function () { setTimeout(syncFeaturedQty, 20); }).observe(featuredGrid, { childList:true, subtree:false });
-  setTimeout(syncFeaturedQty, 200);
+  setTimeout(syncFeaturedQty, 400);
 });
 <\/script>`;
 
-      html = html.replace('</body>', featuredQtyScript + '<script src="./order-lookup-v17.js?v=1"><\/script></body>');
+      html = html.replace('</body>', featuredQtyScript + '<script src="./featured-dynamic-v19.js?v=1"><\/script><script src="./order-lookup-v17.js?v=1"><\/script></body>');
 
       document.open();
       document.write(html);
       document.close();
     } catch (error) {
       console.error(error);
-      document.body.innerHTML = '<div style="font-family:Arial,sans-serif;padding:24px;text-align:center"><strong>Không tải được bản test v17.</strong><br>Vui lòng thử lại sau.</div>';
+      document.body.innerHTML = '<div style="font-family:Arial,sans-serif;padding:24px;text-align:center"><strong>Không tải được bản test v19.</strong><br>Vui lòng thử lại sau.</div>';
     }
   })();
   </script>
