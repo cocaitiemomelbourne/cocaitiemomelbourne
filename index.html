@@ -23,10 +23,10 @@
   <script>
   (async function () {
     try {
-      const response = await fetch('./checkout-v21.html?v=live-1', { cache: 'no-cache' });
+      const response = await fetch('./checkout-v22.html?v=live-1', { cache: 'no-cache' });
       if (!response.ok) throw new Error('Không tải được website');
       let html = await response.text();
-      html = html.replace('<title>Có Cái Tiệm | Checkout Test v21</title>', '<title>Có Cái Tiệm | Ăn Vặt Melbourne</title>');
+      html = html.replace('<title>Có Cái Tiệm | Checkout Test v22</title>', '<title>Có Cái Tiệm | Ăn Vặt Melbourne</title>');
       document.open();
       document.write(html);
       document.close();
