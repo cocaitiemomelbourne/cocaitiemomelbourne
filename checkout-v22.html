@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Có Cái Tiệm | Checkout Test v22</title>
+</head>
+<body>
+  <div style="font-family:Arial,sans-serif;padding:24px;text-align:center">Đang tải Có Cái Tiệm…</div>
+  <script>
+  (async function () {
+    try {
+      const response = await fetch('./checkout-v13.html?v=22-base', { cache: 'no-cache' });
+      if (!response.ok) throw new Error('Không tải được bản nền v13');
+      let html = await response.text();
+
+      html = html.replace('checkout-test-v13-dom-search-safe-banners', 'checkout-test-v22-reset-after-order');
+      html = html.replace(/<img(?![^>]*\bloading=)/g, '<img loading="lazy" decoding="async" fetchpriority="low"');
+      html = html.replace(
+        'img.src=p.image_url;',
+        'img.loading="lazy";img.decoding="async";img.fetchPriority="low";img.src=p.image_url;'
+      );
+
+      html = html.replace(
+        'orderBox.textContent = text;',
+        'if (window.CCT_finalizeOrderTextV21) { text = window.CCT_finalizeOrderTextV21({orderCode:orderCode,hasPreorder:hasPreorder,subtotal:totalPrice,customerName:customerName,confirmationPhone:confirmationPhone,payment:payment,note:note}); }\n      orderBox.textContent = text;'
+      );
+
+      html = html.replace(
+        'await saveOrderDetails(text, customerName);',
+        'await saveOrderDetails(text, customerName);\n        if (window.CCT_saveDeliveryPricingV21) { await window.CCT_saveDeliveryPricingV21(currentOrderToken, totalPrice); }'
+      );
+
+      const cartLayoutStyle = `
+<style>
+@media (max-width: 560px) {
+  .cart-drawer {height:100dvh;max-height:100dvh;}
+  .drawer-head {flex:0 0 auto;}
+  .cart-list {flex:0 0 34dvh;min-height:220px;max-height:34dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 18px 14px;background:#fff;}
+  .checkout {flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 18px 28px;border-top:2px solid var(--line);background:#fff;}
+  .total-row {position:sticky;top:-14px;z-index:4;background:#fff;padding:14px 0 12px;margin-top:-14px;border-bottom:1px solid var(--line);}
+  .cart-row {padding:14px 0;}
+}
+@media (max-width: 390px) {
+  .cart-list {flex-basis:31dvh;max-height:31dvh;min-height:190px;}
+}
+</style>`;
+      html = html.replace('</head>', cartLayoutStyle + '</head>');
+
+      const featuredQtyScript = `
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var api = window.CCT_API;
+  var featuredGrid = document.getElementById("featuredGrid");
+  if (!api || !featuredGrid) return;
+
+  function qtyForProduct(productId) {
+    return api.getCart().filter(function (item) { return Number(item.id) === Number(productId); }).reduce(function (sum, item) { return sum + Number(item.qty || 0); }, 0);
+  }
+
+  function syncFeaturedQty() {
+    featuredGrid.querySelectorAll(".featured-card").forEach(function (card) {
+      var addButton = card.querySelector("[data-product-id]");
+      if (!addButton) return;
+      var productId = Number(addButton.dataset.productId);
+      var qty = qtyForProduct(productId);
+      var bottom = card.querySelector(".featured-bottom");
+      if (!bottom) return;
+      var oldControl = bottom.querySelector(".featured-qty-control");
+      if (oldControl) oldControl.remove();
+      addButton.style.display = qty > 0 ? "none" : "";
+      if (qty <= 0) return;
+      var control = document.createElement("div");
+      control.className = "featured-qty-control";
+      control.style.cssText = "display:flex;align-items:center;gap:7px;background:#fff5df;border:1px solid #f0c46b;border-radius:999px;padding:4px";
+      var minus = document.createElement("button");
+      minus.type = "button";
+      minus.textContent = "−";
+      minus.dataset.featuredMinusId = String(productId);
+      minus.style.cssText = "width:32px;height:32px;border:0;border-radius:50%;background:#f2a51b;font-size:18px;font-weight:900";
+      var count = document.createElement("strong");
+      count.textContent = String(qty);
+      count.style.cssText = "min-width:24px;text-align:center;font-size:15px";
+      var plus = document.createElement("button");
+      plus.type = "button";
+      plus.textContent = "+";
+      plus.dataset.featuredPlusId = String(productId);
+      plus.style.cssText = "width:32px;height:32px;border:0;border-radius:50%;background:#f2a51b;font-size:18px;font-weight:900";
+      control.appendChild(minus);
+      control.appendChild(count);
+      control.appendChild(plus);
+      bottom.appendChild(control);
+    });
+  }
+
+  function clickMenuAdd(productId) {
+    var products = api.getProducts();
+    var index = products.findIndex(function (p) { return Number(p.id) === Number(productId); });
+    if (index < 0) return;
+    var menuAdd = document.querySelector('#productGrid [data-add-index="' + index + '"]');
+    if (menuAdd) menuAdd.click();
+  }
+
+  featuredGrid.addEventListener("click", function (event) {
+    var plus = event.target.closest("[data-featured-plus-id]");
+    if (plus) {
+      clickMenuAdd(Number(plus.dataset.featuredPlusId));
+      setTimeout(syncFeaturedQty, 80);
+      return;
+    }
+    var minus = event.target.closest("[data-featured-minus-id]");
+    if (minus) {
+      var productId = Number(minus.dataset.featuredMinusId);
+      var cart = api.getCart();
+      for (var i = cart.length - 1; i >= 0; i -= 1) {
+        if (Number(cart[i].id) === productId) {
+          cart[i].qty -= 1;
+          if (cart[i].qty <= 0) cart.splice(i, 1);
+          break;
+        }
+      }
+      api.resetOrderReservation();
+      api.updateCart();
+      syncFeaturedQty();
+    }
+  });
+
+  var cartCount = document.getElementById("cartCount");
+  if (cartCount) new MutationObserver(syncFeaturedQty).observe(cartCount, { childList:true, characterData:true, subtree:true });
+  new MutationObserver(function () { setTimeout(syncFeaturedQty, 20); }).observe(featuredGrid, { childList:true, subtree:false });
+  setTimeout(syncFeaturedQty, 400);
+});
+<\/script>`;
+
+      html = html.replace(
+        '</body>',
+        featuredQtyScript +
+        '<script src="./featured-dynamic-v19.js?v=1"><\/script>' +
+        '<script src="./i18n-v20.js?v=1"><\/script>' +
+        '<script src="./delivery-v21.js?v=1"><\/script>' +
+        '<script src="./post-order-reset-v22.js?v=1"><\/script>' +
+        '<script src="./order-lookup-v20.js?v=1"><\/script></body>'
+      );
+
+      document.open();
+      document.write(html);
+      document.close();
+    } catch (error) {
+      console.error(error);
+      document.body.innerHTML = '<div style="font-family:Arial,sans-serif;padding:24px;text-align:center"><strong>Không tải được bản test v22.</strong><br>Vui lòng thử lại sau.</div>';
+    }
+  })();
+  </script>
+</body>
+</html>
