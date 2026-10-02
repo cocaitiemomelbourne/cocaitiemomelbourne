@@ -107,15 +107,15 @@ button,input,select{font:inherit}
   .paper{box-shadow:none;margin:0;width:80mm;min-height:0;padding:4mm}
   @page{size:80mm auto;margin:0}
 }
-.paper .logo{font-size:22px}
-.paper .sub,.paper .meta,.paper .note{font-size:11px}
-.paper .section-title,.paper .footer{font-size:10px}
-.paper .items{font-size:12px}
-.paper .item-opt{font-size:10px}
-.paper .total{font-size:14px}
-.paper.kitchen .item-main{font-size:14px}
-.paper.kitchen .item-opt{font-size:12px}
-.paper.kitchen .note{font-size:13px}
+.paper .logo{font-size:24px}
+.paper .sub,.paper .meta,.paper .note{font-size:12px}
+.paper .section-title,.paper .footer{font-size:11px}
+.paper .items{font-size:13px}
+.paper .item-opt{font-size:11px}
+.paper .total{font-size:15px}
+.paper.kitchen .item-main{font-size:15px}
+.paper.kitchen .item-opt{font-size:13px}
+.paper.kitchen .note{font-size:14px}
 </style>
 </head>
 <body>
@@ -644,7 +644,7 @@ function makeReceiptCanvas(v,kitchen){
   const width=384,pad=16,usable=width-pad*2,lines=[];
   const measure=document.createElement("canvas").getContext("2d");
   function add(value,size=20,bold=false,center=false){
-    size+=2; // One font-size step larger for every receipt text style.
+    size+=4; // Two font-size steps larger for every receipt text style.
     measure.font=(bold?"bold ":"")+size+"px Arial, sans-serif";
     const paragraphs=String(value??"").split(/\r?\n/);
     for(const paragraph of paragraphs){
