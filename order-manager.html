@@ -23,8 +23,11 @@ button,input,select{font:inherit}
 .notice{margin-top:12px;padding:10px 12px;border-radius:10px;background:#fff3cd;border:1px solid #efd98f;font-size:13px;line-height:1.4}
 .top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}
 .top h1{margin:0;font-size:30px}
-.layout{display:grid;grid-template-columns:minmax(420px,1fr) 390px;gap:18px;align-items:start}
+.layout{display:block}
 .left{padding:14px}
+.selected-order-preview{display:flex;justify-content:center;margin-bottom:14px}
+.selected-order-preview .preview-card{width:100%;padding:12px}
+.selected-order-preview .paper{margin:auto}
 .toolbar{display:grid;grid-template-columns:1fr 180px;gap:8px;margin-bottom:10px}
 .orders{display:grid;gap:8px;max-height:70vh;overflow:auto;padding-right:3px}
 .order{border:1px solid var(--line);border-radius:12px;padding:11px;cursor:pointer;background:#fff}
@@ -44,6 +47,14 @@ button,input,select{font:inherit}
 .price-value{font-size:18px;font-weight:900}
 .delivery-editor{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:9px}
 .save-msg{font-size:12px;margin-top:7px;color:#4f6b42}
+.edit-items{padding:12px;margin-bottom:14px}
+.edit-items h3{margin:0 0 8px;font-size:15px}
+.edit-row{display:grid;grid-template-columns:minmax(190px,1fr) 82px minmax(150px,.8fr) auto;gap:8px;align-items:center;margin-top:8px}
+.edit-row select,.edit-row input{width:100%;padding:10px;border:1px solid #d8cec3;border-radius:10px;background:#fff}
+.edit-row .remove-item{padding:10px 12px}
+.edit-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.stock-hint{font-size:11px;color:var(--muted);margin-top:3px}
+@media(max-width:760px){.edit-row{grid-template-columns:1fr 80px}.edit-row .option-input{grid-column:1/2}.edit-row .remove-item{grid-column:2/3;grid-row:2}}
 .order-actions{padding:12px;margin-bottom:10px}
 .order-actions h3{margin:0 0 8px;font-size:15px}
 .status-editor{display:grid;grid-template-columns:1fr auto;gap:8px}
@@ -86,11 +97,11 @@ button,input,select{font:inherit}
 .kitchen .item-main{font-size:13px}
 .kitchen .item-opt{font-size:11px}
 .kitchen .note{font-size:12px;font-weight:700}
-@media(max-width:930px){.layout{grid-template-columns:1fr}.orders{max-height:none}.toolbar{grid-template-columns:1fr}.paper{margin-top:4px}.preview-card{overflow-x:auto}}
+@media(max-width:930px){.orders{max-height:none}.toolbar{grid-template-columns:1fr}.paper{margin-top:4px}.preview-card{overflow-x:auto}}
 @media(max-width:520px){.wrap{padding:10px}.price-grid{grid-template-columns:1fr 1fr}.delivery-editor{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
 @media print{
   body{background:#fff}
-  .top,.selected-controls,.stats,.left,.preview-tools,.pricing,.order-actions,.top-print,.raw{display:none!important}
+  .top,.selected-controls,.edit-items,.stats,.left,.preview-tools,.pricing,.order-actions,.top-print,.raw,#imageStatus,#imageResult{display:none!important}
   .layout{display:block}
   .preview-card{border:0;padding:0}
   .paper{box-shadow:none;margin:0;width:80mm;min-height:0;padding:4mm}
@@ -114,6 +125,7 @@ button,input,select{font:inherit}
     <div><button id="reload" class="btn alt">↻ Tải lại</button> <button id="lock" class="btn alt">Khoá</button></div>
   </div>
 
+  <div style="font-size:14px;font-weight:900;margin:4px 0 8px">ĐƠN ĐANG CHỌN — XỬ LÝ NHANH</div>
   <div class="selected-controls">
     <div class="pricing card">
       <h3>Giá đơn đang chọn</h3>
@@ -153,8 +165,88 @@ button,input,select{font:inherit}
       <select id="mode"><option value="receipt">Bill khách</option><option value="kitchen">Phiếu bếp</option></select>
       <button id="copyBtn" class="btn alt">Copy đơn</button>
       <button id="printBtn" class="btn">🖨️ Print</button>
+      <button id="imageBtn" class="btn">Lưu ảnh phiếu 58 mm</button>
     </div>
 
+    </div>
+  </div>
+
+  <div class="edit-items card">
+    <h3>Sửa món trong đơn</h3>
+    <div class="muted">Đổi món, số lượng hoặc option. Khi lưu, hệ thống tự điều chỉnh tồn kho và tính lại tổng.</div>
+    <div id="editRows"></div>
+    <div class="edit-actions">
+      <button id="addItemRow" class="btn alt">+ Thêm món</button>
+      <button id="saveItems" class="btn primary">Lưu thay đổi món</button>
+    </div>
+    <div id="editMsg" class="save-msg"></div>
+  </div>
+
+  <div style="font-size:14px;font-weight:900;margin:10px 0 8px">ĐƠN HÀNG ĐANG CHỌN</div>
+  <div class="selected-order-preview">
+    <div class="preview-card card">
+      <div id="imageStatus" class="muted" role="status"></div>
+        <div id="imageResult" class="hidden" style="margin:10px 0">
+          <div class="notice">Trên iPhone: nhấn giữ ảnh bên dưới → Lưu vào Ảnh. Sau đó mở Express Thermal Print, chọn ảnh và in khổ 58 mm.</div>
+          <img id="receiptImage" alt="Ảnh phiếu đơn 58 mm" style="display:block;width:100%;max-width:384px;height:auto;margin:10px auto;border:1px solid #ddd">
+          <button id="shareImageBtn" class="btn alt">Chia sẻ / Lưu ảnh</button>
+        </div>
+
+        <main id="paper" class="paper">
+        <div class="center">
+          <div class="logo">CÓ CÁI TIỆM</div>
+          <div class="sub">Ăn Vặt Melbourne</div>
+          <div class="sub">Pick up Springvale • Delivery • AusPost</div>
+          <div class="receipt-title">ORDER RECEIPT</div>
+        </div>
+
+        <div class="rule"></div>
+        <div class="section-title">THÔNG TIN ĐƠN</div>
+        <div class="meta">
+          <div class="row"><span>Mã đơn</span><b id="orderNumber">—</b></div>
+          <div class="row"><span>Thời gian</span><span id="createdAt">—</span></div>
+          <div class="row"><span>Khách</span><span id="customerName">—</span></div>
+          <div class="row"><span>SĐT</span><span id="phone">—</span></div>
+        </div>
+
+        <div class="rule"></div>
+        <div class="section-title">MÓN HÀNG</div>
+        <div id="items" class="items"></div>
+
+        <div class="rule"></div>
+        <div class="section-title">GIAO NHẬN</div>
+        <div class="meta">
+          <div class="row"><span>Hình thức</span><span id="fulfilment">—</span></div>
+          <div id="recipientRow" class="row"><span>Người nhận</span><span id="recipient">—</span></div>
+          <div id="pickupRow" class="row"><span>Pick up</span><span id="pickup">—</span></div>
+          <div id="addressRow" class="row"><span>Địa chỉ</span><span id="address">—</span></div>
+        </div>
+
+        <div class="rule price-only"></div>
+        <div class="price-only">
+          <div class="section-title">THANH TOÁN</div>
+          <div class="row"><span>Tiền món</span><span id="subtotal">—</span></div>
+          <div id="feeRow" class="row"><span id="feeLabel">Delivery</span><span id="deliveryFee">—</span></div>
+          <div class="row total"><span id="totalLabel">TỔNG</span><span id="total">—</span></div>
+          <div class="row payment-only"><span>Phương thức</span><b id="payment">—</b></div>
+        </div>
+
+        <div class="rule"></div>
+        <div class="section-title">GHI CHÚ</div>
+        <div class="note" id="note">—</div>
+
+        <div class="rule customer-footer"></div>
+        <div class="center footer customer-footer">
+          Cảm ơn bạn đã ủng hộ Có Cái Tiệm ♡<br>
+          Facebook & TikTok: @cocaitiem.o.melbourne<br>
+          Website: cocaitiemomelbourne.github.io/cocaitiemomelbourne
+        </div>
+      </main>
+
+      <details class="raw">
+        <summary>Xem nội dung đơn gốc</summary>
+        <pre id="rawText"></pre>
+      </details>
     </div>
   </div>
 
@@ -173,7 +265,7 @@ button,input,select{font:inherit}
         <input id="search" type="search" placeholder="Tìm mã đơn, tên khách, SĐT...">
         <select id="status">
           <option value="all">Tất cả trạng thái</option>
-          <option value="new">Mới</option>
+          <option value="new" selected>Mới</option>
           <option value="confirmed">Đã xác nhận</option>
           <option value="preparing">Đang chuẩn bị</option>
           <option value="ready">Sẵn sàng</option>
@@ -184,65 +276,7 @@ button,input,select{font:inherit}
       <div id="orders" class="orders"></div>
     </div>
 
-    <div>
-      <div class="preview-card card">
-        <main id="paper" class="paper">
-          <div class="center">
-            <div class="logo">CÓ CÁI TIỆM</div>
-            <div class="sub">Ăn Vặt Melbourne</div>
-            <div class="sub">Pick up Springvale • Delivery • AusPost</div>
-            <div class="receipt-title">ORDER RECEIPT</div>
-          </div>
 
-          <div class="rule"></div>
-          <div class="section-title">THÔNG TIN ĐƠN</div>
-          <div class="meta">
-            <div class="row"><span>Mã đơn</span><b id="orderNumber">—</b></div>
-            <div class="row"><span>Thời gian</span><span id="createdAt">—</span></div>
-            <div class="row"><span>Khách</span><span id="customerName">—</span></div>
-            <div class="row"><span>SĐT</span><span id="phone">—</span></div>
-          </div>
-
-          <div class="rule"></div>
-          <div class="section-title">MÓN HÀNG</div>
-          <div id="items" class="items"></div>
-
-          <div class="rule"></div>
-          <div class="section-title">GIAO NHẬN</div>
-          <div class="meta">
-            <div class="row"><span>Hình thức</span><span id="fulfilment">—</span></div>
-            <div id="recipientRow" class="row"><span>Người nhận</span><span id="recipient">—</span></div>
-            <div id="pickupRow" class="row"><span>Pick up</span><span id="pickup">—</span></div>
-            <div id="addressRow" class="row"><span>Địa chỉ</span><span id="address">—</span></div>
-          </div>
-
-          <div class="rule price-only"></div>
-          <div class="price-only">
-            <div class="section-title">THANH TOÁN</div>
-            <div class="row"><span>Tiền món</span><span id="subtotal">—</span></div>
-            <div id="feeRow" class="row"><span id="feeLabel">Delivery</span><span id="deliveryFee">—</span></div>
-            <div class="row total"><span id="totalLabel">TỔNG</span><span id="total">—</span></div>
-            <div class="row payment-only"><span>Phương thức</span><b id="payment">—</b></div>
-          </div>
-
-          <div class="rule"></div>
-          <div class="section-title">GHI CHÚ</div>
-          <div class="note" id="note">—</div>
-
-          <div class="rule customer-footer"></div>
-          <div class="center footer customer-footer">
-            Cảm ơn bạn đã ủng hộ Có Cái Tiệm ♡<br>
-            Facebook & TikTok: @cocaitiem.o.melbourne<br>
-            Website: cocaitiemomelbourne.github.io/cocaitiemomelbourne
-          </div>
-        </main>
-
-        <details class="raw">
-          <summary>Xem nội dung đơn gốc</summary>
-          <pre id="rawText"></pre>
-        </details>
-      </div>
-    </div>
   </div>
 </section>
 </div>
@@ -251,8 +285,8 @@ button,input,select{font:inherit}
 (function(){
 const URL="https://eswrqkhsvlqndjbrgsqo.supabase.co";
 const KEY="sb_publishable_-6iIwPaZQRMkkWAROdfvxg_dmVB81E2";
-const login=document.getElementById("login"),app=document.getElementById("app"),passcode=document.getElementById("passcode"),unlock=document.getElementById("unlock"),loginMsg=document.getElementById("loginMsg"),ordersEl=document.getElementById("orders"),search=document.getElementById("search"),status=document.getElementById("status"),paper=document.getElementById("paper"),mode=document.getElementById("mode"),deliveryEditor=document.getElementById("deliveryEditor"),deliveryInput=document.getElementById("deliveryInput"),savePrice=document.getElementById("savePrice"),saveMsg=document.getElementById("saveMsg"),orderStatus=document.getElementById("orderStatus"),saveStatus=document.getElementById("saveStatus"),statusMsg=document.getElementById("statusMsg"),copyBtn=document.getElementById("copyBtn");
-let code="",orders=[],selectedToken=null,currentView=null;
+const login=document.getElementById("login"),app=document.getElementById("app"),passcode=document.getElementById("passcode"),unlock=document.getElementById("unlock"),loginMsg=document.getElementById("loginMsg"),ordersEl=document.getElementById("orders"),search=document.getElementById("search"),status=document.getElementById("status"),paper=document.getElementById("paper"),mode=document.getElementById("mode"),deliveryEditor=document.getElementById("deliveryEditor"),deliveryInput=document.getElementById("deliveryInput"),savePrice=document.getElementById("savePrice"),saveMsg=document.getElementById("saveMsg"),orderStatus=document.getElementById("orderStatus"),saveStatus=document.getElementById("saveStatus"),statusMsg=document.getElementById("statusMsg"),copyBtn=document.getElementById("copyBtn"),editRows=document.getElementById("editRows"),addItemRow=document.getElementById("addItemRow"),saveItems=document.getElementById("saveItems"),editMsg=document.getElementById("editMsg");
+let code="",orders=[],selectedToken=null,currentView=null,productCatalog=[];
 
 const statusLabels={new:"Mới",confirmed:"Đã xác nhận",preparing:"Đang chuẩn bị",ready:"Sẵn sàng",completed:"Hoàn tất",cancelled:"Đã huỷ"};
 
@@ -268,25 +302,45 @@ function parseLegacy(o){
   const p={items:[],customer_name:"",phone:"",recipient_name:"",shipping_address:"",payment_method:"",customer_note:"",fulfilment_method:"",subtotal:null};
   if(lines.length&&!/^\d+\s*x\s+/i.test(lines[0])&&!/^(Tổng|Total|Tiền món|Items):/i.test(lines[0]))p.customer_name=lines[0];
 
-  lines.forEach(line=>{
+  const fieldLine=/^(?:Tổng|Total|Tiền món|Items|Subtotal|Nhận hàng|Fulfilment|Tên người nhận|Recipient|SĐT|Phone|Địa chỉ|Address|Thanh toán|Payment|Ghi chú|Note|PayID)\s*:/i;
+
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
     const item=line.match(/^(\d+)\s*x\s+(.+?)\s+\$([0-9]+(?:\.[0-9]+)?)$/i);
     if(item){
       const qty=Number(item[1]),name=item[2].replace(/\s+—\s+.*$/,"").trim(),optionText=item[2].includes(" — ")?item[2].split(" — ").slice(1).join(" — ").trim():"",lineTotal=Number(item[3]);
       p.items.push({qty:qty,name:name,option_text:optionText,line_total:lineTotal});
-      return;
+      continue;
     }
+
     let m;
     if((m=line.match(/^(?:Tiền món|Items|Tổng|Subtotal):\s*\$?([0-9]+(?:\.[0-9]+)?)/i))&&p.subtotal===null)p.subtotal=Number(m[1]);
+
     if((m=line.match(/^(?:Nhận hàng|Fulfilment):\s*(.+)$/i))){
       const val=m[1].toLowerCase();
       p.fulfilment_method=val.includes("delivery")?"delivery":val.includes("auspost")?"auspost":val.includes("pick")?"pickup":m[1];
+      continue;
     }
-    if((m=line.match(/^(?:Tên người nhận|Recipient):\s*(.+)$/i)))p.recipient_name=m[1];
-    if((m=line.match(/^(?:SĐT|Phone):\s*(.+)$/i)))p.phone=m[1];
-    if((m=line.match(/^(?:Địa chỉ|Address):\s*(.+)$/i)))p.shipping_address=m[1];
-    if((m=line.match(/^(?:Thanh toán|Payment):\s*(.+)$/i)))p.payment_method=m[1];
-    if((m=line.match(/^(?:Ghi chú|Note):\s*(.+)$/i)))p.customer_note=m[1];
-  });
+
+    if((m=line.match(/^(?:Tên người nhận|Recipient):\s*(.+)$/i))){p.recipient_name=m[1];continue;}
+    if((m=line.match(/^(?:SĐT|Phone):\s*(.+)$/i))){p.phone=m[1];continue;}
+
+    if((m=line.match(/^(?:Địa chỉ|Address):\s*(.*)$/i))){
+      const parts=[];
+      if(m[1].trim())parts.push(m[1].trim());
+      let j=i+1;
+      while(j<lines.length&&!fieldLine.test(lines[j])){
+        if(!/^\d+\s*x\s+/i.test(lines[j]))parts.push(lines[j]);
+        j++;
+      }
+      p.shipping_address=parts.join(", ");
+      i=j-1;
+      continue;
+    }
+
+    if((m=line.match(/^(?:Thanh toán|Payment):\s*(.+)$/i))){p.payment_method=m[1];continue;}
+    if((m=line.match(/^(?:Ghi chú|Note):\s*(.+)$/i))){p.customer_note=m[1];continue;}
+  }
 
   if(!p.subtotal&&p.items.length)p.subtotal=p.items.reduce((s,it)=>s+Number(it.line_total||0),0);
   return p;
@@ -304,7 +358,10 @@ function viewOf(o){
     customer_name:o.customer_name||legacy.customer_name||o.recipient_name||legacy.recipient_name||"",
     phone:o.phone||legacy.phone||"",
     recipient_name:o.recipient_name||legacy.recipient_name||"",
-    shipping_address:o.shipping_address||legacy.shipping_address||"",
+    shipping_address:
+      (legacy.shipping_address && legacy.shipping_address.length > String(o.shipping_address||"").length)
+        ? legacy.shipping_address
+        : (o.shipping_address||legacy.shipping_address||""),
     payment_method:o.payment_method||legacy.payment_method||"",
     customer_note:(o.customer_note&&o.customer_note!=="Không có")?o.customer_note:(legacy.customer_note||o.customer_note||""),
     fulfilment_method:fulfil,
@@ -326,6 +383,10 @@ async function rpc(name,body){
 }
 
 async function fetchOrders(){
+  if(!productCatalog.length){
+    const catalog=await rpc("get_order_editor_products_v1",{p_passcode:code});
+    productCatalog=Array.isArray(catalog)?catalog:[];
+  }
   const data=await rpc("get_print_orders_v2",{p_passcode:code,p_limit:500});
   orders=Array.isArray(data)?data:[];
   renderList();
@@ -356,8 +417,88 @@ function renderList(){
 
 function selectOrder(token){selectedToken=token;const o=orders.find(x=>x.order_token===token);if(o){renderOrder(o);renderList()}}
 
+function productByName(name){
+  const n=String(name||"").trim().toLowerCase();
+  return productCatalog.find(p=>String(p.name||"").trim().toLowerCase()===n)||null;
+}
+
+function productOptions(selectedId){
+  return productCatalog.map(p=>{
+    const stock=p.stock_qty===null||p.stock_qty===undefined?"∞":p.stock_qty;
+    return '<option value="'+esc(p.id)+'" '+(String(p.id)===String(selectedId)?'selected':'')+'>'+esc(String(p.name).trim())+' — '+esc(money(p.price))+' — stock '+esc(stock)+'</option>';
+  }).join("");
+}
+
+function addEditorRow(item){
+  item=item||{};
+  let id=item.id;
+  if(!id&&item.name){const matched=productByName(item.name);if(matched)id=matched.id;}
+  if(!id&&productCatalog.length)id=productCatalog[0].id;
+  const row=document.createElement("div");
+  row.className="edit-row";
+  row.innerHTML='<select class="product-select">'+productOptions(id)+'</select>'+
+    '<input class="qty-input" type="number" min="1" step="1" value="'+esc(item.qty||1)+'" aria-label="Số lượng">'+
+    '<input class="option-input" type="text" value="'+esc(item.option_text||"")+'" placeholder="Option / ghi chú món">'+
+    '<button type="button" class="btn alt remove-item">Xoá</button>';
+  editRows.appendChild(row);
+}
+
+function renderEditor(v){
+  editRows.innerHTML="";
+  const items=Array.isArray(v.items)?v.items:[];
+  if(items.length)items.forEach(addEditorRow);
+  else addEditorRow();
+  editMsg.textContent="";
+}
+
+function editorPayload(){
+  return Array.from(editRows.querySelectorAll(".edit-row")).map(row=>({
+    id:Number(row.querySelector(".product-select").value),
+    qty:Number(row.querySelector(".qty-input").value),
+    option_text:row.querySelector(".option-input").value.trim()
+  }));
+}
+
+function buildCopyText(v){
+  const lines=[v.customer_name||""];
+  (v.items||[]).forEach(it=>{
+    lines.push((it.qty||1)+" x "+(it.name||"Món")+(it.option_text?" — "+it.option_text:"")+" $"+Number(it.line_total||0).toFixed(2).replace(".00",""));
+  });
+  if(v.subtotal!==null)lines.push("Tiền món: "+money(v.subtotal));
+  const f=v.fulfilment_method==="delivery"?"Delivery Melbourne":v.fulfilment_method==="auspost"?"AusPost":"Pick up Springvale";
+  lines.push("Nhận hàng: "+f);
+  if(v.recipient_name)lines.push("Tên người nhận: "+v.recipient_name);
+  if(v.phone)lines.push("SĐT: "+v.phone);
+  if(v.shipping_address)lines.push("Địa chỉ: "+v.shipping_address);
+  if(v.delivery_fee!==null)lines.push((v.fulfilment_method==="auspost"?"AusPost":"Delivery")+": "+money(v.delivery_fee));
+  if(v.total!==null)lines.push("Tổng: "+money(v.total));
+  if(v.payment_method)lines.push("Thanh toán: "+v.payment_method);
+  lines.push("Ghi chú: "+(v.customer_note||"Không có"));
+  return lines.filter(Boolean).join("\n");
+}
+
+async function saveEditedItems(){
+  if(!currentView)return;
+  const payload=editorPayload();
+  if(!payload.length){editMsg.textContent="Đơn phải có ít nhất 1 món.";return}
+  if(payload.some(x=>!x.id||!Number.isInteger(x.qty)||x.qty<1)){editMsg.textContent="Kiểm tra lại món và số lượng.";return}
+  saveItems.disabled=true;saveItems.textContent="Đang lưu...";
+  try{
+    await rpc("update_order_items_v1",{p_passcode:code,p_order_token:currentView.order_token,p_items:payload});
+    editMsg.textContent="Đã cập nhật món, tồn kho và tổng đơn ✓";
+    await fetchOrders();
+  }catch(e){
+    if(String(e.message).includes("insufficient_stock"))editMsg.textContent="Không đủ tồn kho cho một trong các món mới.";
+    else if(String(e.message).includes("product_unavailable"))editMsg.textContent="Một món hiện không còn bán.";
+    else editMsg.textContent="Không lưu được thay đổi món. Vui lòng thử lại.";
+  }
+  saveItems.disabled=false;saveItems.textContent="Lưu thay đổi món";
+}
+
 function renderOrder(o){
+  clearReceiptImage();
   const v=viewOf(o);currentView=v;
+  renderEditor(v);
   orderStatus.value=v.status||"new";
   statusMsg.textContent="";
   setText("orderNumber",v.order_number);setText("createdAt",fmt(v.created_at));setText("customerName",v.customer_name);setText("phone",v.phone);
@@ -463,15 +604,125 @@ saveStatus.addEventListener("click",saveOrderStatus);
 copyBtn.addEventListener("click",async function(){
   if(!currentView)return;
   try{
-    await navigator.clipboard.writeText(currentView.raw||"");
+    await navigator.clipboard.writeText(buildCopyText(currentView));
     copyBtn.textContent="Đã copy ✓";
     setTimeout(()=>copyBtn.textContent="Copy đơn",1200);
   }catch(e){alert("Không copy được tự động.");}
 });
+addItemRow.addEventListener("click",()=>addEditorRow());
+editRows.addEventListener("click",e=>{
+  const btn=e.target.closest(".remove-item");
+  if(!btn)return;
+  const rows=editRows.querySelectorAll(".edit-row");
+  if(rows.length<=1){editMsg.textContent="Đơn phải có ít nhất 1 món.";return}
+  btn.closest(".edit-row").remove();
+});
+saveItems.addEventListener("click",saveEditedItems);
 deliveryInput.addEventListener("keydown",e=>{if(e.key==="Enter")savePricing()});
 document.getElementById("printBtn").addEventListener("click",()=>window.print());
 document.getElementById("reload").addEventListener("click",fetchOrders);
-document.getElementById("lock").addEventListener("click",()=>{sessionStorage.removeItem("cct_print_code");code="";orders=[];selectedToken=null;currentView=null;app.classList.add("hidden");login.classList.remove("hidden");passcode.value=""});
+document.getElementById("lock").addEventListener("click",()=>{clearReceiptImage();sessionStorage.removeItem("cct_print_code");code="";orders=[];selectedToken=null;currentView=null;app.classList.add("hidden");login.classList.remove("hidden");passcode.value=""});
+let receiptBlob=null,receiptUrl=null,receiptFilename="CCT-58mm.png";
+const imageBtn=document.getElementById("imageBtn"),imageStatus=document.getElementById("imageStatus"),imageResult=document.getElementById("imageResult");
+function clearReceiptImage(){
+  receiptBlob=null;
+  if(receiptUrl){URL_GLOBAL.revokeObjectURL(receiptUrl);receiptUrl=null}
+  imageResult.classList.add("hidden");document.getElementById("receiptImage").removeAttribute("src");imageStatus.textContent="";
+}
+const URL_GLOBAL=window.URL;
+function makeReceiptCanvas(v,kitchen){
+  // 384 dots is the printer's stated printable width on 58 mm paper.
+  const width=384,pad=16,usable=width-pad*2,lines=[];
+  const measure=document.createElement("canvas").getContext("2d");
+  function add(value,size=20,bold=false,center=false){
+    measure.font=(bold?"bold ":"")+size+"px Arial, sans-serif";
+    const paragraphs=String(value??"").split(/\r?\n/);
+    for(const paragraph of paragraphs){
+      let line="";
+      for(const word of paragraph.split(/\s+/).filter(Boolean)){
+        if(line&&measure.measureText(line+" "+word).width>usable){lines.push({text:line,size,bold,center});line=""}
+        // Split addresses, URLs or other tokens wider than the printable area.
+        for(const character of (line?" ":"")+word){
+          if(measure.measureText(line+character).width>usable){lines.push({text:line,size,bold,center});line=""}
+          line+=character;
+        }
+      }
+      lines.push({text:line,size,bold,center});
+    }
+  }
+  function rule(){lines.push({rule:true})}
+  add("CÓ CÁI TIỆM",28,true,true);add(kitchen?"PHIẾU BẾP":"PHIẾU ĐƠN HÀNG",22,true,true);
+  add("Ăn Vặt Melbourne",18,false,true);rule();
+  add(v.order_number,25,true);add(fmt(v.created_at),18);
+  add("Khách: "+(v.customer_name||"—"));add("SĐT: "+(v.phone||"—"));rule();
+  add("MÓN HÀNG",20,true);
+  if(!v.items.length)add("Không đọc được danh sách món. Xem nội dung đơn gốc.");
+  for(const it of v.items){
+    add((it.qty||1)+" × "+(it.name||"Món"),22,true);
+    if(it.option_text)add(it.option_text,19);
+    if(!kitchen)add("Thành tiền: "+money(it.line_total!==undefined?it.line_total:Number(it.unit_price||0)*Number(it.qty||1)),19);
+    lines.push({gap:6});
+  }
+  rule();add("GIAO NHẬN",20,true);
+  add(({pickup:"Pick up Springvale",delivery:"Delivery Melbourne",auspost:"AusPost"})[v.fulfilment_method]||v.fulfilment_method||"—");
+  if(v.recipient_name&&v.recipient_name!==v.customer_name)add("Người nhận: "+v.recipient_name);
+  if(v.pickup_date)add("Pick up: "+v.pickup_date+(v.pickup_time?" • "+String(v.pickup_time).slice(0,5):""));
+  if(v.shipping_address)add("Địa chỉ: "+v.shipping_address);
+  if(!kitchen){
+    rule();add("THANH TOÁN",20,true);add("Tiền món: "+money(v.subtotal));
+    const shipping=v.fulfilment_method==="delivery"||v.fulfilment_method==="auspost";
+    if(shipping)add((v.fulfilment_method==="auspost"?"AusPost":"Delivery")+": "+money(v.delivery_fee));
+    let total=v.total;
+    if(total===null&&v.subtotal!==null&&v.delivery_fee!==null)total=v.subtotal+v.delivery_fee;
+    if(!shipping&&v.subtotal!==null)total=v.subtotal;
+    add((shipping&&v.delivery_fee===null?"TẠM TÍNH: ":"TỔNG: ")+money(total),26,true);
+    add("Phương thức: "+(v.payment_method||"—"),19);
+  }
+  rule();add("GHI CHÚ",20,true);add(v.customer_note||"Không có",20,kitchen);
+  if(!kitchen){rule();add("Cảm ơn bạn đã ủng hộ",19,false,true);add("Có Cái Tiệm",20,true,true);add("@cocaitiem.o.melbourne",17,false,true)}
+  const height=pad*2+lines.reduce((sum,l)=>sum+(l.rule?16:l.gap||Math.ceil(l.size*1.35)),0);
+  if(height>30000)throw new Error("Phiếu quá dài. Vui lòng in từng phần.");
+  const canvas=document.createElement("canvas");canvas.width=width;canvas.height=height;
+  const ctx=canvas.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,width,height);ctx.fillStyle="#000";ctx.textBaseline="top";
+  let y=pad;
+  for(const line of lines){
+    if(line.rule){ctx.beginPath();ctx.moveTo(pad,y+8);ctx.lineTo(width-pad,y+8);ctx.strokeStyle="#000";ctx.lineWidth=1;ctx.stroke();y+=16;continue}
+    if(line.gap){y+=line.gap;continue}
+    ctx.font=(line.bold?"bold ":"")+line.size+"px Arial, sans-serif";
+    ctx.textAlign=line.center?"center":"left";ctx.fillText(line.text,line.center?width/2:pad,y);y+=Math.ceil(line.size*1.35);
+  }
+  return canvas;
+}
+imageBtn.addEventListener("click",async()=>{
+  if(!currentView){imageStatus.textContent="Vui lòng chọn một đơn hàng.";return}
+  imageBtn.disabled=true;
+  try{
+    clearReceiptImage();
+    const v=currentView,kitchen=mode.value==="kitchen";
+    const canvas=makeReceiptCanvas(v,kitchen);
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
+    if(!blob)throw new Error("Không tạo được ảnh.");
+    // Do not show a stale receipt if selection changed during image generation.
+    if(currentView!==v||mode.value!==(kitchen?"kitchen":"receipt"))return;
+    receiptBlob=blob;receiptFilename=String(v.order_number).replace(/[^a-zA-Z0-9_-]/g,"_")+(kitchen?"-bep":"")+"-58mm.png";
+    receiptUrl=URL_GLOBAL.createObjectURL(blob);
+    document.getElementById("receiptImage").src=receiptUrl;
+    imageResult.classList.remove("hidden");imageStatus.textContent="Đã tạo ảnh phiếu 58 mm. Nhấn giữ ảnh để lưu.";
+    imageResult.scrollIntoView({behavior:"smooth",block:"start"});
+  }catch(e){imageStatus.textContent=e.message||"Không tạo được ảnh. Vui lòng thử lại."}
+  finally{imageBtn.disabled=false}
+});
+document.getElementById("shareImageBtn").addEventListener("click",async()=>{
+  if(!receiptBlob)return;
+  const file=new File([receiptBlob],receiptFilename,{type:"image/png"});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title:"Phiếu đơn Có Cái Tiệm"})}
+    catch(e){if(e.name!=="AbortError")imageStatus.textContent="Chị nhấn giữ ảnh bên trên để lưu vào Ảnh nhé."}
+  }else{
+    const link=document.createElement("a");link.href=receiptUrl;link.download=receiptFilename;link.click();
+  }
+});
+mode.addEventListener("change",clearReceiptImage);
 const saved=sessionStorage.getItem("cct_print_code");if(saved){passcode.value=saved;openManager()}
 })();
 </script>
