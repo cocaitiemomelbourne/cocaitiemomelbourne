@@ -92,7 +92,7 @@ button,input,select{font:inherit}
 .note{font-size:10px;white-space:pre-wrap}
 .footer{font-size:9px;line-height:1.45;margin-top:8px}
 .kitchen .price-only,.kitchen .payment-only,.kitchen .customer-footer{display:none!important}
-.kitchen .logo:after{content:" • KITCHEN"}
+.kitchen .logo:after{content:""}
 .kitchen .receipt-title{display:none}
 .kitchen .item-main{font-size:13px}
 .kitchen .item-opt{font-size:11px}
@@ -107,6 +107,15 @@ button,input,select{font:inherit}
   .paper{box-shadow:none;margin:0;width:80mm;min-height:0;padding:4mm}
   @page{size:80mm auto;margin:0}
 }
+.paper .logo{font-size:22px}
+.paper .sub,.paper .meta,.paper .note{font-size:11px}
+.paper .section-title,.paper .footer{font-size:10px}
+.paper .items{font-size:12px}
+.paper .item-opt{font-size:10px}
+.paper .total{font-size:14px}
+.paper.kitchen .item-main{font-size:14px}
+.paper.kitchen .item-opt{font-size:12px}
+.paper.kitchen .note{font-size:13px}
 </style>
 </head>
 <body>
@@ -197,7 +206,7 @@ button,input,select{font:inherit}
           <div class="logo">CÓ CÁI TIỆM</div>
           <div class="sub">Ăn Vặt Melbourne</div>
           <div class="sub">Pick up Springvale • Delivery • AusPost</div>
-          <div class="receipt-title">ORDER RECEIPT</div>
+          
         </div>
 
         <div class="rule"></div>
@@ -635,6 +644,7 @@ function makeReceiptCanvas(v,kitchen){
   const width=384,pad=16,usable=width-pad*2,lines=[];
   const measure=document.createElement("canvas").getContext("2d");
   function add(value,size=20,bold=false,center=false){
+    size+=2; // One font-size step larger for every receipt text style.
     measure.font=(bold?"bold ":"")+size+"px Arial, sans-serif";
     const paragraphs=String(value??"").split(/\r?\n/);
     for(const paragraph of paragraphs){
@@ -651,7 +661,7 @@ function makeReceiptCanvas(v,kitchen){
     }
   }
   function rule(){lines.push({rule:true})}
-  add("CÓ CÁI TIỆM",28,true,true);add(kitchen?"PHIẾU BẾP":"PHIẾU ĐƠN HÀNG",22,true,true);
+  add("CÓ CÁI TIỆM",28,true,true);
   add("Ăn Vặt Melbourne",18,false,true);rule();
   add(v.order_number,25,true);add(fmt(v.created_at),18);
   add("Khách: "+(v.customer_name||"—"));add("SĐT: "+(v.phone||"—"));rule();
@@ -686,11 +696,20 @@ function makeReceiptCanvas(v,kitchen){
   const ctx=canvas.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,width,height);ctx.fillStyle="#000";ctx.textBaseline="top";
   let y=pad;
   for(const line of lines){
-    if(line.rule){ctx.beginPath();ctx.moveTo(pad,y+8);ctx.lineTo(width-pad,y+8);ctx.strokeStyle="#000";ctx.lineWidth=1;ctx.stroke();y+=16;continue}
+    if(line.rule){ctx.fillRect(pad,y+8,usable,1);y+=16;continue}
     if(line.gap){y+=line.gap;continue}
     ctx.font=(line.bold?"bold ":"")+line.size+"px Arial, sans-serif";
     ctx.textAlign=line.center?"center":"left";ctx.fillText(line.text,line.center?width/2:pad,y);y+=Math.ceil(line.size*1.35);
   }
+  // Remove grey antialiasing pixels before the print app processes the image.
+  // Keep the native 384-dot width; enlarging then shrinking softens small letters.
+  const pixels=ctx.getImageData(0,0,width,height);
+  for(let i=0;i<pixels.data.length;i+=4){
+    const value=pixels.data[i]<160?0:255;
+    pixels.data[i]=pixels.data[i+1]=pixels.data[i+2]=value;
+    pixels.data[i+3]=255;
+  }
+  ctx.putImageData(pixels,0,0);
   return canvas;
 }
 imageBtn.addEventListener("click",async()=>{
