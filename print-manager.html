@@ -75,7 +75,7 @@ button,input,select{font:inherit}
 @media(max-width:520px){.wrap{padding:10px}.price-grid{grid-template-columns:1fr 1fr}.delivery-editor{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
 @media print{
   body{background:#fff}
-  .top,.left,.preview-tools,.pricing,.raw{display:none!important}
+  .top,.left,.preview-tools,.pricing,.raw,#imageStatus,#imageResult{display:none!important}
   .layout{display:block}
   .preview-card{border:0;padding:0}
   .paper{box-shadow:none;margin:0;width:80mm;min-height:0;padding:4mm}
@@ -137,6 +137,13 @@ button,input,select{font:inherit}
         <div class="preview-tools">
           <select id="mode"><option value="receipt">Bill khách</option><option value="kitchen">Phiếu bếp</option></select>
           <button id="printBtn" class="btn">🖨️ Print</button>
+          <button id="imageBtn" class="btn">Lưu ảnh phiếu 58 mm</button>
+        </div>
+        <div id="imageStatus" class="muted" role="status"></div>
+        <div id="imageResult" class="hidden" style="margin:10px 0">
+          <div class="notice">Trên iPhone: nhấn giữ ảnh bên dưới → Lưu vào Ảnh. Sau đó mở Express Thermal Print, chọn ảnh và in khổ 58 mm.</div>
+          <img id="receiptImage" alt="Ảnh phiếu đơn 58 mm" style="display:block;width:100%;max-width:384px;height:auto;margin:10px auto;border:1px solid #ddd">
+          <button id="shareImageBtn" class="btn alt">Chia sẻ / Lưu ảnh</button>
         </div>
 
         <main id="paper" class="paper">
@@ -303,6 +310,7 @@ function renderList(){
 function selectOrder(token){selectedToken=token;const o=orders.find(x=>x.order_token===token);if(o){renderOrder(o);renderList()}}
 
 function renderOrder(o){
+  clearReceiptImage();
   const v=viewOf(o);currentView=v;
   setText("orderNumber",v.order_number);setText("createdAt",fmt(v.created_at));setText("customerName",v.customer_name);setText("phone",v.phone);
   const fulfilLabels={pickup:"Pick up Springvale",delivery:"Delivery Melbourne",auspost:"AusPost"};
@@ -393,7 +401,109 @@ savePrice.addEventListener("click",savePricing);
 deliveryInput.addEventListener("keydown",e=>{if(e.key==="Enter")savePricing()});
 document.getElementById("printBtn").addEventListener("click",()=>window.print());
 document.getElementById("reload").addEventListener("click",fetchOrders);
-document.getElementById("lock").addEventListener("click",()=>{sessionStorage.removeItem("cct_print_code");code="";orders=[];selectedToken=null;currentView=null;app.classList.add("hidden");login.classList.remove("hidden");passcode.value=""});
+document.getElementById("lock").addEventListener("click",()=>{clearReceiptImage();sessionStorage.removeItem("cct_print_code");code="";orders=[];selectedToken=null;currentView=null;app.classList.add("hidden");login.classList.remove("hidden");passcode.value=""});
+
+let receiptBlob=null,receiptUrl=null,receiptFilename="CCT-58mm.png";
+const imageBtn=document.getElementById("imageBtn"),imageStatus=document.getElementById("imageStatus"),imageResult=document.getElementById("imageResult");
+function clearReceiptImage(){
+  receiptBlob=null;
+  if(receiptUrl){URL_GLOBAL.revokeObjectURL(receiptUrl);receiptUrl=null}
+  imageResult.classList.add("hidden");document.getElementById("receiptImage").removeAttribute("src");imageStatus.textContent="";
+}
+const URL_GLOBAL=window.URL;
+function makeReceiptCanvas(v,kitchen){
+  // 384 dots is the printer's stated printable width on 58 mm paper.
+  const width=384,pad=16,usable=width-pad*2,lines=[];
+  const measure=document.createElement("canvas").getContext("2d");
+  function add(value,size=20,bold=false,center=false){
+    measure.font=(bold?"bold ":"")+size+"px Arial, sans-serif";
+    const paragraphs=String(value??"").split(/\r?\n/);
+    for(const paragraph of paragraphs){
+      let line="";
+      for(const word of paragraph.split(/\s+/).filter(Boolean)){
+        if(line&&measure.measureText(line+" "+word).width>usable){lines.push({text:line,size,bold,center});line=""}
+        // Split addresses, URLs or other tokens wider than the printable area.
+        for(const character of (line?" ":"")+word){
+          if(measure.measureText(line+character).width>usable){lines.push({text:line,size,bold,center});line=""}
+          line+=character;
+        }
+      }
+      lines.push({text:line,size,bold,center});
+    }
+  }
+  function rule(){lines.push({rule:true})}
+  add("CÓ CÁI TIỆM",28,true,true);add(kitchen?"PHIẾU BẾP":"PHIẾU ĐƠN HÀNG",22,true,true);
+  add("Ăn Vặt Melbourne",18,false,true);rule();
+  add(v.order_number,25,true);add(fmt(v.created_at),18);
+  add("Khách: "+(v.customer_name||"—"));add("SĐT: "+(v.phone||"—"));rule();
+  add("MÓN HÀNG",20,true);
+  if(!v.items.length)add("Không đọc được danh sách món. Xem nội dung đơn gốc.");
+  for(const it of v.items){
+    add((it.qty||1)+" × "+(it.name||"Món"),22,true);
+    if(it.option_text)add(it.option_text,19);
+    if(!kitchen)add("Thành tiền: "+money(it.line_total!==undefined?it.line_total:Number(it.unit_price||0)*Number(it.qty||1)),19);
+    lines.push({gap:6});
+  }
+  rule();add("GIAO NHẬN",20,true);
+  add(({pickup:"Pick up Springvale",delivery:"Delivery Melbourne",auspost:"AusPost"})[v.fulfilment_method]||v.fulfilment_method||"—");
+  if(v.recipient_name&&v.recipient_name!==v.customer_name)add("Người nhận: "+v.recipient_name);
+  if(v.pickup_date)add("Pick up: "+v.pickup_date+(v.pickup_time?" • "+String(v.pickup_time).slice(0,5):""));
+  if(v.shipping_address)add("Địa chỉ: "+v.shipping_address);
+  if(!kitchen){
+    rule();add("THANH TOÁN",20,true);add("Tiền món: "+money(v.subtotal));
+    const shipping=v.fulfilment_method==="delivery"||v.fulfilment_method==="auspost";
+    if(shipping)add((v.fulfilment_method==="auspost"?"AusPost":"Delivery")+": "+money(v.delivery_fee));
+    let total=v.total;
+    if(total===null&&v.subtotal!==null&&v.delivery_fee!==null)total=v.subtotal+v.delivery_fee;
+    if(!shipping&&v.subtotal!==null)total=v.subtotal;
+    add((shipping&&v.delivery_fee===null?"TẠM TÍNH: ":"TỔNG: ")+money(total),26,true);
+    add("Phương thức: "+(v.payment_method||"—"),19);
+  }
+  rule();add("GHI CHÚ",20,true);add(v.customer_note||"Không có",20,kitchen);
+  if(!kitchen){rule();add("Cảm ơn bạn đã ủng hộ",19,false,true);add("Có Cái Tiệm",20,true,true);add("@cocaitiem.o.melbourne",17,false,true)}
+  const height=pad*2+lines.reduce((sum,l)=>sum+(l.rule?16:l.gap||Math.ceil(l.size*1.35)),0);
+  if(height>30000)throw new Error("Phiếu quá dài. Vui lòng in từng phần.");
+  const canvas=document.createElement("canvas");canvas.width=width;canvas.height=height;
+  const ctx=canvas.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,width,height);ctx.fillStyle="#000";ctx.textBaseline="top";
+  let y=pad;
+  for(const line of lines){
+    if(line.rule){ctx.beginPath();ctx.moveTo(pad,y+8);ctx.lineTo(width-pad,y+8);ctx.strokeStyle="#000";ctx.lineWidth=1;ctx.stroke();y+=16;continue}
+    if(line.gap){y+=line.gap;continue}
+    ctx.font=(line.bold?"bold ":"")+line.size+"px Arial, sans-serif";
+    ctx.textAlign=line.center?"center":"left";ctx.fillText(line.text,line.center?width/2:pad,y);y+=Math.ceil(line.size*1.35);
+  }
+  return canvas;
+}
+imageBtn.addEventListener("click",async()=>{
+  if(!currentView){imageStatus.textContent="Vui lòng chọn một đơn hàng.";return}
+  imageBtn.disabled=true;
+  try{
+    clearReceiptImage();
+    const v=currentView,kitchen=mode.value==="kitchen";
+    const canvas=makeReceiptCanvas(v,kitchen);
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
+    if(!blob)throw new Error("Không tạo được ảnh.");
+    // Do not show a stale receipt if selection changed during image generation.
+    if(currentView!==v||mode.value!==(kitchen?"kitchen":"receipt"))return;
+    receiptBlob=blob;receiptFilename=String(v.order_number).replace(/[^a-zA-Z0-9_-]/g,"_")+(kitchen?"-bep":"")+"-58mm.png";
+    receiptUrl=URL_GLOBAL.createObjectURL(blob);
+    document.getElementById("receiptImage").src=receiptUrl;
+    imageResult.classList.remove("hidden");imageStatus.textContent="Đã tạo ảnh phiếu 58 mm. Nhấn giữ ảnh để lưu.";
+    imageResult.scrollIntoView({behavior:"smooth",block:"start"});
+  }catch(e){imageStatus.textContent=e.message||"Không tạo được ảnh. Vui lòng thử lại."}
+  finally{imageBtn.disabled=false}
+});
+document.getElementById("shareImageBtn").addEventListener("click",async()=>{
+  if(!receiptBlob)return;
+  const file=new File([receiptBlob],receiptFilename,{type:"image/png"});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title:"Phiếu đơn Có Cái Tiệm"})}
+    catch(e){if(e.name!=="AbortError")imageStatus.textContent="Chị nhấn giữ ảnh bên trên để lưu vào Ảnh nhé."}
+  }else{
+    const link=document.createElement("a");link.href=receiptUrl;link.download=receiptFilename;link.click();
+  }
+});
+mode.addEventListener("change",clearReceiptImage);
 const saved=sessionStorage.getItem("cct_print_code");if(saved){passcode.value=saved;openManager()}
 })();
 </script>
