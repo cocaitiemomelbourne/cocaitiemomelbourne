@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Có Cái Tiệm | Ăn Vặt Melbourne</title>
   <meta name="description" content="Có Cái Tiệm - ăn vặt Việt Nam tại Melbourne. Pick up Springvale, Delivery Melbourne và AusPost.">
   <meta name="robots" content="index,follow">
@@ -23,16 +26,34 @@
   <script>
   (async function () {
     try {
-      const response = await fetch('./checkout-v22.html?v=live-1', { cache: 'no-cache' });
-      if (!response.ok) throw new Error('Không tải được website');
-      let html = await response.text();
-      html = html.replace('<title>Có Cái Tiệm | Checkout Test v22</title>', '<title>Có Cái Tiệm | Ăn Vặt Melbourne</title>');
+      const stamp = Date.now();
+      const versionResponse = await fetch('./current-version.json?t=' + stamp, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' }
+      });
+      if (!versionResponse.ok) throw new Error('Không tải được phiên bản hiện tại');
+
+      const manifest = await versionResponse.json();
+      if (!manifest || !manifest.checkout || !/^checkout-v\d+\.html$/.test(manifest.checkout)) {
+        throw new Error('Phiên bản website không hợp lệ');
+      }
+
+      const cacheBuster = encodeURIComponent(manifest.cache_buster || manifest.version || stamp);
+      const checkoutResponse = await fetch('./' + manifest.checkout + '?live=' + cacheBuster + '&t=' + Date.now(), {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' }
+      });
+      if (!checkoutResponse.ok) throw new Error('Không tải được website');
+
+      let html = await checkoutResponse.text();
+      html = html.replace(/<title>[\s\S]*?<\/title>/i, '<title>Có Cái Tiệm | Ăn Vặt Melbourne</title>');
+
       document.open();
       document.write(html);
       document.close();
     } catch (error) {
       console.error(error);
-      document.body.innerHTML = '<div style="font-family:Arial,sans-serif;padding:24px;text-align:center"><strong>Không tải được Có Cái Tiệm.</strong><br>Vui lòng thử lại sau.</div>';
+      document.body.innerHTML = '<div style="font-family:Arial,sans-serif;padding:24px;text-align:center"><strong>Không tải được Có Cái Tiệm.</strong><br>Vui lòng thử tải lại trang.</div>';
     }
   })();
   </script>
