@@ -116,6 +116,14 @@ button,input,select{font:inherit}
 .paper.kitchen .item-main{font-size:15px}
 .paper.kitchen .item-opt{font-size:13px}
 .paper.kitchen .note{font-size:14px}
+.custom-row{grid-template-columns:minmax(160px,1fr) 80px 120px minmax(140px,1fr) auto;background:#fff9ed;border:1px dashed #c99b49;border-radius:10px;padding:10px}
+.custom-label{grid-column:1/-1;font-size:12px;font-weight:bold;color:#76541c}
+@media(max-width:760px){
+  .custom-row{grid-template-columns:1fr 80px}
+  .custom-row .custom-price{grid-column:1/2}
+  .custom-row .option-input{grid-column:1/-1}
+  .custom-row .remove-item{grid-column:2/3;grid-row:3}
+}
 </style>
 </head>
 <body>
@@ -182,10 +190,11 @@ button,input,select{font:inherit}
 
   <div class="edit-items card">
     <h3>Sửa món trong đơn</h3>
-    <div class="muted">Đổi món, số lượng hoặc option. Khi lưu, hệ thống tự điều chỉnh tồn kho và tính lại tổng.</div>
+    <div class="muted">Món trong menu tự điều chỉnh tồn kho. Món ngoài menu chỉ lưu trong đơn này, không thêm vào menu chính hoặc trừ tồn kho.</div>
     <div id="editRows"></div>
     <div class="edit-actions">
-      <button id="addItemRow" class="btn alt">+ Thêm món</button>
+      <button id="addItemRow" class="btn alt">+ Thêm món trong menu</button>
+      <button id="addCustomItemRow" class="btn alt">+ Thêm món ngoài menu</button>
       <button id="saveItems" class="btn primary">Lưu thay đổi món</button>
     </div>
     <div id="editMsg" class="save-msg"></div>
@@ -440,6 +449,7 @@ function productOptions(selectedId){
 
 function addEditorRow(item){
   item=item||{};
+  if(item.is_custom===true){addCustomEditorRow(item);return}
   let id=item.id;
   if(!id&&item.name){const matched=productByName(item.name);if(matched)id=matched.id;}
   if(!id&&productCatalog.length)id=productCatalog[0].id;
@@ -460,12 +470,30 @@ function renderEditor(v){
   editMsg.textContent="";
 }
 
+function addCustomEditorRow(item){
+  item=item||{};
+  const row=document.createElement("div");
+  row.className="edit-row custom-row";
+  row.dataset.custom="true";
+  row.innerHTML='<div class="custom-label">Món ngoài menu • không trừ tồn kho</div>'+
+    '<input class="custom-name" type="text" maxlength="200" value="'+esc(item.name||"")+'" placeholder="Tên món" aria-label="Tên món ngoài menu">'+
+    '<input class="qty-input" type="number" min="1" max="99999" step="1" value="'+esc(item.qty||1)+'" aria-label="Số lượng">'+
+    '<input class="custom-price" type="number" min="0" max="1000000" step="0.01" value="'+esc(item.unit_price??"")+'" placeholder="Đơn giá AUD" aria-label="Đơn giá AUD">'+
+    '<input class="option-input" type="text" maxlength="500" value="'+esc(item.option_text||"")+'" placeholder="Tuỳ chọn / ghi chú món">'+
+    '<button type="button" class="btn alt remove-item">Xoá</button>';
+  editRows.appendChild(row);
+}
 function editorPayload(){
-  return Array.from(editRows.querySelectorAll(".edit-row")).map(row=>({
-    id:Number(row.querySelector(".product-select").value),
-    qty:Number(row.querySelector(".qty-input").value),
-    option_text:row.querySelector(".option-input").value.trim()
-  }));
+  return Array.from(editRows.querySelectorAll(".edit-row")).map(row=>{
+    const qty=Number(row.querySelector(".qty-input").value);
+    const option_text=row.querySelector(".option-input").value.trim();
+    if(row.dataset.custom==="true"){
+      const price=row.querySelector(".custom-price").value.trim();
+      return {is_custom:true,name:row.querySelector(".custom-name").value.trim(),qty,
+        unit_price:price===""?null:Number(price),option_text};
+    }
+    return {id:Number(row.querySelector(".product-select").value),qty,option_text};
+  });
 }
 
 function buildCopyText(v){
@@ -490,14 +518,16 @@ async function saveEditedItems(){
   if(!currentView)return;
   const payload=editorPayload();
   if(!payload.length){editMsg.textContent="Đơn phải có ít nhất 1 món.";return}
-  if(payload.some(x=>!x.id||!Number.isInteger(x.qty)||x.qty<1)){editMsg.textContent="Kiểm tra lại món và số lượng.";return}
+  if(payload.some(x=>!Number.isInteger(x.qty)||x.qty<1||x.qty>99999||(!x.is_custom&&!x.id))){editMsg.textContent="Kiểm tra lại món và số lượng (1–99999).";return}
+  if(payload.some(x=>x.is_custom&&(!x.name||x.name.length>200||x.unit_price===null||!Number.isFinite(x.unit_price)||x.unit_price<0||x.unit_price>1000000||Math.abs(x.unit_price*100-Math.round(x.unit_price*100))>0.000001))){editMsg.textContent="Món ngoài menu cần tên và đơn giá hợp lệ, tối đa 2 chữ số thập phân.";return}
   saveItems.disabled=true;saveItems.textContent="Đang lưu...";
   try{
     await rpc("update_order_items_v1",{p_passcode:code,p_order_token:currentView.order_token,p_items:payload});
-    editMsg.textContent="Đã cập nhật món, tồn kho và tổng đơn ✓";
     await fetchOrders();
+    editMsg.textContent="Đã lưu món và tính lại tổng đơn ✓";
   }catch(e){
-    if(String(e.message).includes("insufficient_stock"))editMsg.textContent="Không đủ tồn kho cho một trong các món mới.";
+    if(String(e.message).includes("invalid_custom_item"))editMsg.textContent="Kiểm tra lại tên, số lượng và đơn giá món ngoài menu.";
+    else if(String(e.message).includes("insufficient_stock"))editMsg.textContent="Không đủ tồn kho cho một trong các món mới.";
     else if(String(e.message).includes("product_unavailable"))editMsg.textContent="Một món hiện không còn bán.";
     else editMsg.textContent="Không lưu được thay đổi món. Vui lòng thử lại.";
   }
@@ -619,6 +649,7 @@ copyBtn.addEventListener("click",async function(){
   }catch(e){alert("Không copy được tự động.");}
 });
 addItemRow.addEventListener("click",()=>addEditorRow());
+document.getElementById("addCustomItemRow").addEventListener("click",()=>{if(currentView)addCustomEditorRow()});
 editRows.addEventListener("click",e=>{
   const btn=e.target.closest(".remove-item");
   if(!btn)return;
