@@ -20,13 +20,17 @@ document.addEventListener("DOMContentLoaded", function () {
     if(value==="auspost") return "AusPost";
     return v||"";
   }
-  function legacyText(text){
+  function legacyText(text,data){
+    var shipping=data.fulfilment_method==="delivery"||data.fulfilment_method==="auspost";
+    var pending=shipping&&data.delivery_fee==null;
+    var amount=data.subtotal==null?data.total:Number(data.subtotal)+(shipping&&!pending?Number(data.delivery_fee):0);
+    text=String(text||"").replace(/^(?:Tạm tính|Subtotal|Items subtotal):/gm,"Tiền món:").replace(/^(?:Tổng|Total|Provisional total):.*$/gm,function(line){return amount==null?line.replace(/^[^:]+:/,pending?"Tạm tính:":"Tổng:"):(pending?"Tạm tính: ":"Tổng: ")+money(amount);});
     if(!isEn()) return text||"";
     var out=String(text||"");
     var pairs=[
       [/Tên khách:/g,"Customer:"],[/SĐT:/g,"Phone:"],[/Nhận hàng:/g,"Fulfilment:"],[/Ngày:/g,"Date:"],[/Giờ:/g,"Time:"],
       [/Tên người nhận:/g,"Recipient:"],[/Địa chỉ:/g,"Address:"],[/Thanh toán:/g,"Payment:"],[/Ghi chú:/g,"Note:"],
-      [/Tổng:/g,"Total:"],[/báo giá sau khi tạo đơn/g,"quote after order"]
+      [/Tổng:/g,"Total:"],[/Tạm tính:/g,"Provisional total:"],[/Tiền món:/g,"Items subtotal:"],[/báo giá sau khi tạo đơn/g,"quote after order"]
     ];
     pairs.forEach(function(p){out=out.replace(p[0],p[1]);});
     return out;
@@ -55,6 +59,10 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function render(data){
+    if(!data.fulfilment_method){
+      var match=String(data.order_text||"").match(/^(?:Nhận hàng|Fulfilment):\s*(.*)$/mi);
+      if(match){var method=match[1].toLowerCase();data.fulfilment_method=method.indexOf("auspost")>=0?"auspost":method.indexOf("delivery")>=0?"delivery":method.indexOf("pick")>=0?"pickup":"";}
+    }
     var locale=isEn()?"en-AU":"vi-VN";
     var created=data.created_at?new Date(data.created_at).toLocaleString(locale):"";
     var html='<div style="background:#eef8ef;border:1px solid #cfe5d2;border-radius:16px;padding:16px;color:#2f241b">'
@@ -79,14 +87,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if(data.subtotal!=null||data.delivery_fee!=null||data.total!=null){
       html+='<div style="margin-top:14px;background:#fff;border-radius:12px;padding:8px 12px">';
-      if(data.subtotal!=null) html+=row(isEn()?"Subtotal":"Tạm tính",money(data.subtotal));
-      if(data.delivery_fee!=null) html+=row(isEn()?"Delivery fee":"Phí giao hàng",money(data.delivery_fee));
-      if(data.total!=null) html+=row(isEn()?"Total":"Tổng",money(data.total));
+      var shipping=data.fulfilment_method==="delivery"||data.fulfilment_method==="auspost";
+      var pending=shipping&&data.delivery_fee==null;
+      var amount=data.subtotal==null?data.total:Number(data.subtotal)+(shipping&&!pending?Number(data.delivery_fee):0);
+      if(data.subtotal!=null) html+=row(isEn()?"Items subtotal":"Tiền món",money(data.subtotal));
+      if(shipping) html+=row(isEn()?"Shipping fee":"Phí giao hàng",pending?(isEn()?"Quote pending":"Chờ báo giá"):money(data.delivery_fee));
+      if(amount!=null) html+=row(pending?(isEn()?"Provisional total":"Tạm tính"):(isEn()?"Total":"Tổng"),money(amount));
       html+='</div>';
     }
 
     if((!Array.isArray(data.order_items)||!data.order_items.length)&&data.order_text){
-      html+='<div style="margin-top:14px"><strong>'+(isEn()?"Order details":"Chi tiết đơn")+'</strong><pre style="white-space:pre-wrap;background:#fff;border-radius:12px;padding:12px;font-family:inherit;font-size:13px;line-height:1.55;margin-top:6px">'+esc(legacyText(data.order_text))+'</pre></div>';
+      html+='<div style="margin-top:14px"><strong>'+(isEn()?"Order details":"Chi tiết đơn")+'</strong><pre style="white-space:pre-wrap;background:#fff;border-radius:12px;padding:12px;font-family:inherit;font-size:13px;line-height:1.55;margin-top:6px">'+esc(legacyText(data.order_text,data))+'</pre></div>';
     }
 
     html+='</div>';
