@@ -157,19 +157,19 @@ document.addEventListener("DOMContentLoaded", function () {
     var payment = String(ctx.payment || ((document.querySelector('input[name="payment"]:checked') || {}).value || "")).trim();
     var lines = [];
 
-    lines.push((en ? "Order code: " : "Mã đơn: ") + String(ctx.orderCode || ""));
-    if (ctx.hasPreorder) lines.push(en ? "⚠ PRE-ORDER ITEM(S) – ESTIMATED 7–14 DAYS" : "⚠ HÀNG ĐẶT TRƯỚC – DỰ KIẾN 7–14 NGÀY");
     lines.push(customerName);
+    if (ctx.hasPreorder) lines.push(en ? "⚠ PRE-ORDER ITEM(S) – ESTIMATED 7–14 DAYS" : "⚠ HÀNG ĐẶT TRƯỚC – DỰ KIẾN 7–14 NGÀY");
     cart.forEach(function (item) {
       var optionText = item.option_text ? " (" + item.option_text + ")" : "";
       lines.push(Number(item.qty || 0) + " x " + String(item.name || "") + optionText + " $" + money(Number(item.price || 0) * Number(item.qty || 0)));
     });
-    if (method !== "pickup") lines.push((en ? "Items subtotal: $" : "Tiền món: $") + money(sub));
+    var pending = method === "auspost" || (method === "delivery" && !match);
+    lines.push((pending ? (en ? "Provisional total: $" : "Tạm tính: $") : (en ? "Total: $" : "Tổng: $")) + money(total));
 
     if (method === "pickup") {
       lines.push(en ? "Fulfilment: Pick up Springvale" : "Nhận hàng: Pick up Springvale");
       if (pickupDate) lines.push((en ? "Pickup date: " : "Ngày pick up: ") + pickupDate);
-      if (pickupTime) lines.push((en ? "Pickup time: " : "Giờ pick up: ") + pickupTime);
+      if (pickupTime) lines.push((en ? "Pickup time: " : "Giờ pick up: ") + pickupTime.slice(0,5));
     } else if (method === "delivery") {
       lines.push(en ? "Fulfilment: Melbourne delivery" : "Nhận hàng: Delivery Melbourne");
       lines.push((en ? "Delivery fee: " : "Phí giao hàng: ") + (match ? "$" + money(fee) + " – " + match.suburb : (en ? "Quote pending" : "Chờ báo giá")));
@@ -180,12 +180,9 @@ document.addEventListener("DOMContentLoaded", function () {
       lines.push((en ? "Address: " : "Địa chỉ: ") + address);
     }
 
-    lines.push((en ? "Phone: " : "SĐT: ") + phone);
+    lines.push((en ? "Phone: " : "Sđt: ") + phone);
     if (email) lines.push((en ? "Contact email: " : "Email liên hệ: ") + email);
-    lines.push((en ? "Payment: " : "Thanh toán: ") + payment);
-    lines.push((en ? "Note: " : "Ghi chú: ") + (note || (en ? "None" : "Không có")));
-    var pending = method === "auspost" || (method === "delivery" && !match);
-    lines.push((pending ? (en ? "Provisional total: $" : "Tạm tính: $") : (en ? "Total: $" : "Tổng: $")) + money(total));
+    lines.push((en ? "Note: " : "Ghi chú: ") + (note === "Không có" || note === "None" ? "" : note));
     return lines.join("\n");
   };
 
