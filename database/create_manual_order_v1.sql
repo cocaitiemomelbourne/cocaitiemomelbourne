@@ -54,24 +54,25 @@ begin
     -- If any item is invalid or lacks stock, this whole request rolls back.
     perform public.update_order_items_v1(p_passcode,p_order_token,p_items);
     select * into saved from public.order_commits where order_token=p_order_token;
-    text_value:='Mã đơn: '||saved.order_number||E'\n'||saved.customer_name;
+    text_value:=saved.customer_name;
     for item in select * from jsonb_array_elements(saved.order_items) loop
       text_value:=text_value||E'\n'||(item->>'qty')||' x '||regexp_replace(item->>'name',E'[\r\n]+',' ','g')||
         case when coalesce(item->>'option_text','')<>'' then ' ('||regexp_replace(item->>'option_text',E'[\r\n]+',' ','g')||')' else '' end||
-        ' $'||(item->>'line_total');
+        ' $'||regexp_replace(item->>'line_total','\.00$','');
     end loop;
-    text_value:=text_value||case when method<>'pickup' then E'\nTiền món: $'||saved.subtotal else '' end||
+    text_value:=text_value||
+      case when method<>'pickup' and fee is null then E'\nTạm tính: $'||regexp_replace(saved.subtotal::text,'\.00$','')
+        else E'\nTổng: $'||regexp_replace(saved.total::text,'\.00$','') end||
       E'\nNhận hàng: '||case method when 'pickup' then 'Pick up Springvale' when 'delivery' then 'Delivery Melbourne' else 'AusPost' end;
     if saved.pickup_date is not null then text_value:=text_value||E'\nNgày pick up: '||saved.pickup_date; end if;
-    if saved.pickup_time is not null then text_value:=text_value||E'\nGiờ pick up: '||saved.pickup_time; end if;
+    if saved.pickup_time is not null then text_value:=text_value||E'\nGiờ pick up: '||left(saved.pickup_time::text,5); end if;
     if method<>'pickup' then
-      text_value:=text_value||E'\nPhí giao hàng: '||case when fee is null then 'Chờ báo giá' else '$'||fee end||
+      text_value:=text_value||E'\nPhí giao hàng: '||case when fee is null then 'Chờ báo giá' else '$'||regexp_replace(fee::text,'\.00$','') end||
         E'\nĐịa chỉ: '||saved.shipping_address;
     end if;
     if saved.recipient_name is not null then text_value:=text_value||E'\nTên người nhận: '||saved.recipient_name; end if;
-    text_value:=text_value||E'\nSĐT: '||saved.phone||E'\nThanh toán: '||saved.payment_method||
-      E'\nGhi chú: '||coalesce(saved.customer_note,'Không có')||
-      case when method<>'pickup' and fee is null then E'\nTạm tính: $'||saved.subtotal else E'\nTổng: $'||saved.total end;
+    text_value:=text_value||E'\nSđt: '||saved.phone||
+      E'\nGhi chú: '||coalesce(nullif(saved.customer_note,'Không có'),'');
     if length(text_value)>10000 then raise exception 'order_text_too_long'; end if;
     update public.order_commits set order_text=text_value where order_token=p_order_token;
   end if;
