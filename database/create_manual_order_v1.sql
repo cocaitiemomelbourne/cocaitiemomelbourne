@@ -64,7 +64,7 @@ begin
       case when method<>'pickup' and fee is null then E'\nTạm tính: $'||regexp_replace(saved.subtotal::text,'\.00$','')
         else E'\nTổng: $'||regexp_replace(saved.total::text,'\.00$','') end||
       E'\nNhận hàng: '||case method when 'pickup' then 'Pick up Springvale' when 'delivery' then 'Delivery Melbourne' else 'AusPost' end;
-    if saved.pickup_date is not null then text_value:=text_value||E'\nNgày pick up: '||saved.pickup_date; end if;
+    if saved.pickup_date is not null then text_value:=text_value||E'\nNgày pick up: '||to_char(saved.pickup_date,'DD/MM/YY'); end if;
     if saved.pickup_time is not null then text_value:=text_value||E'\nGiờ pick up: '||left(saved.pickup_time::text,5); end if;
     if method<>'pickup' then
       text_value:=text_value||E'\nPhí giao hàng: '||case when fee is null then 'Chờ báo giá' else '$'||regexp_replace(fee::text,'\.00$','') end||
