@@ -349,6 +349,7 @@ const statusLabels={new:"Mới",confirmed:"Đã xác nhận",preparing:"Đang ch
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function money(v){if(v===null||v===undefined||v==="")return "Chưa chốt";return "$"+Number(v).toFixed(2).replace(".00","")}
 function fmt(v){return v?new Date(v).toLocaleString("en-AU",{timeZone:"Australia/Melbourne",dateStyle:"medium",timeStyle:"short"}):"—"}
+function displayDate(v){return String(v||"").replace(/^(\d{4})-(\d{2})-(\d{2})$/,(all,y,m,d)=>d+"/"+m+"/"+y.slice(-2))}
 function setText(id,v){const el=document.getElementById(id);if(el)el.textContent=v===null||v===undefined||v===""?"—":String(v)}
 function firstMatch(text,re){const m=String(text||"").match(re);return m?m[1].trim():""}
 
@@ -674,7 +675,7 @@ function normalizedOrderText(v){
   summaryLines.forEach((index,i)=>{
     lines[index]=i===summaryLines.length-1?pricing.label+": "+money(pricing.amount):pricing.shipping?lines[index].replace(/^[^:]+:/,"Tiền món:"):"";
   });
-  return lines.join("\n");
+  return lines.join("\n").replace(/((?:Ngày pick up|Pickup date):\s*)(\d{4}-\d{2}-\d{2})/gi,(all,label,date)=>label+displayDate(date));
 }
 function buildCopyText(v){
   const lines=[v.customer_name||""];
@@ -686,7 +687,7 @@ function buildCopyText(v){
   const f=v.fulfilment_method==="delivery"?"Delivery Melbourne":v.fulfilment_method==="auspost"?"AusPost":"Pick up Springvale";
   lines.push("Nhận hàng: "+f);
   if(v.recipient_name)lines.push("Tên người nhận: "+v.recipient_name);
-  if(v.pickup_date)lines.push("Ngày pick up: "+v.pickup_date);
+  if(v.pickup_date)lines.push("Ngày pick up: "+displayDate(v.pickup_date));
   if(v.pickup_time)lines.push("Giờ pick up: "+String(v.pickup_time).slice(0,5));
   lines.push("Sđt: "+(v.phone||""));
   if(v.shipping_address)lines.push("Địa chỉ: "+v.shipping_address);
@@ -725,7 +726,7 @@ function renderOrder(o){
   const fulfilLabels={pickup:"Pick up Springvale",delivery:"Delivery Melbourne",auspost:"AusPost"};
   setText("fulfilment",fulfilLabels[v.fulfilment_method]||v.fulfilment_method||"—");
   setText("recipient",v.recipient_name);setText("address",v.shipping_address);
-  setText("pickup",v.pickup_date?(v.pickup_date+(v.pickup_time?" • "+String(v.pickup_time).slice(0,5):"")):"");
+  setText("pickup",v.pickup_date?(displayDate(v.pickup_date)+(v.pickup_time?" • "+String(v.pickup_time).slice(0,5):"")):"");
   document.getElementById("recipientRow").style.display=v.recipient_name&&v.recipient_name!==v.customer_name?"flex":"none";
   document.getElementById("pickupRow").style.display=v.pickup_date?"flex":"none";
   document.getElementById("addressRow").style.display=v.shipping_address?"flex":"none";
@@ -891,7 +892,7 @@ function makeReceiptCanvas(v,kitchen){
   rule();add("GIAO NHẬN",20,true);
   add(({pickup:"Pick up Springvale",delivery:"Delivery Melbourne",auspost:"AusPost"})[v.fulfilment_method]||v.fulfilment_method||"—");
   if(v.recipient_name&&v.recipient_name!==v.customer_name)add("Người nhận: "+v.recipient_name);
-  if(v.pickup_date)add("Pick up: "+v.pickup_date+(v.pickup_time?" • "+String(v.pickup_time).slice(0,5):""));
+  if(v.pickup_date)add("Pick up: "+displayDate(v.pickup_date)+(v.pickup_time?" • "+String(v.pickup_time).slice(0,5):""));
   if(v.shipping_address)add("Địa chỉ: "+v.shipping_address);
   if(!kitchen){
     rule();add("THANH TOÁN",20,true);
