@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function isEn(){ return window.CCT_LANG === "en"; }
   function esc(v){ return String(v == null ? "" : v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
   function money(v){ if(v===null||v===undefined||v==="") return ""; return "$"+Number(v||0).toFixed(2).replace(/\.00$/,""); }
+  function displayDate(v){ return String(v||"").replace(/^(\d{4})-(\d{2})-(\d{2})$/,function(all,y,m,d){return d+"/"+m+"/"+y.slice(-2);}); }
   function statusText(v){
     var vi={new:"Mới",confirmed:"Đã xác nhận",preparing:"Đang chuẩn bị",ready:"Sẵn sàng",completed:"Hoàn tất",cancelled:"Đã huỷ"};
     var en={new:"New",confirmed:"Confirmed",preparing:"Preparing",ready:"Ready",completed:"Completed",cancelled:"Cancelled"};
@@ -30,7 +31,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if(i===summaryLines.length-1)lines[index]=amount==null?lines[index].replace(/^[^:]+:/,pending?"Tạm tính:":"Tổng:"):(pending?"Tạm tính: ":"Tổng: ")+money(amount);
       else lines[index]=shipping?lines[index].replace(/^[^:]+:/,"Tiền món:"):"";
     });
-    text=lines.join("\n");
+    text=lines.join("\n").replace(/((?:Ngày pick up|Pickup date):\s*)(\d{4}-\d{2}-\d{2})/gi,function(all,label,date){return label+displayDate(date);});
     if(!isEn()) return text||"";
     var out=String(text||"");
     var pairs=[
@@ -80,7 +81,7 @@ document.addEventListener("DOMContentLoaded", function () {
     html+=row(isEn()?"Customer":"Tên khách",data.customer_name);
     html+=row(isEn()?"Fulfilment":"Nhận hàng",fulfilmentText(data.fulfilment_method));
     if(String(data.fulfilment_method||"").toLowerCase()==="pickup"){
-      html+=row(isEn()?"Pickup date":"Ngày pick up",data.pickup_date);
+      html+=row(isEn()?"Pickup date":"Ngày pick up",displayDate(data.pickup_date));
       html+=row(isEn()?"Pickup time":"Giờ pick up",data.pickup_time);
     }
     html+=row(isEn()?"Recipient":"Người nhận",data.recipient_name);
