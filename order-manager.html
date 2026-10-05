@@ -504,7 +504,7 @@ function addEditorRow(item,target=editRows){
 function renderEditor(v){
   editRows.innerHTML="";
   const items=Array.isArray(v.items)?v.items:[];
-  if(items.length)items.forEach(addEditorRow);
+  if(items.length)items.forEach(item=>addEditorRow(item));
   else addEditorRow();
   editMsg.textContent="";
 }
