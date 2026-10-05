@@ -185,7 +185,7 @@ button,input,select{font:inherit}
     <div class="pricing card">
       <h3>Giá đơn đang chọn</h3>
       <div class="price-grid">
-        <div class="price-box"><b>Tiền món</b><div id="panelSubtotal" class="price-value">—</div></div>
+        <div id="panelSubtotalBox" class="price-box"><b>Tiền món</b><div id="panelSubtotal" class="price-value">—</div></div>
         <div class="price-box"><b id="panelTotalLabel">Tổng</b><div id="panelTotal" class="price-value">—</div></div>
       </div>
       <div id="deliveryEditor" class="hidden">
@@ -281,7 +281,7 @@ button,input,select{font:inherit}
         <div class="rule price-only"></div>
         <div class="price-only">
           <div class="section-title">THANH TOÁN</div>
-          <div class="row"><span>Tiền món</span><span id="subtotal">—</span></div>
+          <div id="subtotalRow" class="row"><span>Tiền món</span><span id="subtotal">—</span></div>
           <div id="feeRow" class="row"><span id="feeLabel">Delivery</span><span id="deliveryFee">—</span></div>
           <div class="row total"><span id="totalLabel">TỔNG</span><span id="total">—</span></div>
           <div class="row payment-only"><span>Phương thức</span><b id="payment">—</b></div>
@@ -578,7 +578,7 @@ function updateManualSummary(){
     if(Number.isFinite(price)&&Number.isFinite(item.qty))subtotal+=price*item.qty;
   });
   const pricing=pricingSummary({fulfilment_method:d.fulfilment_method,subtotal,delivery_fee:d.delivery_fee});
-  document.getElementById("manualSummary").textContent="Tiền món: "+money(subtotal)+" • "+pricing.label+": "+money(pricing.amount)+(pricing.pending?" (chưa gồm phí giao hàng)":"");
+  document.getElementById("manualSummary").textContent=(shipping?"Tiền món: "+money(subtotal)+" • ":"")+pricing.label+": "+money(pricing.amount)+(pricing.pending?" (chưa gồm phí giao hàng)":"");
 }
 async function openManualOrder(){
   if(manualBusy)return;
@@ -672,7 +672,7 @@ function normalizedOrderText(v){
   const pricing=pricingSummary(v),lines=String(v.raw||"").split(/\r?\n/);
   const summaryLines=lines.map((line,index)=>/^(?:Tổng|Total|Tạm tính|Provisional total|Subtotal|Items subtotal|Tiền món):/.test(line)?index:-1).filter(index=>index>=0);
   summaryLines.forEach((index,i)=>{
-    lines[index]=i===summaryLines.length-1?pricing.label+": "+money(pricing.amount):lines[index].replace(/^[^:]+:/,"Tiền món:");
+    lines[index]=i===summaryLines.length-1?pricing.label+": "+money(pricing.amount):pricing.shipping?lines[index].replace(/^[^:]+:/,"Tiền món:"):"";
   });
   return lines.join("\n");
 }
@@ -681,7 +681,7 @@ function buildCopyText(v){
   (v.items||[]).forEach(it=>{
     lines.push((it.qty||1)+" x "+(it.name||"Món")+(it.option_text?" — "+it.option_text:"")+" $"+Number(it.line_total||0).toFixed(2).replace(".00",""));
   });
-  if(v.subtotal!==null)lines.push("Tiền món: "+money(v.subtotal));
+  if(pricingSummary(v).shipping&&v.subtotal!==null)lines.push("Tiền món: "+money(v.subtotal));
   const f=v.fulfilment_method==="delivery"?"Delivery Melbourne":v.fulfilment_method==="auspost"?"AusPost":"Pick up Springvale";
   lines.push("Nhận hàng: "+f);
   if(v.recipient_name)lines.push("Tên người nhận: "+v.recipient_name);
@@ -747,6 +747,8 @@ function renderOrder(o){
 
   setText("subtotal",money(v.subtotal));
   const isShipping=v.fulfilment_method==="delivery"||v.fulfilment_method==="auspost";
+  document.getElementById("subtotalRow").style.display=isShipping?"flex":"none";
+  document.getElementById("panelSubtotalBox").classList.toggle("hidden",!isShipping);
   document.getElementById("feeRow").style.display=isShipping?"flex":"none";
   setText("feeLabel",v.fulfilment_method==="auspost"?"AusPost":"Delivery");
   setText("deliveryFee",money(v.delivery_fee));
@@ -892,8 +894,9 @@ function makeReceiptCanvas(v,kitchen){
   if(v.pickup_date)add("Pick up: "+v.pickup_date+(v.pickup_time?" • "+String(v.pickup_time).slice(0,5):""));
   if(v.shipping_address)add("Địa chỉ: "+v.shipping_address);
   if(!kitchen){
-    rule();add("THANH TOÁN",20,true);add("Tiền món: "+money(v.subtotal));
+    rule();add("THANH TOÁN",20,true);
     const shipping=v.fulfilment_method==="delivery"||v.fulfilment_method==="auspost";
+    if(shipping)add("Tiền món: "+money(v.subtotal));
     if(shipping)add((v.fulfilment_method==="auspost"?"AusPost":"Delivery")+": "+money(v.delivery_fee));
     const pricing=pricingSummary(v);
     add(pricing.label.toUpperCase()+": "+money(pricing.amount),26,true);
