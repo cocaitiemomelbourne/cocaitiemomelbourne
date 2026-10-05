@@ -164,7 +164,7 @@ document.addEventListener("DOMContentLoaded", function () {
       var optionText = item.option_text ? " (" + item.option_text + ")" : "";
       lines.push(Number(item.qty || 0) + " x " + String(item.name || "") + optionText + " $" + money(Number(item.price || 0) * Number(item.qty || 0)));
     });
-    lines.push((en ? "Items subtotal: $" : "Tiền món: $") + money(sub));
+    if (method !== "pickup") lines.push((en ? "Items subtotal: $" : "Tiền món: $") + money(sub));
 
     if (method === "pickup") {
       lines.push(en ? "Fulfilment: Pick up Springvale" : "Nhận hàng: Pick up Springvale");
