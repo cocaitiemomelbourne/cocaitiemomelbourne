@@ -681,17 +681,17 @@ function buildCopyText(v){
   (v.items||[]).forEach(it=>{
     lines.push((it.qty||1)+" x "+(it.name||"Món")+(it.option_text?" — "+it.option_text:"")+" $"+Number(it.line_total||0).toFixed(2).replace(".00",""));
   });
-  if(pricingSummary(v).shipping&&v.subtotal!==null)lines.push("Tiền món: "+money(v.subtotal));
+  const pricing=pricingSummary(v);
+  lines.push(pricing.label+": "+money(pricing.amount));
   const f=v.fulfilment_method==="delivery"?"Delivery Melbourne":v.fulfilment_method==="auspost"?"AusPost":"Pick up Springvale";
   lines.push("Nhận hàng: "+f);
   if(v.recipient_name)lines.push("Tên người nhận: "+v.recipient_name);
-  if(v.phone)lines.push("SĐT: "+v.phone);
+  if(v.pickup_date)lines.push("Ngày pick up: "+v.pickup_date);
+  if(v.pickup_time)lines.push("Giờ pick up: "+String(v.pickup_time).slice(0,5));
+  lines.push("Sđt: "+(v.phone||""));
   if(v.shipping_address)lines.push("Địa chỉ: "+v.shipping_address);
-  const pricing=pricingSummary(v);
   if(pricing.shipping)lines.push((v.fulfilment_method==="auspost"?"AusPost":"Delivery")+": "+(pricing.pending?"Chờ báo giá":money(v.delivery_fee)));
-  lines.push(pricing.label+": "+money(pricing.amount));
-  if(v.payment_method)lines.push("Thanh toán: "+v.payment_method);
-  lines.push("Ghi chú: "+(v.customer_note||"Không có"));
+  lines.push("Ghi chú: "+(v.customer_note&&v.customer_note!=="Không có"?v.customer_note:""));
   return lines.filter(Boolean).join("\n");
 }
 
