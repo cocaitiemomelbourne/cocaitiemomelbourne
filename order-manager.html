@@ -101,7 +101,7 @@ button,input,select{font:inherit}
 @media(max-width:520px){.wrap{padding:10px}.price-grid{grid-template-columns:1fr 1fr}.delivery-editor{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
 @media print{
   body{background:#fff}
-  .top,.selected-controls,.edit-items,.stats,.left,.preview-tools,.pricing,.order-actions,.top-print,.raw,#imageStatus,#imageResult{display:none!important}
+  .top,.selected-controls,.edit-items,.stats,.left,.preview-tools,.pricing,.order-actions,.top-print,.raw,#manualCard,#manualRecoveryMsg,#imageStatus,#imageResult{display:none!important}
   .layout{display:block}
   .preview-card{border:0;padding:0}
   .paper{box-shadow:none;margin:0;width:80mm;min-height:0;padding:4mm}
@@ -118,6 +118,15 @@ button,input,select{font:inherit}
 .paper.kitchen .note{font-size:14px}
 .custom-row{grid-template-columns:minmax(160px,1fr) 80px 120px minmax(140px,1fr) auto;background:#fff9ed;border:1px dashed #c99b49;border-radius:10px;padding:10px}
 .custom-label{grid-column:1/-1;font-size:12px;font-weight:bold;color:#76541c}
+.manual-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0}
+.manual-fields label{display:grid;gap:5px;font-size:13px;font-weight:700}
+.manual-fields input,.manual-fields select,.manual-fields textarea{width:100%;padding:11px;border:1px solid #d8cec3;border-radius:10px;background:#fff;font:inherit}
+.manual-fields .full{grid-column:1/-1}
+#manualFieldset{border:0;padding:0;margin:0;min-width:0}
+#manualRows{display:grid;gap:10px;margin:12px 0}
+.manual-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+#manualCard{padding:18px;margin-bottom:18px}
+@media(max-width:600px){.manual-fields{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.top>div:last-child{display:flex;gap:7px;flex-wrap:wrap}}
 @media(max-width:760px){
   .custom-row{grid-template-columns:1fr 80px}
   .custom-row .custom-price{grid-column:1/2}
@@ -139,8 +148,37 @@ button,input,select{font:inherit}
 <section id="app" class="hidden">
   <div class="top">
     <div><h1>Order Manager</h1><div class="muted">Xem đơn → báo phí → đổi trạng thái → in bill hoặc phiếu bếp</div></div>
-    <div><button id="reload" class="btn alt">↻ Tải lại</button> <button id="lock" class="btn alt">Khoá</button></div>
+    <div><button id="newOrder" class="btn primary">＋ Tạo đơn mới</button> <button id="reload" class="btn alt">↻ Tải lại</button> <button id="lock" class="btn alt">Khoá</button></div>
   </div>
+
+  <div id="manualRecoveryMsg" class="notice hidden" role="status" style="margin-bottom:14px"></div>
+  <section id="manualCard" class="card hidden" aria-labelledby="manualTitle">
+    <h2 id="manualTitle">Tạo đơn mới</h2>
+    <div class="muted">Đơn inbox / điện thoại • tự cấp mã CCT • gửi email về tiệm khi lưu.</div>
+    <form id="manualForm">
+      <fieldset id="manualFieldset">
+        <div class="manual-fields">
+          <label>Tên khách *<input id="manualName" required maxlength="200" autocomplete="name"></label>
+          <label>Số điện thoại *<input id="manualPhone" required type="tel" maxlength="40" autocomplete="tel"></label>
+          <label>Nhận hàng<select id="manualMethod"><option value="pickup">Pick up Springvale</option><option value="delivery">Delivery Melbourne</option><option value="auspost">AusPost</option></select></label>
+          <label>Thanh toán<select id="manualPayment"><option>Cash</option><option>PayID</option><option>Bank Transfer</option></select></label>
+          <label data-manual-pickup>Ngày pick up (nếu đã hẹn)<input id="manualPickupDate" type="date"></label>
+          <label data-manual-pickup>Giờ pick up (nếu đã hẹn)<input id="manualPickupTime" type="time"></label>
+          <label data-manual-shipping class="hidden">Tên người nhận<input id="manualRecipient" maxlength="200"></label>
+          <label data-manual-shipping class="hidden">Phí giao hàng (AUD)<input id="manualFee" type="number" min="0" max="999999.99" step="0.01" inputmode="decimal" placeholder="Để trống khi chưa chốt; 0 = miễn phí"></label>
+          <label data-manual-shipping class="full hidden">Địa chỉ giao hàng *<textarea id="manualAddress" maxlength="1000" rows="2" autocomplete="street-address"></textarea></label>
+          <label class="full">Ghi chú đơn<textarea id="manualNote" maxlength="1000" rows="2"></textarea></label>
+        </div>
+        <h3>Món hàng</h3>
+        <div class="muted">Món trong menu lấy giá hiện tại và trừ tồn kho; món ngoài menu không trừ tồn kho.</div>
+        <div id="manualRows"></div>
+        <div class="manual-actions"><button id="manualAddMenu" type="button" class="btn alt">＋ Món trong menu</button><button id="manualAddCustom" type="button" class="btn alt">＋ Món ngoài menu</button></div>
+        <div id="manualSummary" class="price-box" style="margin-top:14px" aria-live="polite"></div>
+      </fieldset>
+      <div class="manual-actions"><button id="manualSave" type="submit" class="btn primary">Lưu đơn & gửi email</button><button id="manualCancel" type="button" class="btn alt">Đóng</button></div>
+      <div id="manualMsg" class="save-msg" role="status"></div>
+    </form>
+  </section>
 
   <div style="font-size:14px;font-weight:900;margin:4px 0 8px">ĐƠN ĐANG CHỌN — XỬ LÝ NHANH</div>
   <div class="selected-controls">
@@ -448,9 +486,9 @@ function productOptions(selectedId){
   }).join("");
 }
 
-function addEditorRow(item){
+function addEditorRow(item,target=editRows){
   item=item||{};
-  if(item.is_custom===true){addCustomEditorRow(item);return}
+  if(item.is_custom===true){addCustomEditorRow(item,target);return}
   let id=item.id;
   if(!id&&item.name){const matched=productByName(item.name);if(matched)id=matched.id;}
   if(!id&&productCatalog.length)id=productCatalog[0].id;
@@ -460,7 +498,7 @@ function addEditorRow(item){
     '<input class="qty-input" type="number" min="1" step="1" value="'+esc(item.qty||1)+'" aria-label="Số lượng">'+
     '<input class="option-input" type="text" value="'+esc(item.option_text||"")+'" placeholder="Option / ghi chú món">'+
     '<button type="button" class="btn alt remove-item">Xoá</button>';
-  editRows.appendChild(row);
+  target.appendChild(row);
 }
 
 function renderEditor(v){
@@ -471,7 +509,7 @@ function renderEditor(v){
   editMsg.textContent="";
 }
 
-function addCustomEditorRow(item){
+function addCustomEditorRow(item,target=editRows){
   item=item||{};
   const row=document.createElement("div");
   row.className="edit-row custom-row";
@@ -482,10 +520,10 @@ function addCustomEditorRow(item){
     '<input class="custom-price" type="number" min="0" max="1000000" step="0.01" value="'+esc(item.unit_price??"")+'" placeholder="Đơn giá AUD" aria-label="Đơn giá AUD">'+
     '<input class="option-input" type="text" maxlength="500" value="'+esc(item.option_text||"")+'" placeholder="Tuỳ chọn / ghi chú món">'+
     '<button type="button" class="btn alt remove-item">Xoá</button>';
-  editRows.appendChild(row);
+  target.appendChild(row);
 }
-function editorPayload(){
-  return Array.from(editRows.querySelectorAll(".edit-row")).map(row=>{
+function editorPayload(target=editRows){
+  return Array.from(target.querySelectorAll(".edit-row")).map(row=>{
     const qty=Number(row.querySelector(".qty-input").value);
     const option_text=row.querySelector(".option-input").value.trim();
     if(row.dataset.custom==="true"){
@@ -496,6 +534,132 @@ function editorPayload(){
     return {id:Number(row.querySelector(".product-select").value),qty,option_text};
   });
 }
+
+const manualCard=document.getElementById("manualCard"),manualForm=document.getElementById("manualForm"),
+  manualRows=document.getElementById("manualRows"),manualFieldset=document.getElementById("manualFieldset"),
+  manualSave=document.getElementById("manualSave"),manualMsg=document.getElementById("manualMsg");
+let manualToken=null,manualSaved=null,manualBusy=false,manualAttempted=false;
+function manualValue(id){return document.getElementById(id).value.trim()}
+function manualDetails(){
+  const method=manualValue("manualMethod"),fee=manualValue("manualFee");
+  return {customer_name:manualValue("manualName"),phone:manualValue("manualPhone"),
+    fulfilment_method:method,payment_method:manualValue("manualPayment"),customer_note:manualValue("manualNote"),
+    recipient_name:method==="pickup"?"":manualValue("manualRecipient"),
+    shipping_address:method==="pickup"?"":manualValue("manualAddress"),
+    pickup_date:method==="pickup"?manualValue("manualPickupDate"):"",
+    pickup_time:method==="pickup"?manualValue("manualPickupTime"):"",
+    delivery_fee:method==="pickup"?0:fee===""?null:Number(fee)};
+}
+function validateManual(items,details){
+  if(!details.customer_name)throw new Error("Vui lòng nhập tên khách.");
+  if(!/^[0-9]{8,15}$/.test(details.phone.replace(/\D/g,"")))throw new Error("Số điện thoại cần 8–15 chữ số.");
+  if(details.fulfilment_method!=="pickup"&&details.shipping_address.length<3)throw new Error("Vui lòng nhập địa chỉ giao hàng.");
+  if(details.delivery_fee!==null&&(!Number.isFinite(details.delivery_fee)||details.delivery_fee<0||details.delivery_fee>999999.99||Math.abs(details.delivery_fee*100-Math.round(details.delivery_fee*100))>0.000001))throw new Error("Phí giao hàng không hợp lệ.");
+  if(!items.length||items.length>50)throw new Error("Đơn cần từ 1 đến 50 dòng món.");
+  items.forEach(item=>{
+    if(!Number.isInteger(item.qty)||item.qty<1||item.qty>99999)throw new Error("Số lượng cần là số nguyên từ 1 đến 99999.");
+    if(item.is_custom){
+      if(!item.name||item.name.length>200||item.unit_price===null||!Number.isFinite(item.unit_price)||item.unit_price<0||item.unit_price>1000000||Math.abs(item.unit_price*100-Math.round(item.unit_price*100))>0.000001)throw new Error("Món ngoài menu cần tên và đơn giá hợp lệ.");
+    }else{
+      const p=productCatalog.find(p=>Number(p.id)===item.id);
+      if(!p)throw new Error("Vui lòng chọn món trong menu.");
+    }
+  });
+}
+function updateManualSummary(){
+  const d=manualDetails(),shipping=d.fulfilment_method!=="pickup";
+  document.querySelectorAll("[data-manual-pickup]").forEach(el=>el.classList.toggle("hidden",shipping));
+  document.querySelectorAll("[data-manual-shipping]").forEach(el=>el.classList.toggle("hidden",!shipping));
+  document.getElementById("manualAddress").required=shipping;
+  let subtotal=0;
+  editorPayload(manualRows).forEach(item=>{
+    const p=productCatalog.find(p=>Number(p.id)===item.id);
+    const price=item.is_custom?Number(item.unit_price||0):Number(p?.price||0);
+    if(Number.isFinite(price)&&Number.isFinite(item.qty))subtotal+=price*item.qty;
+  });
+  const pricing=pricingSummary({fulfilment_method:d.fulfilment_method,subtotal,delivery_fee:d.delivery_fee});
+  document.getElementById("manualSummary").textContent="Tiền món: "+money(subtotal)+" • "+pricing.label+": "+money(pricing.amount)+(pricing.pending?" (chưa gồm phí giao hàng)":"");
+}
+async function openManualOrder(){
+  if(manualBusy)return;
+  if(!manualCard.classList.contains("hidden")){manualCard.scrollIntoView({behavior:"smooth"});return}
+  try{
+    await recoverManualOrder();
+    if(sessionStorage.getItem("cct_manual_pending_token"))return;
+    const data=await rpc("get_order_editor_products_v1",{p_passcode:code});
+    productCatalog=Array.isArray(data)?data:[];
+    manualForm.reset();manualRows.innerHTML="";manualToken="manual-"+crypto.randomUUID();
+    manualSaved=null;manualAttempted=false;manualFieldset.disabled=false;manualMsg.textContent="";
+    manualSave.textContent="Lưu đơn & gửi email";manualSave.disabled=false;
+    if(productCatalog.length)addEditorRow({},manualRows);else addCustomEditorRow({},manualRows);
+    manualCard.classList.remove("hidden");updateManualSummary();manualCard.scrollIntoView({behavior:"smooth"});
+    document.getElementById("manualName").focus();
+  }catch(e){alert("Không mở được phần tạo đơn: "+e.message)}
+}
+function closeManualOrder(){
+  if(manualBusy)return;
+  if(manualAttempted&&!manualSaved&&!confirm("Yêu cầu lưu có thể đã tới hệ thống. Chị nên thử lưu lại để kiểm tra cùng mã đơn; nếu đóng, hãy kiểm tra danh sách đơn trước khi tạo lại. Vẫn đóng?"))return;
+  manualCard.classList.add("hidden");manualToken=null;manualSaved=null;
+}
+async function recoverManualOrder(){
+  const pending=sessionStorage.getItem("cct_manual_pending_token");
+  if(!pending||manualBusy)return;
+  const msg=document.getElementById("manualRecoveryMsg");
+  msg.classList.remove("hidden");msg.textContent="Đang kiểm tra yêu cầu tạo đơn trước đó…";
+  try{
+    const result=await rpc("create_manual_order_v1",{p_passcode:code,p_order_token:pending,p_items:null,p_details:null});
+    if(!result?.order?.order_token)throw new Error("unknown_result");
+    selectedToken=result.order.order_token;orders=[result.order,...orders.filter(o=>o.order_token!==selectedToken)];
+    status.value="all";search.value="";renderOrder(result.order);renderList();
+    if(result.email_queued){
+      sessionStorage.removeItem("cct_manual_pending_token");
+      msg.textContent="Đơn trước đã lưu "+result.order.order_number+" và đã xếp hàng gửi email. Không tạo trùng.";
+    }else msg.textContent="Đơn "+result.order.order_number+" đã lưu nhưng email chưa được xếp hàng. Bấm Tải lại để thử gửi lại.";
+  }catch(error){
+    if(error.message==="invalid_items"){
+      sessionStorage.removeItem("cct_manual_pending_token");msg.textContent="Yêu cầu trước chưa tạo đơn. Chị có thể tạo đơn mới.";
+    }else msg.textContent="Chưa kiểm tra được yêu cầu trước. Bấm Tải lại; hãy kiểm tra đơn trước khi tạo lại.";
+  }
+}
+manualForm.addEventListener("input",updateManualSummary);
+manualForm.addEventListener("change",updateManualSummary);
+manualRows.addEventListener("click",e=>{
+  const remove=e.target.closest(".remove-item");if(remove){remove.closest(".edit-row").remove();updateManualSummary()}
+});
+document.getElementById("manualAddMenu").addEventListener("click",()=>{if(productCatalog.length){addEditorRow({},manualRows);updateManualSummary()}});
+document.getElementById("manualAddCustom").addEventListener("click",()=>{addCustomEditorRow({},manualRows);updateManualSummary()});
+document.getElementById("newOrder").addEventListener("click",openManualOrder);
+document.getElementById("manualCancel").addEventListener("click",closeManualOrder);
+manualForm.addEventListener("submit",async e=>{
+  e.preventDefault();if(manualBusy||!manualToken)return;
+  let items,details;
+  try{items=editorPayload(manualRows);details=manualDetails();if(!manualAttempted)validateManual(items,details)}
+  catch(error){manualMsg.textContent=error.message;return}
+  manualBusy=true;manualAttempted=true;manualSave.disabled=true;manualFieldset.disabled=true;
+  sessionStorage.setItem("cct_manual_pending_token",manualToken);
+  manualMsg.textContent="Đang lưu đơn và xếp hàng gửi email…";
+  try{
+    const result=await rpc("create_manual_order_v1",{p_passcode:code,p_order_token:manualToken,p_items:items,p_details:details});
+    if(!result?.order?.order_token)throw new Error("Phản hồi chưa rõ. Thử lại để kiểm tra cùng một đơn.");
+    manualSaved=result.order;selectedToken=manualSaved.order_token;status.value="all";search.value="";
+    orders=[manualSaved,...orders.filter(o=>o.order_token!==manualSaved.order_token)];renderOrder(manualSaved);renderList();
+    productCatalog=[];
+    if(result.email_queued){
+      sessionStorage.removeItem("cct_manual_pending_token");
+      manualMsg.textContent="Đã lưu "+manualSaved.order_number+" và xếp hàng gửi email về tiệm.";
+      manualSave.textContent="Đã lưu đơn";manualSave.disabled=true;
+    }else{
+      manualMsg.textContent="Đã lưu "+manualSaved.order_number+". "+(result.email_error||"Email chưa được xếp hàng; chị thử lại nhé.");
+      manualSave.textContent="Thử gửi email lại";manualSave.disabled=false;
+    }
+    try{await fetchOrders()}catch(error){manualMsg.textContent+=" Chưa tải lại được danh sách, chị bấm Tải lại sau."}
+  }catch(error){
+    const known=/not_authorized|invalid_|required|empty_order|product_unavailable|insufficient_stock|too_long/.test(error.message);
+    manualMsg.textContent=error.message.startsWith("insufficient_stock")?"Món không đủ tồn kho. Đơn chưa lưu; chị chỉnh số lượng nhé.":known?"Đơn chưa lưu: "+error.message:"Chưa xác nhận được kết quả. Bấm thử lại sẽ kiểm tra cùng đơn, không tạo trùng.";
+    if(known){manualAttempted=false;manualFieldset.disabled=false;sessionStorage.removeItem("cct_manual_pending_token")}
+    manualSave.textContent="Thử lưu / gửi email lại";manualSave.disabled=false;
+  }finally{manualBusy=false}
+});
 
 function pricingSummary(v){
   const shipping=v.fulfilment_method==="delivery"||v.fulfilment_method==="auspost";
@@ -643,6 +807,7 @@ async function openManager(){
     await fetchOrders();
     sessionStorage.setItem("cct_print_code",code);
     login.classList.add("hidden");app.classList.remove("hidden");loginMsg.classList.add("hidden");
+    await recoverManualOrder();
   }catch(e){
     loginMsg.textContent=e&&e.message==="not_authorized"?"Mã quản trị không đúng.":"Không tải được danh sách đơn. Vui lòng thử lại.";
     loginMsg.classList.remove("hidden");
@@ -677,8 +842,8 @@ editRows.addEventListener("click",e=>{
 saveItems.addEventListener("click",saveEditedItems);
 deliveryInput.addEventListener("keydown",e=>{if(e.key==="Enter")savePricing()});
 document.getElementById("printBtn").addEventListener("click",()=>window.print());
-document.getElementById("reload").addEventListener("click",fetchOrders);
-document.getElementById("lock").addEventListener("click",()=>{clearReceiptImage();sessionStorage.removeItem("cct_print_code");code="";orders=[];selectedToken=null;currentView=null;app.classList.add("hidden");login.classList.remove("hidden");passcode.value=""});
+document.getElementById("reload").addEventListener("click",async()=>{await fetchOrders();await recoverManualOrder()});
+document.getElementById("lock").addEventListener("click",()=>{if(manualBusy)return;clearReceiptImage();manualCard.classList.add("hidden");manualToken=null;manualSaved=null;productCatalog=[];sessionStorage.removeItem("cct_print_code");code="";orders=[];selectedToken=null;currentView=null;app.classList.add("hidden");login.classList.remove("hidden");passcode.value=""});
 let receiptBlob=null,receiptUrl=null,receiptFilename="CCT-58mm.png";
 const imageBtn=document.getElementById("imageBtn"),imageStatus=document.getElementById("imageStatus"),imageResult=document.getElementById("imageResult");
 function clearReceiptImage(){
