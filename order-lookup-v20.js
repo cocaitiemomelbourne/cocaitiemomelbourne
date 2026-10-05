@@ -24,7 +24,13 @@ document.addEventListener("DOMContentLoaded", function () {
     var shipping=data.fulfilment_method==="delivery"||data.fulfilment_method==="auspost";
     var pending=shipping&&data.delivery_fee==null;
     var amount=data.subtotal==null?data.total:Number(data.subtotal)+(shipping&&!pending?Number(data.delivery_fee):0);
-    text=String(text||"").replace(/^(?:Tạm tính|Subtotal|Items subtotal):/gm,"Tiền món:").replace(/^(?:Tổng|Total|Provisional total):.*$/gm,function(line){return amount==null?line.replace(/^[^:]+:/,pending?"Tạm tính:":"Tổng:"):(pending?"Tạm tính: ":"Tổng: ")+money(amount);});
+    var lines=String(text||"").split(/\r?\n/);
+    var summaryLines=lines.map(function(line,index){return /^(?:Tổng|Total|Tạm tính|Provisional total|Subtotal|Items subtotal|Tiền món):/.test(line)?index:-1;}).filter(function(index){return index>=0;});
+    summaryLines.forEach(function(index,i){
+      if(i===summaryLines.length-1)lines[index]=amount==null?lines[index].replace(/^[^:]+:/,pending?"Tạm tính:":"Tổng:"):(pending?"Tạm tính: ":"Tổng: ")+money(amount);
+      else lines[index]=lines[index].replace(/^[^:]+:/,"Tiền món:");
+    });
+    text=lines.join("\n");
     if(!isEn()) return text||"";
     var out=String(text||"");
     var pairs=[
