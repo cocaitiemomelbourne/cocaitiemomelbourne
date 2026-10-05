@@ -504,6 +504,14 @@ function pricingSummary(v){
   const amount=subtotal===null?v.total:subtotal+(shipping&&!pending?Number(v.delivery_fee):0);
   return {shipping,pending,amount,label:pending?"Tạm tính":"Tổng"};
 }
+function normalizedOrderText(v){
+  const pricing=pricingSummary(v),lines=String(v.raw||"").split(/\r?\n/);
+  const summaryLines=lines.map((line,index)=>/^(?:Tổng|Total|Tạm tính|Provisional total|Subtotal|Items subtotal|Tiền món):/.test(line)?index:-1).filter(index=>index>=0);
+  summaryLines.forEach((index,i)=>{
+    lines[index]=i===summaryLines.length-1?pricing.label+": "+money(pricing.amount):lines[index].replace(/^[^:]+:/,"Tiền món:");
+  });
+  return lines.join("\n");
+}
 function buildCopyText(v){
   const lines=[v.customer_name||""];
   (v.items||[]).forEach(it=>{
@@ -586,7 +594,7 @@ function renderOrder(o){
   setText("panelTotalLabel",pricing.label);
   setText("payment",v.payment_method);
   setText("note",v.customer_note||"Không có");
-  setText("rawText",v.raw.replace(/^(?:Tạm tính|Subtotal|Items subtotal):/gm,"Tiền món:").replace(/^(?:Tổng|Total|Provisional total):.*$/gm,pricing.label+": "+money(pricing.amount)));
+  setText("rawText",normalizedOrderText(v));
 
   setText("panelSubtotal",money(v.subtotal));setText("panelTotal",money(displayTotal));
   if(isShipping){
