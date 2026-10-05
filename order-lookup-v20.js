@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var summaryLines=lines.map(function(line,index){return /^(?:Tổng|Total|Tạm tính|Provisional total|Subtotal|Items subtotal|Tiền món):/.test(line)?index:-1;}).filter(function(index){return index>=0;});
     summaryLines.forEach(function(index,i){
       if(i===summaryLines.length-1)lines[index]=amount==null?lines[index].replace(/^[^:]+:/,pending?"Tạm tính:":"Tổng:"):(pending?"Tạm tính: ":"Tổng: ")+money(amount);
-      else lines[index]=lines[index].replace(/^[^:]+:/,"Tiền món:");
+      else lines[index]=shipping?lines[index].replace(/^[^:]+:/,"Tiền món:"):"";
     });
     text=lines.join("\n");
     if(!isEn()) return text||"";
@@ -96,7 +96,7 @@ document.addEventListener("DOMContentLoaded", function () {
       var shipping=data.fulfilment_method==="delivery"||data.fulfilment_method==="auspost";
       var pending=shipping&&data.delivery_fee==null;
       var amount=data.subtotal==null?data.total:Number(data.subtotal)+(shipping&&!pending?Number(data.delivery_fee):0);
-      if(data.subtotal!=null) html+=row(isEn()?"Items subtotal":"Tiền món",money(data.subtotal));
+      if(shipping&&data.subtotal!=null) html+=row(isEn()?"Items subtotal":"Tiền món",money(data.subtotal));
       if(shipping) html+=row(isEn()?"Shipping fee":"Phí giao hàng",pending?(isEn()?"Quote pending":"Chờ báo giá"):money(data.delivery_fee));
       if(amount!=null) html+=row(pending?(isEn()?"Provisional total":"Tạm tính"):(isEn()?"Total":"Tổng"),money(amount));
       html+='</div>';
