@@ -60,7 +60,7 @@ begin
         case when coalesce(item->>'option_text','')<>'' then ' ('||regexp_replace(item->>'option_text',E'[\r\n]+',' ','g')||')' else '' end||
         ' $'||(item->>'line_total');
     end loop;
-    text_value:=text_value||E'\nTiền món: $'||saved.subtotal||
+    text_value:=text_value||case when method<>'pickup' then E'\nTiền món: $'||saved.subtotal else '' end||
       E'\nNhận hàng: '||case method when 'pickup' then 'Pick up Springvale' when 'delivery' then 'Delivery Melbourne' else 'AusPost' end;
     if saved.pickup_date is not null then text_value:=text_value||E'\nNgày pick up: '||saved.pickup_date; end if;
     if saved.pickup_time is not null then text_value:=text_value||E'\nGiờ pick up: '||saved.pickup_time; end if;
