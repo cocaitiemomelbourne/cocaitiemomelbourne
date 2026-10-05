@@ -148,7 +148,7 @@ button,input,select{font:inherit}
       <h3>Giá đơn đang chọn</h3>
       <div class="price-grid">
         <div class="price-box"><b>Tiền món</b><div id="panelSubtotal" class="price-value">—</div></div>
-        <div class="price-box"><b>Tổng sau phí</b><div id="panelTotal" class="price-value">—</div></div>
+        <div class="price-box"><b id="panelTotalLabel">Tổng</b><div id="panelTotal" class="price-value">—</div></div>
       </div>
       <div id="deliveryEditor" class="hidden">
         <div class="delivery-editor">
@@ -317,10 +317,10 @@ function firstMatch(text,re){const m=String(text||"").match(re);return m?m[1].tr
 function parseLegacy(o){
   const raw=String(o.order_text||"");
   const lines=raw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
-  const p={items:[],customer_name:"",phone:"",recipient_name:"",shipping_address:"",payment_method:"",customer_note:"",fulfilment_method:"",subtotal:null};
+  const p={items:[],customer_name:"",phone:"",recipient_name:"",shipping_address:"",payment_method:"",customer_note:"",fulfilment_method:"",subtotal:null,delivery_fee:null};
   if(lines.length&&!/^\d+\s*x\s+/i.test(lines[0])&&!/^(Tổng|Total|Tiền món|Items):/i.test(lines[0]))p.customer_name=lines[0];
 
-  const fieldLine=/^(?:Tổng|Total|Tiền món|Items|Subtotal|Nhận hàng|Fulfilment|Tên người nhận|Recipient|SĐT|Phone|Địa chỉ|Address|Thanh toán|Payment|Ghi chú|Note|PayID)\s*:/i;
+  const fieldLine=/^(?:Tổng|Total|Tạm tính|Provisional total|Tiền món|Items|Items subtotal|Subtotal|Phí giao hàng|Delivery fee|Delivery|AusPost|Nhận hàng|Fulfilment|Tên người nhận|Recipient|SĐT|Phone|Địa chỉ|Address|Thanh toán|Payment|Ghi chú|Note|PayID)\s*:/i;
 
   for(let i=0;i<lines.length;i++){
     const line=lines[i];
@@ -332,7 +332,8 @@ function parseLegacy(o){
     }
 
     let m;
-    if((m=line.match(/^(?:Tiền món|Items|Tổng|Subtotal):\s*\$?([0-9]+(?:\.[0-9]+)?)/i))&&p.subtotal===null)p.subtotal=Number(m[1]);
+    if((m=line.match(/^(?:Tiền món|Items|Items subtotal|Tạm tính|Subtotal):\s*\$?([0-9]+(?:\.[0-9]+)?)/i))&&p.subtotal===null)p.subtotal=Number(m[1]);
+    if((m=line.match(/^(?:Phí giao hàng|Delivery fee|Delivery|AusPost):\s*\$([0-9]+(?:\.[0-9]+)?)/i)))p.delivery_fee=Number(m[1]);
 
     if((m=line.match(/^(?:Nhận hàng|Fulfilment):\s*(.+)$/i))){
       const val=m[1].toLowerCase();
@@ -386,7 +387,7 @@ function viewOf(o){
     pickup_date:o.pickup_date||"",
     pickup_time:o.pickup_time||"",
     subtotal:subtotal,
-    delivery_fee:o.delivery_fee!==null&&o.delivery_fee!==undefined?Number(o.delivery_fee):null,
+    delivery_fee:o.delivery_fee!==null&&o.delivery_fee!==undefined?Number(o.delivery_fee):legacy.delivery_fee,
     total:o.total!==null&&o.total!==undefined?Number(o.total):null,
     items:structuredItems||legacy.items||[],
     raw:o.order_text||"",
@@ -425,9 +426,9 @@ function renderList(){
   if(!list.length){ordersEl.innerHTML='<div class="muted" style="padding:20px;text-align:center">Không tìm thấy đơn phù hợp.</div>';return}
   ordersEl.innerHTML=list.map(o=>{
     const v=viewOf(o);
-    const amount=v.total!==null?v.total:v.subtotal;
+    const pricing=pricingSummary(v),amount=pricing.amount;
     return '<div class="order '+(o.order_token===selectedToken?'active':'')+'" data-token="'+esc(o.order_token)+'">'+
-      '<div class="order-head"><div class="order-no">'+esc(v.order_number)+'</div><b>'+esc(money(amount))+'</b></div>'+
+      '<div class="order-head"><div class="order-no">'+esc(v.order_number)+'</div><b>'+esc(pricing.label+": "+money(amount))+'</b></div>'+
       '<div class="order-meta">'+esc(fmt(v.created_at))+' • '+esc(statusLabels[o.status]||o.status||"")+'</div>'+
       '<div class="order-name">'+esc(v.customer_name||"—")+(v.phone?' • '+esc(v.phone):'')+'</div></div>';
   }).join("");
@@ -496,6 +497,13 @@ function editorPayload(){
   });
 }
 
+function pricingSummary(v){
+  const shipping=v.fulfilment_method==="delivery"||v.fulfilment_method==="auspost";
+  const pending=shipping&&v.delivery_fee==null;
+  const subtotal=v.subtotal==null?null:Number(v.subtotal);
+  const amount=subtotal===null?v.total:subtotal+(shipping&&!pending?Number(v.delivery_fee):0);
+  return {shipping,pending,amount,label:pending?"Tạm tính":"Tổng"};
+}
 function buildCopyText(v){
   const lines=[v.customer_name||""];
   (v.items||[]).forEach(it=>{
@@ -507,8 +515,9 @@ function buildCopyText(v){
   if(v.recipient_name)lines.push("Tên người nhận: "+v.recipient_name);
   if(v.phone)lines.push("SĐT: "+v.phone);
   if(v.shipping_address)lines.push("Địa chỉ: "+v.shipping_address);
-  if(v.delivery_fee!==null)lines.push((v.fulfilment_method==="auspost"?"AusPost":"Delivery")+": "+money(v.delivery_fee));
-  if(v.total!==null)lines.push("Tổng: "+money(v.total));
+  const pricing=pricingSummary(v);
+  if(pricing.shipping)lines.push((v.fulfilment_method==="auspost"?"AusPost":"Delivery")+": "+(pricing.pending?"Chờ báo giá":money(v.delivery_fee)));
+  lines.push(pricing.label+": "+money(pricing.amount));
   if(v.payment_method)lines.push("Thanh toán: "+v.payment_method);
   lines.push("Ghi chú: "+(v.customer_note||"Không có"));
   return lines.filter(Boolean).join("\n");
@@ -570,14 +579,14 @@ function renderOrder(o){
   setText("feeLabel",v.fulfilment_method==="auspost"?"AusPost":"Delivery");
   setText("deliveryFee",money(v.delivery_fee));
 
-  let displayTotal=v.total;
-  if(displayTotal===null&&v.subtotal!==null&&v.delivery_fee!==null)displayTotal=v.subtotal+v.delivery_fee;
-  if(!isShipping&&v.subtotal!==null)displayTotal=v.subtotal;
+  const pricing=pricingSummary(v);
+  const displayTotal=pricing.amount;
   setText("total",money(displayTotal));
-  setText("totalLabel",isShipping&&v.delivery_fee===null?"TẠM TÍNH":"TỔNG");
+  setText("totalLabel",pricing.label.toUpperCase());
+  setText("panelTotalLabel",pricing.label);
   setText("payment",v.payment_method);
   setText("note",v.customer_note||"Không có");
-  setText("rawText",v.raw);
+  setText("rawText",v.raw.replace(/^(?:Tạm tính|Subtotal|Items subtotal):/gm,"Tiền món:").replace(/^(?:Tổng|Total|Provisional total):.*$/gm,pricing.label+": "+money(pricing.amount)));
 
   setText("panelSubtotal",money(v.subtotal));setText("panelTotal",money(displayTotal));
   if(isShipping){
@@ -713,10 +722,8 @@ function makeReceiptCanvas(v,kitchen){
     rule();add("THANH TOÁN",20,true);add("Tiền món: "+money(v.subtotal));
     const shipping=v.fulfilment_method==="delivery"||v.fulfilment_method==="auspost";
     if(shipping)add((v.fulfilment_method==="auspost"?"AusPost":"Delivery")+": "+money(v.delivery_fee));
-    let total=v.total;
-    if(total===null&&v.subtotal!==null&&v.delivery_fee!==null)total=v.subtotal+v.delivery_fee;
-    if(!shipping&&v.subtotal!==null)total=v.subtotal;
-    add((shipping&&v.delivery_fee===null?"TẠM TÍNH: ":"TỔNG: ")+money(total),26,true);
+    const pricing=pricingSummary(v);
+    add(pricing.label.toUpperCase()+": "+money(pricing.amount),26,true);
     add("Phương thức: "+(v.payment_method||"—"),19);
   }
   rule();add("GHI CHÚ",20,true);add(v.customer_note||"Không có",20,kitchen);
