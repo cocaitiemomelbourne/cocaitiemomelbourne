@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function isEn() { return window.CCT_LANG === "en"; }
   function money(v) { return Number(v || 0).toFixed(2).replace(/\.00$/, ""); }
+  function displayDate(v) { return String(v || "").replace(/^(\d{4})-(\d{2})-(\d{2})$/, function(_,y,m,d){return d+"/"+m+"/"+y.slice(-2);}); }
   function normalize(v) {
     return String(v || "")
       .normalize("NFD")
@@ -168,7 +169,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (method === "pickup") {
       lines.push(en ? "Fulfilment: Pick up Springvale" : "Nhận hàng: Pick up Springvale");
-      if (pickupDate) lines.push((en ? "Pickup date: " : "Ngày pick up: ") + pickupDate);
+      if (pickupDate) lines.push((en ? "Pickup date: " : "Ngày pick up: ") + displayDate(pickupDate));
       if (pickupTime) lines.push((en ? "Pickup time: " : "Giờ pick up: ") + pickupTime.slice(0,5));
     } else if (method === "delivery") {
       lines.push(en ? "Fulfilment: Melbourne delivery" : "Nhận hàng: Delivery Melbourne");
