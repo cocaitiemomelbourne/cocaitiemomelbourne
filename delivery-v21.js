@@ -57,14 +57,18 @@ document.addEventListener("DOMContentLoaded", function () {
     var total = sub + fee;
     var expected = money(total);
     if (cartTotal.textContent !== expected) cartTotal.textContent = expected;
+    var pending = method === "auspost" || (method === "delivery" && !match);
+    var label = document.querySelector(".total-row > span");
+    var labelText = pending ? (isEn() ? "Provisional total" : "Tạm tính") : (isEn() ? "Total" : "Tổng");
+    if (label && label.textContent !== labelText) label.textContent = labelText;
 
     if (!row) return;
-    if (method !== "delivery") {
+    if (method === "pickup") {
       row.style.display = "none";
       return;
     }
     row.style.display = "flex";
-    if (match) {
+    if (method === "delivery" && match) {
       row.innerHTML = '<span>' + (isEn() ? 'Delivery fee' : 'Phí giao hàng') +
         ' <span style="font-weight:600">(' + escapeHtml(match.suburb) + ')</span></span><strong>$' + money(match.fee) + '</strong>';
     } else {
@@ -160,7 +164,7 @@ document.addEventListener("DOMContentLoaded", function () {
       var optionText = item.option_text ? " (" + item.option_text + ")" : "";
       lines.push(Number(item.qty || 0) + " x " + String(item.name || "") + optionText + " $" + money(Number(item.price || 0) * Number(item.qty || 0)));
     });
-    lines.push((en ? "Subtotal: $" : "Tạm tính: $") + money(sub));
+    lines.push((en ? "Items subtotal: $" : "Tiền món: $") + money(sub));
 
     if (method === "pickup") {
       lines.push(en ? "Fulfilment: Pick up Springvale" : "Nhận hàng: Pick up Springvale");
@@ -180,7 +184,8 @@ document.addEventListener("DOMContentLoaded", function () {
     if (email) lines.push((en ? "Contact email: " : "Email liên hệ: ") + email);
     lines.push((en ? "Payment: " : "Thanh toán: ") + payment);
     lines.push((en ? "Note: " : "Ghi chú: ") + (note || (en ? "None" : "Không có")));
-    lines.push((en ? "Total: $" : "Tổng: $") + money(total));
+    var pending = method === "auspost" || (method === "delivery" && !match);
+    lines.push((pending ? (en ? "Provisional total: $" : "Tạm tính: $") : (en ? "Total: $" : "Tổng: $")) + money(total));
     return lines.join("\n");
   };
 
@@ -190,8 +195,8 @@ document.addEventListener("DOMContentLoaded", function () {
     var method = deliveryMethod.value;
     var match = method === "delivery" ? window.CCT_deliveryMatch : null;
     var sub = Number(subtotalValue != null ? subtotalValue : subtotal());
-    var fee = match ? Number(match.fee || 0) : (method === "delivery" ? null : 0);
-    var total = fee == null ? sub : sub + fee;
+    var fee = method === "pickup" ? 0 : (match ? Number(match.fee || 0) : null);
+    var total = fee == null ? null : sub + fee;
     try {
       var response = await fetch(SUPABASE_URL + "/rest/v1/rpc/save_order_delivery_pricing_v1", {
         method: "POST",
