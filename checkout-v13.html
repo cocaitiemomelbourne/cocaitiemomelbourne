@@ -1083,9 +1083,10 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    const optionText = selectedOptions.map(function (opt) {
-      return opt.choice;
-    }).join(" • ");
+    const optionText = selectedOptions
+      .filter(function (opt, index) { return Number(product.id) !== 40 || index === 0 || opt.choiceIndex > 0; })
+      .map(function (opt, index) { return Number(product.id) === 40 && index > 0 ? opt.group + ": " + opt.choice : opt.choice; })
+      .join(" • ");
 
     const addonPrice = Number(product.id) === 40
       ? selectedOptions.reduce(function (sum, opt, index) {
@@ -1570,7 +1571,7 @@ document.addEventListener("DOMContentLoaded", function () {
       var enC=Array.isArray(enG.choices)?enG.choices:[];
       var idx=viC.indexOf(opt.choice); if(idx<0) idx=enC.indexOf(opt.choice);
       var targetC=lang==="en"?enC:viC;
-      return {group:targetG.name||opt.group,choice:(idx>=0&&targetC[idx])?targetC[idx]:opt.choice};
+      return {group:targetG.name||opt.group,choice:(idx>=0&&targetC[idx])?targetC[idx]:opt.choice,choiceIndex:idx>=0?idx:opt.choiceIndex};
     });
   }
 
@@ -1588,7 +1589,7 @@ document.addEventListener("DOMContentLoaded", function () {
       item.name=currentLang==="en"?(tr.name_en||tr.name):tr.name;
       if(Array.isArray(item.options)&&item.options.length){
         item.options=translateOptions(item.options,tr,currentLang);
-        item.option_text=item.options.map(function(o){return o.choice;}).join(" • ");
+        item.option_text=item.options.filter(function(o,i){return Number(item.id)!==40||i===0||o.choiceIndex>0;}).map(function(o,i){return Number(item.id)===40&&i>0?o.group+": "+o.choice:o.choice;}).join(" • ");
         item.variant_key=item.id+"::"+item.option_text;
       }
     });
