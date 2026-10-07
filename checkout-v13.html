@@ -1013,7 +1013,7 @@ document.addEventListener("DOMContentLoaded", function () {
           const id = "opt-" + groupIndex + "-" + choiceIndex + "-" + Date.now();
           html +=
             '<label class="option-choice" for="' + id + '">' +
-              '<input id="' + id + '" type="radio" name="option-group-' + groupIndex + '" value="' + escapeHtml(choice) + '">' +
+              '<input id="' + id + '" type="radio" name="option-group-' + groupIndex + '" value="' + escapeHtml(choice) + '" data-choice-index="' + choiceIndex + '"' + (Number(product.id) === 40 && groupIndex > 0 && choiceIndex === 0 ? " checked" : "") + '>' +
               '<span>' + escapeHtml(choice) + '</span>' +
             '</label>';
         });
@@ -1056,7 +1056,8 @@ document.addEventListener("DOMContentLoaded", function () {
           if (checked) {
             selected.push({
               group: groups[i].name || ("Option " + (i + 1)),
-              choice: checked.value
+              choice: checked.value,
+              choiceIndex: Number(checked.dataset.choiceIndex)
             });
           }
         }
@@ -1086,6 +1087,15 @@ document.addEventListener("DOMContentLoaded", function () {
       return opt.choice;
     }).join(" • ");
 
+    const addonPrice = Number(product.id) === 40
+      ? selectedOptions.reduce(function (sum, opt, index) {
+          if (index === 1 || index === 2) return sum + (opt.choiceIndex > 0 ? 10 : 0);
+          if (index === 3 || index === 4) return sum + opt.choiceIndex * 5;
+          return sum;
+        }, 0)
+      : 0;
+    const unitPrice = Number(product.price) + addonPrice;
+
     const variantKey = product.id + "::" + optionText;
 
     const existing = cart.find(function (item) {
@@ -1110,7 +1120,7 @@ document.addEventListener("DOMContentLoaded", function () {
       cart.push({
         id: product.id,
         name: product.name,
-        price: product.price,
+        price: unitPrice,
         qty: 1,
         stock_qty: product.stock_qty,
         category: product.category,
