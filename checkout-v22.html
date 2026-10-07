@@ -10,7 +10,7 @@
   <script>
   (async function () {
     try {
-      const response = await fetch('./checkout-v13.html?v=22-base', { cache: 'no-cache' });
+      const response = await fetch('./checkout-v13.html?v=22-base-addons-20261007', { cache: 'no-cache' });
       if (!response.ok) throw new Error('Không tải được bản nền v13');
       let html = await response.text();
 
