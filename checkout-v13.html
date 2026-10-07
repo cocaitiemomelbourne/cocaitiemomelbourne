@@ -2080,6 +2080,10 @@ document.addEventListener("DOMContentLoaded", function () {
       if(index<0) return;
       var addButton=document.querySelector('#productGrid [data-add-index="'+index+'"]');
       if(!addButton) return;
+      if(Array.isArray(products[index].option_groups) && products[index].option_groups.length){
+        addButton.click();
+        return;
+      }
       var card=addButton.closest(".product-card");
       if(!card) return;
       card.scrollIntoView({behavior:"smooth",block:"center"});
