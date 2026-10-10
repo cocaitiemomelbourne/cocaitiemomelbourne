@@ -428,7 +428,10 @@ function viewOf(o){
     subtotal:subtotal,
     delivery_fee:o.delivery_fee!==null&&o.delivery_fee!==undefined?Number(o.delivery_fee):legacy.delivery_fee,
     total:o.total!==null&&o.total!==undefined?Number(o.total):null,
-    items:structuredItems||legacy.items||[],
+    items:structuredItems||(legacy.items||[]).map((item,index)=>{
+      const committed=Array.isArray(o.items)&&o.items.length===legacy.items.length?o.items[index]:null;
+      return {...item,id:committed&&Number(committed.qty)===Number(item.qty)?committed.id:null};
+    }),
     raw:o.order_text||"",
     status:o.status||""
   };
@@ -441,7 +444,7 @@ async function rpc(name,body){
 }
 
 async function fetchOrders(){
-  if(!productCatalog.length){
+  {
     const catalog=await rpc("get_order_editor_products_v1",{p_passcode:code});
     productCatalog=Array.isArray(catalog)?catalog:[];
   }
@@ -481,7 +484,9 @@ function productByName(name){
 }
 
 function productOptions(selectedId){
-  return productCatalog.map(p=>{
+  const known=productCatalog.some(p=>String(p.id)===String(selectedId));
+  const placeholder='<option value="" '+(!known?'selected':'')+'>Chọn đúng món trong menu</option>';
+  return placeholder+productCatalog.map(p=>{
     const stock=p.stock_qty===null||p.stock_qty===undefined?"∞":p.stock_qty;
     return '<option value="'+esc(p.id)+'" '+(String(p.id)===String(selectedId)?'selected':'')+'>'+esc(String(p.name).trim())+' — '+esc(money(p.price))+' — stock '+esc(stock)+'</option>';
   }).join("");
@@ -492,7 +497,7 @@ function addEditorRow(item,target=editRows){
   if(item.is_custom===true){addCustomEditorRow(item,target);return}
   let id=item.id;
   if(!id&&item.name){const matched=productByName(item.name);if(matched)id=matched.id;}
-  if(!id&&productCatalog.length)id=productCatalog[0].id;
+
   const row=document.createElement("div");
   row.className="edit-row";
   row.innerHTML='<select class="product-select">'+productOptions(id)+'</select>'+
