@@ -41,7 +41,10 @@ button,input,select{font:inherit}
 .preview-tools select{width:auto;min-width:150px}
 .pricing{padding:12px;margin-bottom:10px}
 .pricing h3{margin:0 0 8px;font-size:15px}
-.price-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.price-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.discount-editor{display:grid;grid-template-columns:150px 1fr auto;gap:8px;margin-top:9px}
+.discount-editor select,.discount-editor input{width:100%;padding:11px 12px;border:1px solid #d8cec3;border-radius:10px;background:#fff}
+@media(max-width:650px){.discount-editor{grid-template-columns:1fr 1fr}.discount-editor button{grid-column:1/-1}.price-grid{grid-template-columns:1fr 1fr}.price-grid .discount-box{grid-column:1/-1}}
 .price-box{background:#faf7f3;border-radius:10px;padding:9px}
 .price-box b{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
 .price-value{font-size:18px;font-weight:900}
@@ -49,12 +52,19 @@ button,input,select{font:inherit}
 .save-msg{font-size:12px;margin-top:7px;color:#4f6b42}
 .edit-items{padding:12px;margin-bottom:14px}
 .edit-items h3{margin:0 0 8px;font-size:15px}
-.edit-row{display:grid;grid-template-columns:minmax(190px,1fr) 82px minmax(150px,.8fr) auto;gap:8px;align-items:center;margin-top:8px}
+.edit-row{display:grid;grid-template-columns:minmax(190px,1fr) 82px 110px minmax(150px,.8fr) auto;gap:8px;align-items:center;margin-top:8px}
+.edit-price-wrap{display:grid;gap:3px}
+.edit-price-wrap small{font-size:10px;color:var(--muted);font-weight:700}
 .edit-row select,.edit-row input{width:100%;padding:10px;border:1px solid #d8cec3;border-radius:10px;background:#fff}
 .edit-row .remove-item{padding:10px 12px}
 .edit-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .stock-hint{font-size:11px;color:var(--muted);margin-top:3px}
-@media(max-width:760px){.edit-row{grid-template-columns:1fr 80px}.edit-row .option-input{grid-column:1/2}.edit-row .remove-item{grid-column:2/3;grid-row:2}}
+@media(max-width:760px){
+  .edit-row{grid-template-columns:1fr 80px}
+  .edit-row .edit-price-wrap{grid-column:1/2}
+  .edit-row .option-input{grid-column:1/2}
+  .edit-row .remove-item{grid-column:2/3;grid-row:3}
+}
 .order-actions{padding:12px;margin-bottom:10px}
 .order-actions h3{margin:0 0 8px;font-size:15px}
 .status-editor{display:grid;grid-template-columns:1fr auto;gap:8px}
@@ -133,6 +143,313 @@ button,input,select{font:inherit}
   .custom-row .option-input{grid-column:1/-1}
   .custom-row .remove-item{grid-column:2/3;grid-row:3}
 }
+
+/* Order Manager v9 — Inbox layout */
+body.v9-active{overflow:hidden}
+#app.v9-inbox{
+  height:calc(100dvh - 36px);
+  min-height:640px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+#app.v9-inbox>.top{
+  flex:0 0 auto;
+  margin-bottom:8px;
+}
+.v9-status-tabs{
+  flex:0 0 auto;
+  display:flex;
+  gap:7px;
+  overflow-x:auto;
+  padding:2px 0 9px;
+  scrollbar-width:none;
+}
+.v9-status-tabs::-webkit-scrollbar{display:none}
+.v9-status-tab{
+  flex:0 0 auto;
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--ink);
+  border-radius:999px;
+  padding:9px 12px;
+  font-weight:800;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.v9-status-tab.active{
+  background:var(--dark);
+  color:#fff;
+  border-color:var(--dark);
+}
+.v9-status-tab b{
+  display:inline-block;
+  margin-left:5px;
+  min-width:20px;
+  text-align:center;
+}
+.v9-shell{
+  flex:1 1 auto;
+  min-height:0;
+  display:grid;
+  grid-template-columns:360px minmax(0,1fr);
+  gap:12px;
+}
+.v9-list-pane,.v9-detail-pane{min-width:0;min-height:0}
+.v9-list-pane{
+  overflow:hidden;
+}
+.v9-list-pane>.left{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  padding:12px;
+}
+.v9-list-pane .toolbar{
+  flex:0 0 auto;
+  grid-template-columns:1fr;
+}
+.v9-list-pane #status{display:none}
+.v9-list-pane .orders{
+  flex:1 1 auto;
+  min-height:0;
+  max-height:none;
+  overflow-y:auto;
+  padding-right:3px;
+}
+.v9-detail-pane{
+  overflow-y:auto;
+  padding:0 4px 24px 0;
+  scroll-behavior:smooth;
+}
+.v9-detail-title{
+  position:sticky;
+  top:0;
+  z-index:20;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:8px 10px;
+  margin:0 0 10px;
+  background:rgba(255,248,239,.96);
+  backdrop-filter:blur(8px);
+  border:1px solid var(--line);
+  border-radius:12px;
+}
+.v9-detail-title strong{font-size:14px}
+.v9-detail-title span{font-size:12px;color:var(--muted)}
+.v9-detail-pane .selected-order-preview{margin-bottom:10px}
+.v9-detail-pane .selected-controls{
+  grid-template-columns:1.25fr 1fr .9fr;
+  margin-bottom:10px;
+}
+.v9-detail-pane .edit-items{margin-bottom:10px}
+.v9-detail-pane .paper{margin:0 auto}
+.v9-hidden-heading{display:none!important}
+#app.v9-inbox>.stats,
+#app.v9-inbox>.layout{display:none!important}
+
+/* New-order form becomes an overlay instead of stretching the page. */
+#app.v9-inbox #manualCard:not(.hidden){
+  position:fixed;
+  inset:14px;
+  z-index:1000;
+  max-width:920px;
+  margin:auto;
+  overflow-y:auto;
+  box-shadow:0 20px 80px #0005;
+  padding:18px;
+}
+#app.v9-inbox #manualRecoveryMsg:not(.hidden){
+  position:fixed;
+  z-index:1100;
+  left:50%;
+  top:12px;
+  transform:translateX(-50%);
+  max-width:min(720px,calc(100vw - 24px));
+}
+
+@media(max-width:1050px){
+  .v9-shell{grid-template-columns:330px minmax(0,1fr)}
+  .v9-detail-pane .selected-controls{grid-template-columns:1fr 1fr}
+  .v9-detail-pane .top-print{grid-column:1/-1}
+}
+@media(max-width:760px){
+  .wrap{padding:8px}
+  #app.v9-inbox{
+    height:calc(100dvh - 16px);
+    min-height:0;
+  }
+  #app.v9-inbox>.top{
+    flex-direction:row;
+    align-items:center;
+    margin-bottom:5px;
+  }
+  #app.v9-inbox>.top h1{font-size:21px}
+  #app.v9-inbox>.top .muted{display:none}
+  #app.v9-inbox>.top>div:last-child{
+    display:flex;
+    gap:5px;
+    flex-wrap:nowrap;
+  }
+  #app.v9-inbox>.top .btn{
+    padding:8px 9px;
+    font-size:12px;
+  }
+  .v9-status-tabs{padding-bottom:6px}
+  .v9-status-tab{padding:8px 10px;font-size:12px}
+  .v9-shell{
+    grid-template-columns:1fr;
+    grid-template-rows:minmax(180px,29dvh) minmax(0,1fr);
+    gap:8px;
+  }
+  .v9-list-pane .left{padding:9px}
+  .v9-list-pane .toolbar{margin-bottom:5px}
+  .v9-list-pane .toolbar input{padding:8px 10px}
+  .v9-list-pane .order{padding:8px}
+  .v9-list-pane .order-meta{font-size:11px}
+  .v9-list-pane .order-name{font-size:12px}
+  .v9-detail-pane{
+    border-top:3px solid var(--line);
+    padding:6px 0 24px;
+    min-height:0;
+  }
+  .v9-detail-title{
+    top:0;
+    margin-bottom:8px;
+    border-radius:10px;
+  }
+  .v9-detail-pane .selected-controls{grid-template-columns:1fr}
+  .v9-detail-pane .top-print{grid-column:auto}
+  .v9-detail-pane .selected-order-preview .preview-card{padding:8px}
+  .v9-detail-pane .paper{width:min(80mm,100%)}
+  #app.v9-inbox #manualCard:not(.hidden){inset:8px;padding:14px}
+}
+
+</style>
+
+<style id="v12-mobile-app-style">
+.v12-item-summary{display:none}
+.v12-discount-trigger{display:none}
+@media(max-width:760px){
+  body.v9-active{overflow:hidden}
+  #app.v9-inbox{height:calc(100dvh - 16px);overflow:hidden}
+
+  /* Mobile behaves like two app screens, not split view */
+  .v9-shell{display:block!important;min-height:0}
+  .v9-list-pane{display:block;height:100%;overflow:hidden}
+  .v9-detail-pane{display:none;height:100%;overflow-y:auto;border-top:0!important;padding:0 0 88px!important}
+  body.v12-detail-open .v9-list-pane{display:none}
+  body.v12-detail-open .v9-detail-pane{display:block}
+  body.v12-detail-open #app.v9-inbox>.top,
+  body.v12-detail-open .v9-status-tabs{display:none!important}
+
+  .v9-detail-title{
+    position:sticky;top:0;z-index:50;
+    min-height:54px;margin:0 0 8px!important;
+    border-radius:0 0 12px 12px!important;
+    padding:8px 10px!important;
+  }
+  .v12-back{
+    border:0;background:#efe8df;color:var(--ink);
+    border-radius:10px;padding:9px 11px;font-weight:900;
+  }
+  .v12-detail-name{font-weight:900;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:52vw}
+
+  /* Make receipt readable as a normal full-width order card on phone */
+  .v9-detail-pane .selected-order-preview .preview-card{padding:8px!important}
+  .v9-detail-pane .paper{
+    width:100%!important;max-width:none!important;min-height:0!important;
+    box-shadow:none!important;border-radius:12px!important;
+    padding:14px 14px!important;
+  }
+  .v9-detail-pane .paper .logo{font-size:22px}
+  .v9-detail-pane .paper .sub,
+  .v9-detail-pane .paper .meta,
+  .v9-detail-pane .paper .note{font-size:13px}
+  .v9-detail-pane .paper .items{font-size:14px}
+  .v9-detail-pane .paper .item-main{font-size:14px}
+  .v9-detail-pane .paper .item-opt{font-size:12px}
+  .v9-detail-pane .paper .total{font-size:17px}
+  .v9-detail-pane .paper .section-title{font-size:12px}
+
+  /* Compact editing like a POS app */
+  .edit-items{padding:10px!important}
+  .edit-items>h3{font-size:16px;margin-bottom:2px}
+  .edit-items>.muted{font-size:11px;margin-bottom:8px}
+  #editRows{display:grid;gap:7px}
+  #editRows .edit-row{
+    display:block!important;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:0;
+    margin:0;
+    overflow:hidden;
+    background:#fff;
+  }
+  #editRows .edit-row.custom-row{padding:0!important}
+  .v12-item-summary{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto auto auto;
+    gap:8px;align-items:center;
+    padding:11px 10px;
+  }
+  .v12-item-name{font-weight:850;font-size:13px;line-height:1.25;min-width:0}
+  .v12-item-qty,.v12-item-price{font-size:12px;font-weight:800;white-space:nowrap}
+  .v12-item-more{
+    width:34px;height:34px;border:0;border-radius:10px;
+    background:#efe8df;font-size:20px;line-height:1;font-weight:900;
+  }
+  #editRows .edit-row:not(.v12-expanded)>:not(.v12-item-summary){display:none!important}
+  #editRows .edit-row.v12-expanded{
+    padding:0 10px 10px;
+  }
+  #editRows .edit-row.v12-expanded .v12-item-summary{
+    margin:0 -10px 9px;
+    border-bottom:1px solid var(--line);
+  }
+  #editRows .edit-row.v12-expanded>select,
+  #editRows .edit-row.v12-expanded>input,
+  #editRows .edit-row.v12-expanded>.edit-price-wrap,
+  #editRows .edit-row.v12-expanded>.custom-label,
+  #editRows .edit-row.v12-expanded>.remove-item{
+    display:block!important;
+    width:100%!important;
+    margin-top:7px;
+  }
+  #editRows .edit-row.v12-expanded>.remove-item{background:#f7e9e5;color:#8d3428}
+  .edit-actions{
+    display:grid!important;
+    grid-template-columns:1fr 1fr;
+    gap:7px!important;
+  }
+  #saveItems{grid-column:1/-1}
+
+  /* Compact pricing / discount */
+  .selected-controls{display:grid!important;grid-template-columns:1fr!important;gap:8px!important}
+  .pricing{padding:10px!important}
+  .price-grid{grid-template-columns:repeat(3,1fr)!important;gap:6px!important}
+  .price-box{padding:8px!important}
+  .price-value{font-size:16px!important}
+  .v12-discount-trigger{
+    display:flex;width:100%;justify-content:space-between;align-items:center;
+    border:1px solid var(--line);background:#fff;border-radius:10px;
+    padding:10px 11px;margin-top:8px;font-weight:850;color:var(--ink)
+  }
+  .discount-editor{display:none!important;margin-top:7px!important}
+  .pricing.v12-discount-open .discount-editor{
+    display:grid!important;grid-template-columns:1fr 1fr!important;
+  }
+  .pricing.v12-discount-open .discount-editor button{grid-column:1/-1}
+  .pricing>.muted{display:none}
+  .delivery-editor{grid-template-columns:1fr auto!important}
+
+  /* Bottom actions in detail view */
+  .order-actions,.top-print{padding:10px!important}
+  .preview-tools{gap:6px!important}
+  .preview-tools .btn,.preview-tools select{font-size:12px!important;padding:9px 10px!important}
+}
 </style>
 </head>
 <body>
@@ -186,8 +503,19 @@ button,input,select{font:inherit}
       <h3>Giá đơn đang chọn</h3>
       <div class="price-grid">
         <div id="panelSubtotalBox" class="price-box"><b>Tiền món</b><div id="panelSubtotal" class="price-value">—</div></div>
+        <div class="price-box discount-box"><b>Discount</b><div id="panelDiscount" class="price-value">—</div></div>
         <div class="price-box"><b id="panelTotalLabel">Tổng</b><div id="panelTotal" class="price-value">—</div></div>
       </div>
+      <div class="discount-editor">
+        <select id="discountType" aria-label="Loại discount">
+          <option value="">Không discount</option>
+          <option value="amount">Giảm theo $</option>
+          <option value="percent">Giảm theo %</option>
+        </select>
+        <input id="discountInput" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Nhập discount">
+        <button id="saveDiscount" class="btn primary">Lưu discount</button>
+      </div>
+      <div class="muted" style="margin-top:5px">Giảm % chỉ tính trên tiền món, không giảm phí Delivery/AusPost.</div>
       <div id="deliveryEditor" class="hidden">
         <div class="delivery-editor">
           <input id="deliveryInput" inputmode="decimal" placeholder="Nhập phí delivery, ví dụ 8">
@@ -228,7 +556,7 @@ button,input,select{font:inherit}
 
   <div class="edit-items card">
     <h3>Sửa món trong đơn</h3>
-    <div class="muted">Món trong menu tự điều chỉnh tồn kho. Món ngoài menu chỉ lưu trong đơn này, không thêm vào menu chính hoặc trừ tồn kho.</div>
+    <div class="muted">Món trong menu tự điều chỉnh tồn kho. Có thể sửa <b>Đơn giá</b> riêng cho đơn này; giá trên menu/web không thay đổi. Món ngoài menu chỉ lưu trong đơn này.</div>
     <div id="editRows"></div>
     <div class="edit-actions">
       <button id="addItemRow" class="btn alt">+ Thêm món trong menu</button>
@@ -283,6 +611,7 @@ button,input,select{font:inherit}
           <div class="section-title">THANH TOÁN</div>
           <div id="subtotalRow" class="row"><span>Tiền món</span><span id="subtotal">—</span></div>
           <div id="feeRow" class="row"><span id="feeLabel">Delivery</span><span id="deliveryFee">—</span></div>
+          <div id="discountRow" class="row"><span>Discount</span><span id="discountAmount">—</span></div>
           <div class="row total"><span id="totalLabel">TỔNG</span><span id="total">—</span></div>
           <div class="row payment-only"><span>Phương thức</span><b id="payment">—</b></div>
         </div>
@@ -341,7 +670,7 @@ button,input,select{font:inherit}
 (function(){
 const URL="https://eswrqkhsvlqndjbrgsqo.supabase.co";
 const KEY="sb_publishable_-6iIwPaZQRMkkWAROdfvxg_dmVB81E2";
-const login=document.getElementById("login"),app=document.getElementById("app"),passcode=document.getElementById("passcode"),unlock=document.getElementById("unlock"),loginMsg=document.getElementById("loginMsg"),ordersEl=document.getElementById("orders"),search=document.getElementById("search"),status=document.getElementById("status"),paper=document.getElementById("paper"),mode=document.getElementById("mode"),deliveryEditor=document.getElementById("deliveryEditor"),deliveryInput=document.getElementById("deliveryInput"),savePrice=document.getElementById("savePrice"),saveMsg=document.getElementById("saveMsg"),orderStatus=document.getElementById("orderStatus"),saveStatus=document.getElementById("saveStatus"),statusMsg=document.getElementById("statusMsg"),copyBtn=document.getElementById("copyBtn"),editRows=document.getElementById("editRows"),addItemRow=document.getElementById("addItemRow"),saveItems=document.getElementById("saveItems"),editMsg=document.getElementById("editMsg");
+const login=document.getElementById("login"),app=document.getElementById("app"),passcode=document.getElementById("passcode"),unlock=document.getElementById("unlock"),loginMsg=document.getElementById("loginMsg"),ordersEl=document.getElementById("orders"),search=document.getElementById("search"),status=document.getElementById("status"),paper=document.getElementById("paper"),mode=document.getElementById("mode"),deliveryEditor=document.getElementById("deliveryEditor"),deliveryInput=document.getElementById("deliveryInput"),savePrice=document.getElementById("savePrice"),saveMsg=document.getElementById("saveMsg"),discountType=document.getElementById("discountType"),discountInput=document.getElementById("discountInput"),saveDiscount=document.getElementById("saveDiscount"),orderStatus=document.getElementById("orderStatus"),saveStatus=document.getElementById("saveStatus"),statusMsg=document.getElementById("statusMsg"),copyBtn=document.getElementById("copyBtn"),editRows=document.getElementById("editRows"),addItemRow=document.getElementById("addItemRow"),saveItems=document.getElementById("saveItems"),editMsg=document.getElementById("editMsg");
 let code="",orders=[],selectedToken=null,currentView=null,productCatalog=[];
 
 const statusLabels={new:"Mới",confirmed:"Đã xác nhận",preparing:"Đang chuẩn bị",ready:"Sẵn sàng",completed:"Hoàn tất",cancelled:"Đã huỷ"};
@@ -427,6 +756,9 @@ function viewOf(o){
     pickup_time:o.pickup_time||"",
     subtotal:subtotal,
     delivery_fee:o.delivery_fee!==null&&o.delivery_fee!==undefined?Number(o.delivery_fee):legacy.delivery_fee,
+    discount_type:o.discount_type||"",
+    discount_value:o.discount_value!==null&&o.discount_value!==undefined?Number(o.discount_value):null,
+    discount_amount:o.discount_amount!==null&&o.discount_amount!==undefined?Number(o.discount_amount):0,
     total:o.total!==null&&o.total!==undefined?Number(o.total):null,
     items:structuredItems||(legacy.items||[]).map((item,index)=>{
       const committed=Array.isArray(o.items)&&o.items.length===legacy.items.length?o.items[index]:null;
@@ -448,7 +780,7 @@ async function fetchOrders(){
     const catalog=await rpc("get_order_editor_products_v1",{p_passcode:code});
     productCatalog=Array.isArray(catalog)?catalog:[];
   }
-  const data=await rpc("get_print_orders_v2",{p_passcode:code,p_limit:500});
+  const data=await rpc("get_print_orders_v3",{p_passcode:code,p_limit:500});
   orders=Array.isArray(data)?data:[];
   renderList();
   if(!selectedToken&&orders.length)selectOrder(orders[0].order_token);
@@ -502,6 +834,9 @@ function addEditorRow(item,target=editRows){
   row.className="edit-row";
   row.innerHTML='<select class="product-select">'+productOptions(id)+'</select>'+
     '<input class="qty-input" type="number" min="1" step="1" value="'+esc(item.qty||1)+'" aria-label="Số lượng">'+
+    (target===editRows
+      ? '<label class="edit-price-wrap"><small>Đơn giá</small><input class="override-price" type="number" min="0" max="1000000" step="0.01" inputmode="decimal" value="'+esc(item.unit_price!==undefined&&item.unit_price!==null?item.unit_price:(productCatalog.find(p=>Number(p.id)===Number(id))||{}).price??"")+'" placeholder="$"></label>'
+      : '')+
     '<input class="option-input" type="text" value="'+esc(item.option_text||"")+'" placeholder="Option / ghi chú món">'+
     '<button type="button" class="btn alt remove-item">Xoá</button>';
   target.appendChild(row);
@@ -537,7 +872,9 @@ function editorPayload(target=editRows){
       return {is_custom:true,name:row.querySelector(".custom-name").value.trim(),qty,
         unit_price:price===""?null:Number(price),option_text};
     }
-    return {id:Number(row.querySelector(".product-select").value),qty,option_text};
+    const priceInput=row.querySelector(".override-price");
+    const unit_price=priceInput?Number(priceInput.value):null;
+    return {id:Number(row.querySelector(".product-select").value),qty,option_text,unit_price};
   });
 }
 
@@ -671,8 +1008,9 @@ function pricingSummary(v){
   const shipping=v.fulfilment_method==="delivery"||v.fulfilment_method==="auspost";
   const pending=shipping&&v.delivery_fee==null;
   const subtotal=v.subtotal==null?null:Number(v.subtotal);
-  const amount=subtotal===null?v.total:subtotal+(shipping&&!pending?Number(v.delivery_fee):0);
-  return {shipping,pending,amount,label:pending?"Tạm tính":"Tổng"};
+  const discount=Number(v.discount_amount||0);
+  const amount=subtotal===null?v.total:Math.max(0,subtotal+(shipping&&!pending?Number(v.delivery_fee):0)-discount);
+  return {shipping,pending,amount,discount,label:pending?"Tạm tính":"Tổng"};
 }
 function normalizedOrderText(v){
   const pricing=pricingSummary(v),lines=String(v.raw||"").split(/\r?\n/);
@@ -697,6 +1035,7 @@ function buildCopyText(v){
   lines.push("Sđt: "+(v.phone||""));
   if(v.shipping_address)lines.push("Địa chỉ: "+v.shipping_address);
   if(pricing.shipping)lines.push((v.fulfilment_method==="auspost"?"AusPost":"Delivery")+": "+(pricing.pending?"Chờ báo giá":money(v.delivery_fee)));
+  if(pricing.discount>0)lines.push("Discount: -"+money(pricing.discount)+(v.discount_type==="percent"&&v.discount_value!==null?" ("+Number(v.discount_value).toFixed(2).replace(".00","")+"%)":""));
   lines.push("Ghi chú: "+(v.customer_note&&v.customer_note!=="Không có"?v.customer_note:""));
   return lines.filter(Boolean).join("\n");
 }
@@ -706,12 +1045,13 @@ async function saveEditedItems(){
   const payload=editorPayload();
   if(!payload.length){editMsg.textContent="Đơn phải có ít nhất 1 món.";return}
   if(payload.some(x=>!Number.isInteger(x.qty)||x.qty<1||x.qty>99999||(!x.is_custom&&!x.id))){editMsg.textContent="Kiểm tra lại món và số lượng (1–99999).";return}
+  if(payload.some(x=>!x.is_custom&&(!Number.isFinite(x.unit_price)||x.unit_price<0||x.unit_price>1000000||Math.abs(x.unit_price*100-Math.round(x.unit_price*100))>0.000001))){editMsg.textContent="Đơn giá cần hợp lệ, tối đa 2 chữ số thập phân.";return}
   if(payload.some(x=>x.is_custom&&(!x.name||x.name.length>200||x.unit_price===null||!Number.isFinite(x.unit_price)||x.unit_price<0||x.unit_price>1000000||Math.abs(x.unit_price*100-Math.round(x.unit_price*100))>0.000001))){editMsg.textContent="Món ngoài menu cần tên và đơn giá hợp lệ, tối đa 2 chữ số thập phân.";return}
   saveItems.disabled=true;saveItems.textContent="Đang lưu...";
   try{
-    await rpc("update_order_items_v1",{p_passcode:code,p_order_token:currentView.order_token,p_items:payload});
+    await rpc("update_order_items_v3",{p_passcode:code,p_order_token:currentView.order_token,p_items:payload});
     await fetchOrders();
-    editMsg.textContent="Đã lưu món và tính lại tổng đơn ✓";
+    editMsg.textContent="Đã lưu món, đơn giá và tính lại tổng đơn ✓";
   }catch(e){
     if(String(e.message).includes("invalid_custom_item"))editMsg.textContent="Kiểm tra lại tên, số lượng và đơn giá món ngoài menu.";
     else if(String(e.message).includes("insufficient_stock"))editMsg.textContent="Không đủ tồn kho cho một trong các món mới.";
@@ -758,6 +1098,12 @@ function renderOrder(o){
   document.getElementById("feeRow").style.display=isShipping?"flex":"none";
   setText("feeLabel",v.fulfilment_method==="auspost"?"AusPost":"Delivery");
   setText("deliveryFee",money(v.delivery_fee));
+  const discountValueText=v.discount_type==="percent"&&v.discount_value!==null
+    ? money(v.discount_amount)+" ("+Number(v.discount_value).toFixed(2).replace(".00","")+"%)"
+    : money(v.discount_amount||0);
+  setText("discountAmount",v.discount_amount>0?"-"+money(v.discount_amount):money(0));
+  setText("panelDiscount",v.discount_amount>0?"-"+discountValueText:money(0));
+  document.getElementById("discountRow").style.display=v.discount_amount>0?"flex":"none";
 
   const pricing=pricingSummary(v);
   const displayTotal=pricing.amount;
@@ -776,6 +1122,9 @@ function renderOrder(o){
   }else{
     deliveryEditor.classList.add("hidden");deliveryInput.value="";
   }
+  discountType.value=v.discount_type||"";
+  discountInput.value=v.discount_value===null?"":String(v.discount_value);
+  discountInput.disabled=!discountType.value;
   saveMsg.textContent="";
 }
 
@@ -785,7 +1134,13 @@ async function saveOrderStatus(){
   try{
     await rpc("update_order_manager_status_v1",{p_passcode:code,p_order_token:currentView.order_token,p_status:orderStatus.value});
     statusMsg.textContent="Đã cập nhật trạng thái ✓";
+    const previousToken=currentView.order_token;
     await fetchOrders();
+    const currentStillVisible=orders.find(o=>o.order_token===previousToken&&(status.value==="all"||o.status===status.value));
+    if(!currentStillVisible){
+      const next=orders.find(o=>status.value==="all"||o.status===status.value);
+      if(next) selectOrder(next.order_token);
+    }
   }catch(e){
     statusMsg.textContent="Không cập nhật được trạng thái.";
   }
@@ -801,11 +1156,41 @@ async function savePricing(){
   if(currentView.subtotal===null){saveMsg.textContent="Không xác định được tiền món của đơn này.";return}
   savePrice.disabled=true;savePrice.textContent="Đang lưu...";
   try{
-    await rpc("update_print_order_pricing_v1",{p_passcode:code,p_order_token:currentView.order_token,p_subtotal:currentView.subtotal,p_delivery_fee:fee});
+    await rpc("update_print_order_pricing_v2",{
+      p_passcode:code,p_order_token:currentView.order_token,p_subtotal:currentView.subtotal,p_delivery_fee:fee,
+      p_discount_type:currentView.discount_type||null,p_discount_value:currentView.discount_value
+    });
     saveMsg.textContent="Đã lưu phí và cập nhật tổng đơn ✓";
     await fetchOrders();
   }catch(e){saveMsg.textContent="Không lưu được giá. Vui lòng thử lại."}
   savePrice.disabled=false;savePrice.textContent="Lưu giá";
+}
+
+async function saveOrderDiscount(){
+  if(!currentView)return;
+  if(currentView.subtotal===null){saveMsg.textContent="Không xác định được tiền món của đơn này.";return}
+  const type=discountType.value||null;
+  const raw=discountInput.value.trim();
+  let value=null;
+  if(type){
+    if(raw===""){saveMsg.textContent="Vui lòng nhập giá trị discount.";return}
+    value=Number(raw);
+    if(!Number.isFinite(value)||value<0){saveMsg.textContent="Discount không hợp lệ.";return}
+    if(type==="percent"&&value>100){saveMsg.textContent="Discount % phải từ 0 đến 100.";return}
+    if(type==="amount"&&value>Number(currentView.subtotal)){saveMsg.textContent="Discount $ không thể lớn hơn tiền món.";return}
+  }
+  saveDiscount.disabled=true;saveDiscount.textContent="Đang lưu...";
+  try{
+    await rpc("update_print_order_pricing_v2",{
+      p_passcode:code,p_order_token:currentView.order_token,p_subtotal:currentView.subtotal,
+      p_delivery_fee:currentView.delivery_fee,p_discount_type:type,p_discount_value:value
+    });
+    saveMsg.textContent=type?"Đã lưu discount và cập nhật tổng đơn ✓":"Đã xoá discount ✓";
+    await fetchOrders();
+  }catch(e){
+    saveMsg.textContent=String(e.message).includes("discount")?"Discount không hợp lệ. Vui lòng kiểm tra lại.":"Không lưu được discount. Vui lòng thử lại.";
+  }
+  saveDiscount.disabled=false;saveDiscount.textContent="Lưu discount";
 }
 
 async function openManager(){
@@ -826,9 +1211,21 @@ async function openManager(){
 unlock.addEventListener("click",openManager);
 passcode.addEventListener("keydown",e=>{if(e.key==="Enter")openManager()});
 ordersEl.addEventListener("click",e=>{const row=e.target.closest("[data-token]");if(row)selectOrder(row.dataset.token)});
-search.addEventListener("input",renderList);status.addEventListener("change",renderList);
+search.addEventListener("input",renderList);
+status.addEventListener("change",function(){
+  renderList();
+  const next=orders.find(o=>status.value==="all"||o.status===status.value);
+  if(next) selectOrder(next.order_token);
+});
 mode.addEventListener("change",()=>paper.classList.toggle("kitchen",mode.value==="kitchen"));
 savePrice.addEventListener("click",savePricing);
+saveDiscount.addEventListener("click",saveOrderDiscount);
+discountType.addEventListener("change",function(){
+  discountInput.disabled=!discountType.value;
+  if(!discountType.value)discountInput.value="";
+  discountInput.placeholder=discountType.value==="percent"?"Ví dụ 10 = 10%":discountType.value==="amount"?"Ví dụ 5 = $5":"Nhập discount";
+});
+discountInput.addEventListener("keydown",e=>{if(e.key==="Enter")saveOrderDiscount()});
 saveStatus.addEventListener("click",saveOrderStatus);
 copyBtn.addEventListener("click",async function(){
   if(!currentView)return;
@@ -840,6 +1237,14 @@ copyBtn.addEventListener("click",async function(){
 });
 addItemRow.addEventListener("click",()=>addEditorRow());
 document.getElementById("addCustomItemRow").addEventListener("click",()=>{if(currentView)addCustomEditorRow()});
+editRows.addEventListener("change",e=>{
+  const select=e.target.closest(".product-select");
+  if(!select)return;
+  const row=select.closest(".edit-row");
+  const priceInput=row&&row.querySelector(".override-price");
+  const product=productCatalog.find(p=>Number(p.id)===Number(select.value));
+  if(priceInput&&product)priceInput.value=Number(product.price||0).toFixed(2).replace(".00","");
+});
 editRows.addEventListener("click",e=>{
   const btn=e.target.closest(".remove-item");
   if(!btn)return;
@@ -905,6 +1310,7 @@ function makeReceiptCanvas(v,kitchen){
     if(shipping)add("Tiền món: "+money(v.subtotal));
     if(shipping)add((v.fulfilment_method==="auspost"?"AusPost":"Delivery")+": "+money(v.delivery_fee));
     const pricing=pricingSummary(v);
+    if(pricing.discount>0)add("Discount: -"+money(pricing.discount)+(v.discount_type==="percent"&&v.discount_value!==null?" ("+Number(v.discount_value).toFixed(2).replace(".00","")+"%)":""),19);
     add(pricing.label.toUpperCase()+": "+money(pricing.amount),26,true);
     add("Phương thức: "+(v.payment_method||"—"),19);
   }
@@ -965,5 +1371,124 @@ mode.addEventListener("change",clearReceiptImage);
 const saved=sessionStorage.getItem("cct_print_code");if(saved){passcode.value=saved;openManager()}
 })();
 </script>
+
+<script>
+(function(){
+  function ready(fn){
+    if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",fn);
+    else fn();
+  }
+  ready(function(){
+    var app=document.getElementById("app");
+    var left=document.querySelector(".layout .left");
+    var selectedControls=document.querySelector(".selected-controls");
+    var editItems=document.querySelector(".edit-items");
+    var preview=document.querySelector(".selected-order-preview");
+    var stats=document.querySelector(".stats");
+    var status=document.getElementById("status");
+    if(!app||!left||!selectedControls||!editItems||!preview||!status) return;
+
+    document.body.classList.add("v9-active");
+    app.classList.add("v9-inbox");
+
+    // Hide the old section labels but keep the functional elements.
+    Array.from(app.children).forEach(function(el){
+      if(el.tagName==="DIV" && /ĐƠN ĐANG CHỌN|ĐƠN HÀNG ĐANG CHỌN/.test(el.textContent||"")){
+        el.classList.add("v9-hidden-heading");
+      }
+    });
+
+    var tabs=document.createElement("div");
+    tabs.className="v9-status-tabs";
+    tabs.setAttribute("role","tablist");
+    var statuses=[
+      ["new","Mới","s-new"],
+      ["confirmed","Đã xác nhận","s-confirmed"],
+      ["preparing","Đang chuẩn bị","s-preparing"],
+      ["ready","Sẵn sàng","s-ready"],
+      ["completed","Hoàn tất","s-completed"],
+      ["cancelled","Đã huỷ","s-cancelled"],
+      ["all","Tất cả",null]
+    ];
+    statuses.forEach(function(item){
+      var button=document.createElement("button");
+      button.type="button";
+      button.className="v9-status-tab";
+      button.dataset.status=item[0];
+      button.innerHTML='<span>'+item[1]+'</span>'+(item[2]?'<b data-count-source="'+item[2]+'">0</b>':'');
+      tabs.appendChild(button);
+    });
+
+    var top=app.querySelector(":scope > .top");
+    if(top) top.insertAdjacentElement("afterend",tabs);
+    else app.insertBefore(tabs,app.firstChild);
+
+    var shell=document.createElement("div");
+    shell.className="v9-shell";
+    var listPane=document.createElement("section");
+    listPane.className="v9-list-pane";
+    listPane.setAttribute("aria-label","Danh sách đơn");
+    var detailPane=document.createElement("section");
+    detailPane.className="v9-detail-pane";
+    detailPane.setAttribute("aria-label","Chi tiết đơn");
+
+    var detailTitle=document.createElement("div");
+    detailTitle.className="v9-detail-title";
+    detailTitle.innerHTML='<strong>Đơn đang chọn</strong><span>Bấm đơn bên trái để xem & xử lý</span>';
+    detailPane.appendChild(detailTitle);
+
+    left.parentNode && left.parentNode.removeChild(left);
+    listPane.appendChild(left);
+
+    preview.parentNode && preview.parentNode.removeChild(preview);
+    selectedControls.parentNode && selectedControls.parentNode.removeChild(selectedControls);
+    editItems.parentNode && editItems.parentNode.removeChild(editItems);
+
+    detailPane.appendChild(preview);
+    detailPane.appendChild(selectedControls);
+    detailPane.appendChild(editItems);
+
+    shell.appendChild(listPane);
+    shell.appendChild(detailPane);
+    app.appendChild(shell);
+
+    function syncTabs(){
+      tabs.querySelectorAll(".v9-status-tab").forEach(function(btn){
+        btn.classList.toggle("active",btn.dataset.status===status.value);
+        var count=btn.querySelector("[data-count-source]");
+        if(count){
+          var source=document.getElementById(count.dataset.countSource);
+          count.textContent=source?source.textContent:"0";
+        }
+      });
+    }
+
+    tabs.addEventListener("click",function(event){
+      var button=event.target.closest(".v9-status-tab");
+      if(!button) return;
+      status.value=button.dataset.status;
+      status.dispatchEvent(new Event("change",{bubbles:true}));
+      syncTabs();
+    });
+
+    if(stats){
+      new MutationObserver(syncTabs).observe(stats,{subtree:true,childList:true,characterData:true});
+    }
+    status.addEventListener("change",syncTabs);
+    syncTabs();
+
+    // Keep selected order visible in its own list pane without moving the whole page.
+    document.getElementById("orders").addEventListener("click",function(event){
+      var row=event.target.closest("[data-token]");
+      if(!row) return;
+      requestAnimationFrame(function(){
+        if(window.innerWidth<=760) detailPane.scrollTop=0;
+      });
+    });
+  });
+})();
+</script>
+
+<script src="./order-manager-v12-ui.js?v=1"></script>
 </body>
 </html>
