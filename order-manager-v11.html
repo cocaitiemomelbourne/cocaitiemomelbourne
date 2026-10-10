@@ -1,0 +1,1370 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Order Manager v11 Price Override Test | Có Cái Tiệm</title>
+<style>
+:root{--ink:#2f241b;--muted:#7c6c5d;--line:#e6dcd1;--bg:#fff8ef;--accent:#f2a51b;--dark:#2b251f}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+button,input,select{font:inherit}
+.wrap{max-width:1380px;margin:auto;padding:18px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px}
+.hidden{display:none!important}
+.login{max-width:520px;margin:70px auto;padding:22px}
+.login h1{margin:0 0 6px;font-size:34px}
+.muted{color:var(--muted);font-size:13px}
+.login input,.toolbar input,.toolbar select,.pricing input,.preview-tools select{width:100%;padding:11px 12px;border:1px solid #d8cec3;border-radius:10px;background:#fff}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;background:var(--dark);color:#fff}
+.btn.alt{background:#efe8df;color:var(--ink)}
+.btn.primary{background:var(--dark);color:#fff}
+.wide{width:100%;margin-top:10px}
+.notice{margin-top:12px;padding:10px 12px;border-radius:10px;background:#fff3cd;border:1px solid #efd98f;font-size:13px;line-height:1.4}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}
+.top h1{margin:0;font-size:30px}
+.layout{display:block}
+.left{padding:14px}
+.selected-order-preview{display:flex;justify-content:center;margin-bottom:14px}
+.selected-order-preview .preview-card{width:100%;padding:12px}
+.selected-order-preview .paper{margin:auto}
+.toolbar{display:grid;grid-template-columns:1fr 180px;gap:8px;margin-bottom:10px}
+.orders{display:grid;gap:8px;max-height:70vh;overflow:auto;padding-right:3px}
+.order{border:1px solid var(--line);border-radius:12px;padding:11px;cursor:pointer;background:#fff}
+.order:hover,.order.active{border-color:#c88d20;background:#fffaf0}
+.order-head{display:flex;justify-content:space-between;gap:10px}
+.order-no{font-weight:900}
+.order-meta{font-size:12px;color:var(--muted);margin-top:3px}
+.order-name{font-size:13px;margin-top:5px}
+.preview-card{padding:12px}
+.preview-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.preview-tools select{width:auto;min-width:150px}
+.pricing{padding:12px;margin-bottom:10px}
+.pricing h3{margin:0 0 8px;font-size:15px}
+.price-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.discount-editor{display:grid;grid-template-columns:150px 1fr auto;gap:8px;margin-top:9px}
+.discount-editor select,.discount-editor input{width:100%;padding:11px 12px;border:1px solid #d8cec3;border-radius:10px;background:#fff}
+@media(max-width:650px){.discount-editor{grid-template-columns:1fr 1fr}.discount-editor button{grid-column:1/-1}.price-grid{grid-template-columns:1fr 1fr}.price-grid .discount-box{grid-column:1/-1}}
+.price-box{background:#faf7f3;border-radius:10px;padding:9px}
+.price-box b{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
+.price-value{font-size:18px;font-weight:900}
+.delivery-editor{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:9px}
+.save-msg{font-size:12px;margin-top:7px;color:#4f6b42}
+.edit-items{padding:12px;margin-bottom:14px}
+.edit-items h3{margin:0 0 8px;font-size:15px}
+.edit-row{display:grid;grid-template-columns:minmax(190px,1fr) 82px 110px minmax(150px,.8fr) auto;gap:8px;align-items:center;margin-top:8px}
+.edit-price-wrap{display:grid;gap:3px}
+.edit-price-wrap small{font-size:10px;color:var(--muted);font-weight:700}
+.edit-row select,.edit-row input{width:100%;padding:10px;border:1px solid #d8cec3;border-radius:10px;background:#fff}
+.edit-row .remove-item{padding:10px 12px}
+.edit-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.stock-hint{font-size:11px;color:var(--muted);margin-top:3px}
+@media(max-width:760px){
+  .edit-row{grid-template-columns:1fr 80px}
+  .edit-row .edit-price-wrap{grid-column:1/2}
+  .edit-row .option-input{grid-column:1/2}
+  .edit-row .remove-item{grid-column:2/3;grid-row:3}
+}
+.order-actions{padding:12px;margin-bottom:10px}
+.order-actions h3{margin:0 0 8px;font-size:15px}
+.status-editor{display:grid;grid-template-columns:1fr auto;gap:8px}
+.status-editor select{width:100%;padding:11px 12px;border:1px solid #d8cec3;border-radius:10px;background:#fff}
+.selected-controls{display:grid;grid-template-columns:1.25fr 1fr .9fr;gap:10px;margin-bottom:14px;align-items:stretch}
+.selected-controls .pricing,.selected-controls .order-actions,.top-print{margin:0;padding:12px}
+.top-print h3{margin:0 0 8px;font-size:15px}
+.top-print .preview-tools{margin:0}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:14px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px;text-align:center}
+.stat b{display:block;font-size:19px}.stat span{font-size:11px;color:var(--muted)}
+@media(max-width:1050px){.selected-controls{grid-template-columns:1fr 1fr}.top-print{grid-column:1/-1}}
+@media(max-width:900px){.stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:650px){.selected-controls{grid-template-columns:1fr}.top-print{grid-column:auto}}
+@media(max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}}
+.raw{margin-top:10px}
+.raw summary{cursor:pointer;font-size:12px;color:var(--muted)}
+.raw pre{white-space:pre-wrap;word-break:break-word;font-size:11px;background:#faf7f3;padding:9px;border-radius:9px}
+.paper{width:80mm;min-height:120mm;background:#fff;padding:5mm 4mm;box-shadow:0 4px 24px #0002;color:#111;margin:auto}
+.receipt-title{text-align:center;font-size:10px;font-weight:800;letter-spacing:.8px;margin-top:5px}
+.center{text-align:center}
+.logo{font-size:20px;font-weight:900}
+.sub{font-size:10px;margin-top:2px}
+.rule{border-top:1px dashed #111;margin:7px 0}
+.meta{font-size:10px;line-height:1.45}
+.meta .row span:last-child,.meta .row b:last-child{text-align:right;max-width:62%}
+.row{display:flex;justify-content:space-between;gap:7px}
+.section-title{font-size:9px;font-weight:900;letter-spacing:.7px;margin-bottom:5px}
+.items{font-size:11px}
+.item{margin:7px 0}
+.item-main{display:flex;justify-content:space-between;gap:7px;font-weight:700}
+.item-main span:first-child{max-width:72%}
+.item-opt{font-size:9px;margin-top:2px;padding-left:9px}
+.total{font-size:13px;font-weight:900}
+.note{font-size:10px;white-space:pre-wrap}
+.footer{font-size:9px;line-height:1.45;margin-top:8px}
+.kitchen .price-only,.kitchen .payment-only,.kitchen .customer-footer{display:none!important}
+.kitchen .logo:after{content:""}
+.kitchen .receipt-title{display:none}
+.kitchen .item-main{font-size:13px}
+.kitchen .item-opt{font-size:11px}
+.kitchen .note{font-size:12px;font-weight:700}
+@media(max-width:930px){.orders{max-height:none}.toolbar{grid-template-columns:1fr}.paper{margin-top:4px}.preview-card{overflow-x:auto}}
+@media(max-width:520px){.wrap{padding:10px}.price-grid{grid-template-columns:1fr 1fr}.delivery-editor{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
+@media print{
+  body{background:#fff}
+  .top,.selected-controls,.edit-items,.stats,.left,.preview-tools,.pricing,.order-actions,.top-print,.raw,#manualCard,#manualRecoveryMsg,#imageStatus,#imageResult{display:none!important}
+  .layout{display:block}
+  .preview-card{border:0;padding:0}
+  .paper{box-shadow:none;margin:0;width:80mm;min-height:0;padding:4mm}
+  @page{size:80mm auto;margin:0}
+}
+.paper .logo{font-size:24px}
+.paper .sub,.paper .meta,.paper .note{font-size:12px}
+.paper .section-title,.paper .footer{font-size:11px}
+.paper .items{font-size:13px}
+.paper .item-opt{font-size:11px}
+.paper .total{font-size:15px}
+.paper.kitchen .item-main{font-size:15px}
+.paper.kitchen .item-opt{font-size:13px}
+.paper.kitchen .note{font-size:14px}
+.custom-row{grid-template-columns:minmax(160px,1fr) 80px 120px minmax(140px,1fr) auto;background:#fff9ed;border:1px dashed #c99b49;border-radius:10px;padding:10px}
+.custom-label{grid-column:1/-1;font-size:12px;font-weight:bold;color:#76541c}
+.manual-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0}
+.manual-fields label{display:grid;gap:5px;font-size:13px;font-weight:700}
+.manual-fields input,.manual-fields select,.manual-fields textarea{width:100%;padding:11px;border:1px solid #d8cec3;border-radius:10px;background:#fff;font:inherit}
+.manual-fields .full{grid-column:1/-1}
+#manualFieldset{border:0;padding:0;margin:0;min-width:0}
+#manualRows{display:grid;gap:10px;margin:12px 0}
+.manual-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+#manualCard{padding:18px;margin-bottom:18px}
+@media(max-width:600px){.manual-fields{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.top>div:last-child{display:flex;gap:7px;flex-wrap:wrap}}
+@media(max-width:760px){
+  .custom-row{grid-template-columns:1fr 80px}
+  .custom-row .custom-price{grid-column:1/2}
+  .custom-row .option-input{grid-column:1/-1}
+  .custom-row .remove-item{grid-column:2/3;grid-row:3}
+}
+
+/* Order Manager v9 — Inbox layout */
+body.v9-active{overflow:hidden}
+#app.v9-inbox{
+  height:calc(100dvh - 36px);
+  min-height:640px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+#app.v9-inbox>.top{
+  flex:0 0 auto;
+  margin-bottom:8px;
+}
+.v9-status-tabs{
+  flex:0 0 auto;
+  display:flex;
+  gap:7px;
+  overflow-x:auto;
+  padding:2px 0 9px;
+  scrollbar-width:none;
+}
+.v9-status-tabs::-webkit-scrollbar{display:none}
+.v9-status-tab{
+  flex:0 0 auto;
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--ink);
+  border-radius:999px;
+  padding:9px 12px;
+  font-weight:800;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.v9-status-tab.active{
+  background:var(--dark);
+  color:#fff;
+  border-color:var(--dark);
+}
+.v9-status-tab b{
+  display:inline-block;
+  margin-left:5px;
+  min-width:20px;
+  text-align:center;
+}
+.v9-shell{
+  flex:1 1 auto;
+  min-height:0;
+  display:grid;
+  grid-template-columns:360px minmax(0,1fr);
+  gap:12px;
+}
+.v9-list-pane,.v9-detail-pane{min-width:0;min-height:0}
+.v9-list-pane{
+  overflow:hidden;
+}
+.v9-list-pane>.left{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  padding:12px;
+}
+.v9-list-pane .toolbar{
+  flex:0 0 auto;
+  grid-template-columns:1fr;
+}
+.v9-list-pane #status{display:none}
+.v9-list-pane .orders{
+  flex:1 1 auto;
+  min-height:0;
+  max-height:none;
+  overflow-y:auto;
+  padding-right:3px;
+}
+.v9-detail-pane{
+  overflow-y:auto;
+  padding:0 4px 24px 0;
+  scroll-behavior:smooth;
+}
+.v9-detail-title{
+  position:sticky;
+  top:0;
+  z-index:20;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:8px 10px;
+  margin:0 0 10px;
+  background:rgba(255,248,239,.96);
+  backdrop-filter:blur(8px);
+  border:1px solid var(--line);
+  border-radius:12px;
+}
+.v9-detail-title strong{font-size:14px}
+.v9-detail-title span{font-size:12px;color:var(--muted)}
+.v9-detail-pane .selected-order-preview{margin-bottom:10px}
+.v9-detail-pane .selected-controls{
+  grid-template-columns:1.25fr 1fr .9fr;
+  margin-bottom:10px;
+}
+.v9-detail-pane .edit-items{margin-bottom:10px}
+.v9-detail-pane .paper{margin:0 auto}
+.v9-hidden-heading{display:none!important}
+#app.v9-inbox>.stats,
+#app.v9-inbox>.layout{display:none!important}
+
+/* New-order form becomes an overlay instead of stretching the page. */
+#app.v9-inbox #manualCard:not(.hidden){
+  position:fixed;
+  inset:14px;
+  z-index:1000;
+  max-width:920px;
+  margin:auto;
+  overflow-y:auto;
+  box-shadow:0 20px 80px #0005;
+  padding:18px;
+}
+#app.v9-inbox #manualRecoveryMsg:not(.hidden){
+  position:fixed;
+  z-index:1100;
+  left:50%;
+  top:12px;
+  transform:translateX(-50%);
+  max-width:min(720px,calc(100vw - 24px));
+}
+
+@media(max-width:1050px){
+  .v9-shell{grid-template-columns:330px minmax(0,1fr)}
+  .v9-detail-pane .selected-controls{grid-template-columns:1fr 1fr}
+  .v9-detail-pane .top-print{grid-column:1/-1}
+}
+@media(max-width:760px){
+  .wrap{padding:8px}
+  #app.v9-inbox{
+    height:calc(100dvh - 16px);
+    min-height:0;
+  }
+  #app.v9-inbox>.top{
+    flex-direction:row;
+    align-items:center;
+    margin-bottom:5px;
+  }
+  #app.v9-inbox>.top h1{font-size:21px}
+  #app.v9-inbox>.top .muted{display:none}
+  #app.v9-inbox>.top>div:last-child{
+    display:flex;
+    gap:5px;
+    flex-wrap:nowrap;
+  }
+  #app.v9-inbox>.top .btn{
+    padding:8px 9px;
+    font-size:12px;
+  }
+  .v9-status-tabs{padding-bottom:6px}
+  .v9-status-tab{padding:8px 10px;font-size:12px}
+  .v9-shell{
+    grid-template-columns:1fr;
+    grid-template-rows:minmax(180px,29dvh) minmax(0,1fr);
+    gap:8px;
+  }
+  .v9-list-pane .left{padding:9px}
+  .v9-list-pane .toolbar{margin-bottom:5px}
+  .v9-list-pane .toolbar input{padding:8px 10px}
+  .v9-list-pane .order{padding:8px}
+  .v9-list-pane .order-meta{font-size:11px}
+  .v9-list-pane .order-name{font-size:12px}
+  .v9-detail-pane{
+    border-top:3px solid var(--line);
+    padding:6px 0 24px;
+    min-height:0;
+  }
+  .v9-detail-title{
+    top:0;
+    margin-bottom:8px;
+    border-radius:10px;
+  }
+  .v9-detail-pane .selected-controls{grid-template-columns:1fr}
+  .v9-detail-pane .top-print{grid-column:auto}
+  .v9-detail-pane .selected-order-preview .preview-card{padding:8px}
+  .v9-detail-pane .paper{width:min(80mm,100%)}
+  #app.v9-inbox #manualCard:not(.hidden){inset:8px;padding:14px}
+}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+<section id="login" class="login card">
+  <h1>Order Manager</h1>
+  <div class="muted">Có Cái Tiệm • quản lý đơn, báo phí và in bill tại một nơi</div>
+  <input id="passcode" type="password" placeholder="Mã quản trị">
+  <button id="unlock" class="btn wide">Mở Order Manager</button>
+  <div id="loginMsg" class="notice hidden"></div>
+</section>
+
+<section id="app" class="hidden">
+  <div class="top">
+    <div><h1>Order Manager</h1><div class="muted">Xem đơn → báo phí → đổi trạng thái → in bill hoặc phiếu bếp</div></div>
+    <div><button id="newOrder" class="btn primary">＋ Tạo đơn mới</button> <button id="reload" class="btn alt">↻ Tải lại</button> <button id="lock" class="btn alt">Khoá</button></div>
+  </div>
+
+  <div id="manualRecoveryMsg" class="notice hidden" role="status" style="margin-bottom:14px"></div>
+  <section id="manualCard" class="card hidden" aria-labelledby="manualTitle">
+    <h2 id="manualTitle">Tạo đơn mới</h2>
+    <div class="muted">Đơn inbox / điện thoại • tự cấp mã CCT • gửi email về tiệm khi lưu.</div>
+    <form id="manualForm">
+      <fieldset id="manualFieldset">
+        <div class="manual-fields">
+          <label>Tên khách *<input id="manualName" required maxlength="200" autocomplete="name"></label>
+          <label>Số điện thoại *<input id="manualPhone" required type="tel" maxlength="40" autocomplete="tel"></label>
+          <label>Nhận hàng<select id="manualMethod"><option value="pickup">Pick up Springvale</option><option value="delivery">Delivery Melbourne</option><option value="auspost">AusPost</option></select></label>
+          <label>Thanh toán<select id="manualPayment"><option>Cash</option><option>PayID</option><option>Bank Transfer</option></select></label>
+          <label data-manual-pickup>Ngày pick up (nếu đã hẹn)<input id="manualPickupDate" type="date"></label>
+          <label data-manual-pickup>Giờ pick up (nếu đã hẹn)<input id="manualPickupTime" type="time"></label>
+          <label data-manual-shipping class="hidden">Tên người nhận<input id="manualRecipient" maxlength="200"></label>
+          <label data-manual-shipping class="hidden">Phí giao hàng (AUD)<input id="manualFee" type="number" min="0" max="999999.99" step="0.01" inputmode="decimal" placeholder="Để trống khi chưa chốt; 0 = miễn phí"></label>
+          <label data-manual-shipping class="full hidden">Địa chỉ giao hàng *<textarea id="manualAddress" maxlength="1000" rows="2" autocomplete="street-address"></textarea></label>
+          <label class="full">Ghi chú đơn<textarea id="manualNote" maxlength="1000" rows="2"></textarea></label>
+        </div>
+        <h3>Món hàng</h3>
+        <div class="muted">Món trong menu lấy giá hiện tại và trừ tồn kho; món ngoài menu không trừ tồn kho.</div>
+        <div id="manualRows"></div>
+        <div class="manual-actions"><button id="manualAddMenu" type="button" class="btn alt">＋ Món trong menu</button><button id="manualAddCustom" type="button" class="btn alt">＋ Món ngoài menu</button></div>
+        <div id="manualSummary" class="price-box" style="margin-top:14px" aria-live="polite"></div>
+      </fieldset>
+      <div class="manual-actions"><button id="manualSave" type="submit" class="btn primary">Lưu đơn & gửi email</button><button id="manualCancel" type="button" class="btn alt">Đóng</button></div>
+      <div id="manualMsg" class="save-msg" role="status"></div>
+    </form>
+  </section>
+
+  <div style="font-size:14px;font-weight:900;margin:4px 0 8px">ĐƠN ĐANG CHỌN — XỬ LÝ NHANH</div>
+  <div class="selected-controls">
+    <div class="pricing card">
+      <h3>Giá đơn đang chọn</h3>
+      <div class="price-grid">
+        <div id="panelSubtotalBox" class="price-box"><b>Tiền món</b><div id="panelSubtotal" class="price-value">—</div></div>
+        <div class="price-box discount-box"><b>Discount</b><div id="panelDiscount" class="price-value">—</div></div>
+        <div class="price-box"><b id="panelTotalLabel">Tổng</b><div id="panelTotal" class="price-value">—</div></div>
+      </div>
+      <div class="discount-editor">
+        <select id="discountType" aria-label="Loại discount">
+          <option value="">Không discount</option>
+          <option value="amount">Giảm theo $</option>
+          <option value="percent">Giảm theo %</option>
+        </select>
+        <input id="discountInput" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Nhập discount">
+        <button id="saveDiscount" class="btn primary">Lưu discount</button>
+      </div>
+      <div class="muted" style="margin-top:5px">Giảm % chỉ tính trên tiền món, không giảm phí Delivery/AusPost.</div>
+      <div id="deliveryEditor" class="hidden">
+        <div class="delivery-editor">
+          <input id="deliveryInput" inputmode="decimal" placeholder="Nhập phí delivery, ví dụ 8">
+          <button id="savePrice" class="btn primary">Lưu giá</button>
+        </div>
+        <div class="muted" style="margin-top:5px">Nhập số tiền, ví dụ <b>8</b> = $8. Tổng đơn sẽ tự tính.</div>
+      </div>
+      <div id="saveMsg" class="save-msg"></div>
+    </div>
+
+    <div class="order-actions card">
+      <h3>Quản lý đơn</h3>
+      <div class="status-editor">
+        <select id="orderStatus">
+          <option value="new">Mới</option>
+          <option value="confirmed">Đã xác nhận</option>
+          <option value="preparing">Đang chuẩn bị</option>
+          <option value="ready">Sẵn sàng</option>
+          <option value="completed">Hoàn tất</option>
+          <option value="cancelled">Đã huỷ</option>
+        </select>
+        <button id="saveStatus" class="btn primary">Lưu trạng thái</button>
+      </div>
+      <div id="statusMsg" class="save-msg"></div>
+    </div>
+
+    <div class="top-print card">
+      <h3>In & sao chép</h3>
+    <div class="preview-tools top-preview-tools">
+      <select id="mode"><option value="receipt">Bill khách</option><option value="kitchen">Phiếu bếp</option></select>
+      <button id="copyBtn" class="btn alt">Copy đơn</button>
+      <button id="printBtn" class="btn">🖨️ Print</button>
+      <button id="imageBtn" class="btn">Lưu ảnh phiếu 58 mm</button>
+    </div>
+
+    </div>
+  </div>
+
+  <div class="edit-items card">
+    <h3>Sửa món trong đơn</h3>
+    <div class="muted">Món trong menu tự điều chỉnh tồn kho. Có thể sửa <b>Đơn giá</b> riêng cho đơn này; giá trên menu/web không thay đổi. Món ngoài menu chỉ lưu trong đơn này.</div>
+    <div id="editRows"></div>
+    <div class="edit-actions">
+      <button id="addItemRow" class="btn alt">+ Thêm món trong menu</button>
+      <button id="addCustomItemRow" class="btn alt">+ Thêm món ngoài menu</button>
+      <button id="saveItems" class="btn primary">Lưu thay đổi món</button>
+    </div>
+    <div id="editMsg" class="save-msg"></div>
+  </div>
+
+  <div style="font-size:14px;font-weight:900;margin:10px 0 8px">ĐƠN HÀNG ĐANG CHỌN</div>
+  <div class="selected-order-preview">
+    <div class="preview-card card">
+      <div id="imageStatus" class="muted" role="status"></div>
+        <div id="imageResult" class="hidden" style="margin:10px 0">
+          <div class="notice">Trên iPhone: nhấn giữ ảnh bên dưới → Lưu vào Ảnh. Sau đó mở Express Thermal Print, chọn ảnh và in khổ 58 mm.</div>
+          <img id="receiptImage" alt="Ảnh phiếu đơn 58 mm" style="display:block;width:100%;max-width:384px;height:auto;margin:10px auto;border:1px solid #ddd">
+          <button id="shareImageBtn" class="btn alt">Chia sẻ / Lưu ảnh</button>
+        </div>
+
+        <main id="paper" class="paper">
+        <div class="center">
+          <div class="logo">CÓ CÁI TIỆM</div>
+          <div class="sub">Ăn Vặt Melbourne</div>
+          <div class="sub">Pick up Springvale • Delivery • AusPost</div>
+          
+        </div>
+
+        <div class="rule"></div>
+        <div class="section-title">THÔNG TIN ĐƠN</div>
+        <div class="meta">
+          <div class="row"><span>Mã đơn</span><b id="orderNumber">—</b></div>
+          <div class="row"><span>Thời gian</span><span id="createdAt">—</span></div>
+          <div class="row"><span>Khách</span><span id="customerName">—</span></div>
+          <div class="row"><span>SĐT</span><span id="phone">—</span></div>
+        </div>
+
+        <div class="rule"></div>
+        <div class="section-title">MÓN HÀNG</div>
+        <div id="items" class="items"></div>
+
+        <div class="rule"></div>
+        <div class="section-title">GIAO NHẬN</div>
+        <div class="meta">
+          <div class="row"><span>Hình thức</span><span id="fulfilment">—</span></div>
+          <div id="recipientRow" class="row"><span>Người nhận</span><span id="recipient">—</span></div>
+          <div id="pickupRow" class="row"><span>Pick up</span><span id="pickup">—</span></div>
+          <div id="addressRow" class="row"><span>Địa chỉ</span><span id="address">—</span></div>
+        </div>
+
+        <div class="rule price-only"></div>
+        <div class="price-only">
+          <div class="section-title">THANH TOÁN</div>
+          <div id="subtotalRow" class="row"><span>Tiền món</span><span id="subtotal">—</span></div>
+          <div id="feeRow" class="row"><span id="feeLabel">Delivery</span><span id="deliveryFee">—</span></div>
+          <div id="discountRow" class="row"><span>Discount</span><span id="discountAmount">—</span></div>
+          <div class="row total"><span id="totalLabel">TỔNG</span><span id="total">—</span></div>
+          <div class="row payment-only"><span>Phương thức</span><b id="payment">—</b></div>
+        </div>
+
+        <div class="rule"></div>
+        <div class="section-title">GHI CHÚ</div>
+        <div class="note" id="note">—</div>
+
+        <div class="rule customer-footer"></div>
+        <div class="center footer customer-footer">
+          Cảm ơn bạn đã ủng hộ Có Cái Tiệm ♡<br>
+          Facebook & TikTok: @cocaitiem.o.melbourne<br>
+          Website: cocaitiemomelbourne.github.io/cocaitiemomelbourne
+        </div>
+      </main>
+
+      <details class="raw">
+        <summary>Xem nội dung đơn gốc</summary>
+        <pre id="rawText"></pre>
+      </details>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="s-new">0</b><span>Mới</span></div>
+    <div class="stat"><b id="s-confirmed">0</b><span>Đã xác nhận</span></div>
+    <div class="stat"><b id="s-preparing">0</b><span>Đang chuẩn bị</span></div>
+    <div class="stat"><b id="s-ready">0</b><span>Sẵn sàng</span></div>
+    <div class="stat"><b id="s-completed">0</b><span>Hoàn tất</span></div>
+    <div class="stat"><b id="s-cancelled">0</b><span>Đã huỷ</span></div>
+  </div>
+
+  <div class="layout">
+    <div class="left card">
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Tìm mã đơn, tên khách, SĐT...">
+        <select id="status">
+          <option value="all">Tất cả trạng thái</option>
+          <option value="new" selected>Mới</option>
+          <option value="confirmed">Đã xác nhận</option>
+          <option value="preparing">Đang chuẩn bị</option>
+          <option value="ready">Sẵn sàng</option>
+          <option value="completed">Hoàn tất</option>
+          <option value="cancelled">Đã huỷ</option>
+        </select>
+      </div>
+      <div id="orders" class="orders"></div>
+    </div>
+
+
+  </div>
+</section>
+</div>
+
+<script>
+(function(){
+const URL="https://eswrqkhsvlqndjbrgsqo.supabase.co";
+const KEY="sb_publishable_-6iIwPaZQRMkkWAROdfvxg_dmVB81E2";
+const login=document.getElementById("login"),app=document.getElementById("app"),passcode=document.getElementById("passcode"),unlock=document.getElementById("unlock"),loginMsg=document.getElementById("loginMsg"),ordersEl=document.getElementById("orders"),search=document.getElementById("search"),status=document.getElementById("status"),paper=document.getElementById("paper"),mode=document.getElementById("mode"),deliveryEditor=document.getElementById("deliveryEditor"),deliveryInput=document.getElementById("deliveryInput"),savePrice=document.getElementById("savePrice"),saveMsg=document.getElementById("saveMsg"),discountType=document.getElementById("discountType"),discountInput=document.getElementById("discountInput"),saveDiscount=document.getElementById("saveDiscount"),orderStatus=document.getElementById("orderStatus"),saveStatus=document.getElementById("saveStatus"),statusMsg=document.getElementById("statusMsg"),copyBtn=document.getElementById("copyBtn"),editRows=document.getElementById("editRows"),addItemRow=document.getElementById("addItemRow"),saveItems=document.getElementById("saveItems"),editMsg=document.getElementById("editMsg");
+let code="",orders=[],selectedToken=null,currentView=null,productCatalog=[];
+
+const statusLabels={new:"Mới",confirmed:"Đã xác nhận",preparing:"Đang chuẩn bị",ready:"Sẵn sàng",completed:"Hoàn tất",cancelled:"Đã huỷ"};
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function money(v){if(v===null||v===undefined||v==="")return "Chưa chốt";return "$"+Number(v).toFixed(2).replace(".00","")}
+function fmt(v){return v?new Date(v).toLocaleString("en-AU",{timeZone:"Australia/Melbourne",dateStyle:"medium",timeStyle:"short"}):"—"}
+function displayDate(v){return String(v||"").replace(/^(\d{4})-(\d{2})-(\d{2})$/,(all,y,m,d)=>d+"/"+m+"/"+y.slice(-2))}
+function setText(id,v){const el=document.getElementById(id);if(el)el.textContent=v===null||v===undefined||v===""?"—":String(v)}
+function firstMatch(text,re){const m=String(text||"").match(re);return m?m[1].trim():""}
+
+function parseLegacy(o){
+  const raw=String(o.order_text||"");
+  const lines=raw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  const p={items:[],customer_name:"",phone:"",recipient_name:"",shipping_address:"",payment_method:"",customer_note:"",fulfilment_method:"",subtotal:null,delivery_fee:null};
+  if(lines.length&&!/^\d+\s*x\s+/i.test(lines[0])&&!/^(Tổng|Total|Tiền món|Items):/i.test(lines[0]))p.customer_name=lines[0];
+
+  const fieldLine=/^(?:Tổng|Total|Tạm tính|Provisional total|Tiền món|Items|Items subtotal|Subtotal|Phí giao hàng|Delivery fee|Delivery|AusPost|Nhận hàng|Fulfilment|Tên người nhận|Recipient|SĐT|Phone|Địa chỉ|Address|Thanh toán|Payment|Ghi chú|Note|PayID)\s*:/i;
+
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    const item=line.match(/^(\d+)\s*x\s+(.+?)\s+\$([0-9]+(?:\.[0-9]+)?)$/i);
+    if(item){
+      const qty=Number(item[1]),name=item[2].replace(/\s+—\s+.*$/,"").trim(),optionText=item[2].includes(" — ")?item[2].split(" — ").slice(1).join(" — ").trim():"",lineTotal=Number(item[3]);
+      p.items.push({qty:qty,name:name,option_text:optionText,line_total:lineTotal});
+      continue;
+    }
+
+    let m;
+    if((m=line.match(/^(?:Tiền món|Items|Items subtotal|Tạm tính|Subtotal):\s*\$?([0-9]+(?:\.[0-9]+)?)/i))&&p.subtotal===null)p.subtotal=Number(m[1]);
+    if((m=line.match(/^(?:Phí giao hàng|Delivery fee|Delivery|AusPost):\s*\$([0-9]+(?:\.[0-9]+)?)/i)))p.delivery_fee=Number(m[1]);
+
+    if((m=line.match(/^(?:Nhận hàng|Fulfilment):\s*(.+)$/i))){
+      const val=m[1].toLowerCase();
+      p.fulfilment_method=val.includes("delivery")?"delivery":val.includes("auspost")?"auspost":val.includes("pick")?"pickup":m[1];
+      continue;
+    }
+
+    if((m=line.match(/^(?:Tên người nhận|Recipient):\s*(.+)$/i))){p.recipient_name=m[1];continue;}
+    if((m=line.match(/^(?:SĐT|Phone):\s*(.+)$/i))){p.phone=m[1];continue;}
+
+    if((m=line.match(/^(?:Địa chỉ|Address):\s*(.*)$/i))){
+      const parts=[];
+      if(m[1].trim())parts.push(m[1].trim());
+      let j=i+1;
+      while(j<lines.length&&!fieldLine.test(lines[j])){
+        if(!/^\d+\s*x\s+/i.test(lines[j]))parts.push(lines[j]);
+        j++;
+      }
+      p.shipping_address=parts.join(", ");
+      i=j-1;
+      continue;
+    }
+
+    if((m=line.match(/^(?:Thanh toán|Payment):\s*(.+)$/i))){p.payment_method=m[1];continue;}
+    if((m=line.match(/^(?:Ghi chú|Note):\s*(.+)$/i))){p.customer_note=m[1];continue;}
+  }
+
+  if(!p.subtotal&&p.items.length)p.subtotal=p.items.reduce((s,it)=>s+Number(it.line_total||0),0);
+  return p;
+}
+
+function viewOf(o){
+  const legacy=parseLegacy(o);
+  const structuredItems=Array.isArray(o.order_items)&&o.order_items.length?o.order_items:null;
+  const fulfil=o.fulfilment_method||legacy.fulfilment_method||"";
+  const subtotal=o.subtotal!==null&&o.subtotal!==undefined?Number(o.subtotal):(legacy.subtotal!==null?Number(legacy.subtotal):null);
+  return {
+    order_token:o.order_token,
+    order_number:o.order_number||o.order_token,
+    created_at:o.created_at,
+    customer_name:o.customer_name||legacy.customer_name||o.recipient_name||legacy.recipient_name||"",
+    phone:o.phone||legacy.phone||"",
+    recipient_name:o.recipient_name||legacy.recipient_name||"",
+    shipping_address:
+      (legacy.shipping_address && legacy.shipping_address.length > String(o.shipping_address||"").length)
+        ? legacy.shipping_address
+        : (o.shipping_address||legacy.shipping_address||""),
+    payment_method:o.payment_method||legacy.payment_method||"",
+    customer_note:(o.customer_note&&o.customer_note!=="Không có")?o.customer_note:(legacy.customer_note||o.customer_note||""),
+    fulfilment_method:fulfil,
+    pickup_date:o.pickup_date||"",
+    pickup_time:o.pickup_time||"",
+    subtotal:subtotal,
+    delivery_fee:o.delivery_fee!==null&&o.delivery_fee!==undefined?Number(o.delivery_fee):legacy.delivery_fee,
+    discount_type:o.discount_type||"",
+    discount_value:o.discount_value!==null&&o.discount_value!==undefined?Number(o.discount_value):null,
+    discount_amount:o.discount_amount!==null&&o.discount_amount!==undefined?Number(o.discount_amount):0,
+    total:o.total!==null&&o.total!==undefined?Number(o.total):null,
+    items:structuredItems||(legacy.items||[]).map((item,index)=>{
+      const committed=Array.isArray(o.items)&&o.items.length===legacy.items.length?o.items[index]:null;
+      return {...item,id:committed&&Number(committed.qty)===Number(item.qty)?committed.id:null};
+    }),
+    raw:o.order_text||"",
+    status:o.status||""
+  };
+}
+
+async function rpc(name,body){
+  const r=await fetch(URL+"/rest/v1/rpc/"+name,{method:"POST",headers:{apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json"},body:JSON.stringify(body)});
+  if(!r.ok){let msg="request_failed";try{const x=await r.json();msg=x.message||msg}catch(e){}throw new Error(msg)}
+  return r.json();
+}
+
+async function fetchOrders(){
+  {
+    const catalog=await rpc("get_order_editor_products_v1",{p_passcode:code});
+    productCatalog=Array.isArray(catalog)?catalog:[];
+  }
+  const data=await rpc("get_print_orders_v3",{p_passcode:code,p_limit:500});
+  orders=Array.isArray(data)?data:[];
+  renderList();
+  if(!selectedToken&&orders.length)selectOrder(orders[0].order_token);
+  else if(selectedToken){const current=orders.find(o=>o.order_token===selectedToken);if(current)renderOrder(current)}
+}
+
+function updateStats(){
+  Object.keys(statusLabels).forEach(function(k){
+    const el=document.getElementById("s-"+k);
+    if(el) el.textContent=String(orders.filter(o=>o.status===k).length);
+  });
+}
+function renderList(){
+  updateStats();
+  const q=search.value.trim().toLowerCase(),st=status.value;
+  const list=orders.filter(o=>(st==="all"||o.status===st)&&(!q||[o.order_number,o.customer_name,o.phone,o.recipient_name,o.shipping_address,o.order_text].join(" ").toLowerCase().includes(q)));
+  if(!list.length){ordersEl.innerHTML='<div class="muted" style="padding:20px;text-align:center">Không tìm thấy đơn phù hợp.</div>';return}
+  ordersEl.innerHTML=list.map(o=>{
+    const v=viewOf(o);
+    const pricing=pricingSummary(v),amount=pricing.amount;
+    return '<div class="order '+(o.order_token===selectedToken?'active':'')+'" data-token="'+esc(o.order_token)+'">'+
+      '<div class="order-head"><div class="order-no">'+esc(v.order_number)+'</div><b>'+esc(pricing.label+": "+money(amount))+'</b></div>'+
+      '<div class="order-meta">'+esc(fmt(v.created_at))+' • '+esc(statusLabels[o.status]||o.status||"")+'</div>'+
+      '<div class="order-name">'+esc(v.customer_name||"—")+(v.phone?' • '+esc(v.phone):'')+'</div></div>';
+  }).join("");
+}
+
+function selectOrder(token){selectedToken=token;const o=orders.find(x=>x.order_token===token);if(o){renderOrder(o);renderList()}}
+
+function productByName(name){
+  const n=String(name||"").trim().toLowerCase();
+  return productCatalog.find(p=>String(p.name||"").trim().toLowerCase()===n)||null;
+}
+
+function productOptions(selectedId){
+  const known=productCatalog.some(p=>String(p.id)===String(selectedId));
+  const placeholder='<option value="" '+(!known?'selected':'')+'>Chọn đúng món trong menu</option>';
+  return placeholder+productCatalog.map(p=>{
+    const stock=p.stock_qty===null||p.stock_qty===undefined?"∞":p.stock_qty;
+    return '<option value="'+esc(p.id)+'" '+(String(p.id)===String(selectedId)?'selected':'')+'>'+esc(String(p.name).trim())+' — '+esc(money(p.price))+' — stock '+esc(stock)+'</option>';
+  }).join("");
+}
+
+function addEditorRow(item,target=editRows){
+  item=item||{};
+  if(item.is_custom===true){addCustomEditorRow(item,target);return}
+  let id=item.id;
+  if(!id&&item.name){const matched=productByName(item.name);if(matched)id=matched.id;}
+
+  const row=document.createElement("div");
+  row.className="edit-row";
+  row.innerHTML='<select class="product-select">'+productOptions(id)+'</select>'+
+    '<input class="qty-input" type="number" min="1" step="1" value="'+esc(item.qty||1)+'" aria-label="Số lượng">'+
+    (target===editRows
+      ? '<label class="edit-price-wrap"><small>Đơn giá</small><input class="override-price" type="number" min="0" max="1000000" step="0.01" inputmode="decimal" value="'+esc(item.unit_price!==undefined&&item.unit_price!==null?item.unit_price:(productCatalog.find(p=>Number(p.id)===Number(id))||{}).price??"")+'" placeholder="$"></label>'
+      : '')+
+    '<input class="option-input" type="text" value="'+esc(item.option_text||"")+'" placeholder="Option / ghi chú món">'+
+    '<button type="button" class="btn alt remove-item">Xoá</button>';
+  target.appendChild(row);
+}
+
+function renderEditor(v){
+  editRows.innerHTML="";
+  const items=Array.isArray(v.items)?v.items:[];
+  if(items.length)items.forEach(item=>addEditorRow(item));
+  else addEditorRow();
+  editMsg.textContent="";
+}
+
+function addCustomEditorRow(item,target=editRows){
+  item=item||{};
+  const row=document.createElement("div");
+  row.className="edit-row custom-row";
+  row.dataset.custom="true";
+  row.innerHTML='<div class="custom-label">Món ngoài menu • không trừ tồn kho</div>'+
+    '<input class="custom-name" type="text" maxlength="200" value="'+esc(item.name||"")+'" placeholder="Tên món" aria-label="Tên món ngoài menu">'+
+    '<input class="qty-input" type="number" min="1" max="99999" step="1" value="'+esc(item.qty||1)+'" aria-label="Số lượng">'+
+    '<input class="custom-price" type="number" min="0" max="1000000" step="0.01" value="'+esc(item.unit_price??"")+'" placeholder="Đơn giá AUD" aria-label="Đơn giá AUD">'+
+    '<input class="option-input" type="text" maxlength="500" value="'+esc(item.option_text||"")+'" placeholder="Tuỳ chọn / ghi chú món">'+
+    '<button type="button" class="btn alt remove-item">Xoá</button>';
+  target.appendChild(row);
+}
+function editorPayload(target=editRows){
+  return Array.from(target.querySelectorAll(".edit-row")).map(row=>{
+    const qty=Number(row.querySelector(".qty-input").value);
+    const option_text=row.querySelector(".option-input").value.trim();
+    if(row.dataset.custom==="true"){
+      const price=row.querySelector(".custom-price").value.trim();
+      return {is_custom:true,name:row.querySelector(".custom-name").value.trim(),qty,
+        unit_price:price===""?null:Number(price),option_text};
+    }
+    const priceInput=row.querySelector(".override-price");
+    const unit_price=priceInput?Number(priceInput.value):null;
+    return {id:Number(row.querySelector(".product-select").value),qty,option_text,unit_price};
+  });
+}
+
+const manualCard=document.getElementById("manualCard"),manualForm=document.getElementById("manualForm"),
+  manualRows=document.getElementById("manualRows"),manualFieldset=document.getElementById("manualFieldset"),
+  manualSave=document.getElementById("manualSave"),manualMsg=document.getElementById("manualMsg");
+let manualToken=null,manualSaved=null,manualBusy=false,manualAttempted=false;
+function manualValue(id){return document.getElementById(id).value.trim()}
+function manualDetails(){
+  const method=manualValue("manualMethod"),fee=manualValue("manualFee");
+  return {customer_name:manualValue("manualName"),phone:manualValue("manualPhone"),
+    fulfilment_method:method,payment_method:manualValue("manualPayment"),customer_note:manualValue("manualNote"),
+    recipient_name:method==="pickup"?"":manualValue("manualRecipient"),
+    shipping_address:method==="pickup"?"":manualValue("manualAddress"),
+    pickup_date:method==="pickup"?manualValue("manualPickupDate"):"",
+    pickup_time:method==="pickup"?manualValue("manualPickupTime"):"",
+    delivery_fee:method==="pickup"?0:fee===""?null:Number(fee)};
+}
+function validateManual(items,details){
+  if(!details.customer_name)throw new Error("Vui lòng nhập tên khách.");
+  if(!/^[0-9]{8,15}$/.test(details.phone.replace(/\D/g,"")))throw new Error("Số điện thoại cần 8–15 chữ số.");
+  if(details.fulfilment_method!=="pickup"&&details.shipping_address.length<3)throw new Error("Vui lòng nhập địa chỉ giao hàng.");
+  if(details.delivery_fee!==null&&(!Number.isFinite(details.delivery_fee)||details.delivery_fee<0||details.delivery_fee>999999.99||Math.abs(details.delivery_fee*100-Math.round(details.delivery_fee*100))>0.000001))throw new Error("Phí giao hàng không hợp lệ.");
+  if(!items.length||items.length>50)throw new Error("Đơn cần từ 1 đến 50 dòng món.");
+  items.forEach(item=>{
+    if(!Number.isInteger(item.qty)||item.qty<1||item.qty>99999)throw new Error("Số lượng cần là số nguyên từ 1 đến 99999.");
+    if(item.is_custom){
+      if(!item.name||item.name.length>200||item.unit_price===null||!Number.isFinite(item.unit_price)||item.unit_price<0||item.unit_price>1000000||Math.abs(item.unit_price*100-Math.round(item.unit_price*100))>0.000001)throw new Error("Món ngoài menu cần tên và đơn giá hợp lệ.");
+    }else{
+      const p=productCatalog.find(p=>Number(p.id)===item.id);
+      if(!p)throw new Error("Vui lòng chọn món trong menu.");
+    }
+  });
+}
+function updateManualSummary(){
+  const d=manualDetails(),shipping=d.fulfilment_method!=="pickup";
+  document.querySelectorAll("[data-manual-pickup]").forEach(el=>el.classList.toggle("hidden",shipping));
+  document.querySelectorAll("[data-manual-shipping]").forEach(el=>el.classList.toggle("hidden",!shipping));
+  document.getElementById("manualAddress").required=shipping;
+  let subtotal=0;
+  editorPayload(manualRows).forEach(item=>{
+    const p=productCatalog.find(p=>Number(p.id)===item.id);
+    const price=item.is_custom?Number(item.unit_price||0):Number(p?.price||0);
+    if(Number.isFinite(price)&&Number.isFinite(item.qty))subtotal+=price*item.qty;
+  });
+  const pricing=pricingSummary({fulfilment_method:d.fulfilment_method,subtotal,delivery_fee:d.delivery_fee});
+  document.getElementById("manualSummary").textContent=(shipping?"Tiền món: "+money(subtotal)+" • ":"")+pricing.label+": "+money(pricing.amount)+(pricing.pending?" (chưa gồm phí giao hàng)":"");
+}
+async function openManualOrder(){
+  if(manualBusy)return;
+  if(!manualCard.classList.contains("hidden")){manualCard.scrollIntoView({behavior:"smooth"});return}
+  try{
+    await recoverManualOrder();
+    if(sessionStorage.getItem("cct_manual_pending_token"))return;
+    const data=await rpc("get_order_editor_products_v1",{p_passcode:code});
+    productCatalog=Array.isArray(data)?data:[];
+    manualForm.reset();manualRows.innerHTML="";manualToken="manual-"+crypto.randomUUID();
+    manualSaved=null;manualAttempted=false;manualFieldset.disabled=false;manualMsg.textContent="";
+    manualSave.textContent="Lưu đơn & gửi email";manualSave.disabled=false;
+    if(productCatalog.length)addEditorRow({},manualRows);else addCustomEditorRow({},manualRows);
+    manualCard.classList.remove("hidden");updateManualSummary();manualCard.scrollIntoView({behavior:"smooth"});
+    document.getElementById("manualName").focus();
+  }catch(e){alert("Không mở được phần tạo đơn: "+e.message)}
+}
+function closeManualOrder(){
+  if(manualBusy)return;
+  if(manualAttempted&&!manualSaved&&!confirm("Yêu cầu lưu có thể đã tới hệ thống. Chị nên thử lưu lại để kiểm tra cùng mã đơn; nếu đóng, hãy kiểm tra danh sách đơn trước khi tạo lại. Vẫn đóng?"))return;
+  manualCard.classList.add("hidden");manualToken=null;manualSaved=null;
+}
+async function recoverManualOrder(){
+  const pending=sessionStorage.getItem("cct_manual_pending_token");
+  if(!pending||manualBusy)return;
+  const msg=document.getElementById("manualRecoveryMsg");
+  msg.classList.remove("hidden");msg.textContent="Đang kiểm tra yêu cầu tạo đơn trước đó…";
+  try{
+    const result=await rpc("create_manual_order_v1",{p_passcode:code,p_order_token:pending,p_items:null,p_details:null});
+    if(!result?.order?.order_token)throw new Error("unknown_result");
+    selectedToken=result.order.order_token;orders=[result.order,...orders.filter(o=>o.order_token!==selectedToken)];
+    status.value="all";search.value="";renderOrder(result.order);renderList();
+    if(result.email_queued){
+      sessionStorage.removeItem("cct_manual_pending_token");
+      msg.textContent="Đơn trước đã lưu "+result.order.order_number+" và đã xếp hàng gửi email. Không tạo trùng.";
+    }else msg.textContent="Đơn "+result.order.order_number+" đã lưu nhưng email chưa được xếp hàng. Bấm Tải lại để thử gửi lại.";
+  }catch(error){
+    if(error.message==="invalid_items"){
+      sessionStorage.removeItem("cct_manual_pending_token");msg.textContent="Yêu cầu trước chưa tạo đơn. Chị có thể tạo đơn mới.";
+    }else msg.textContent="Chưa kiểm tra được yêu cầu trước. Bấm Tải lại; hãy kiểm tra đơn trước khi tạo lại.";
+  }
+}
+manualForm.addEventListener("input",updateManualSummary);
+manualForm.addEventListener("change",updateManualSummary);
+manualRows.addEventListener("click",e=>{
+  const remove=e.target.closest(".remove-item");if(remove){remove.closest(".edit-row").remove();updateManualSummary()}
+});
+document.getElementById("manualAddMenu").addEventListener("click",()=>{if(productCatalog.length){addEditorRow({},manualRows);updateManualSummary()}});
+document.getElementById("manualAddCustom").addEventListener("click",()=>{addCustomEditorRow({},manualRows);updateManualSummary()});
+document.getElementById("newOrder").addEventListener("click",openManualOrder);
+document.getElementById("manualCancel").addEventListener("click",closeManualOrder);
+manualForm.addEventListener("submit",async e=>{
+  e.preventDefault();if(manualBusy||!manualToken)return;
+  let items,details;
+  try{items=editorPayload(manualRows);details=manualDetails();if(!manualAttempted)validateManual(items,details)}
+  catch(error){manualMsg.textContent=error.message;return}
+  manualBusy=true;manualAttempted=true;manualSave.disabled=true;manualFieldset.disabled=true;
+  sessionStorage.setItem("cct_manual_pending_token",manualToken);
+  manualMsg.textContent="Đang lưu đơn và xếp hàng gửi email…";
+  try{
+    const result=await rpc("create_manual_order_v1",{p_passcode:code,p_order_token:manualToken,p_items:items,p_details:details});
+    if(!result?.order?.order_token)throw new Error("Phản hồi chưa rõ. Thử lại để kiểm tra cùng một đơn.");
+    manualSaved=result.order;selectedToken=manualSaved.order_token;status.value="all";search.value="";
+    orders=[manualSaved,...orders.filter(o=>o.order_token!==manualSaved.order_token)];renderOrder(manualSaved);renderList();
+    productCatalog=[];
+    if(result.email_queued){
+      sessionStorage.removeItem("cct_manual_pending_token");
+      manualMsg.textContent="Đã lưu "+manualSaved.order_number+" và xếp hàng gửi email về tiệm.";
+      manualSave.textContent="Đã lưu đơn";manualSave.disabled=true;
+    }else{
+      manualMsg.textContent="Đã lưu "+manualSaved.order_number+". "+(result.email_error||"Email chưa được xếp hàng; chị thử lại nhé.");
+      manualSave.textContent="Thử gửi email lại";manualSave.disabled=false;
+    }
+    try{await fetchOrders()}catch(error){manualMsg.textContent+=" Chưa tải lại được danh sách, chị bấm Tải lại sau."}
+  }catch(error){
+    const known=/not_authorized|invalid_|required|empty_order|product_unavailable|insufficient_stock|too_long/.test(error.message);
+    manualMsg.textContent=error.message.startsWith("insufficient_stock")?"Món không đủ tồn kho. Đơn chưa lưu; chị chỉnh số lượng nhé.":known?"Đơn chưa lưu: "+error.message:"Chưa xác nhận được kết quả. Bấm thử lại sẽ kiểm tra cùng đơn, không tạo trùng.";
+    if(known){manualAttempted=false;manualFieldset.disabled=false;sessionStorage.removeItem("cct_manual_pending_token")}
+    manualSave.textContent="Thử lưu / gửi email lại";manualSave.disabled=false;
+  }finally{manualBusy=false}
+});
+
+function pricingSummary(v){
+  const shipping=v.fulfilment_method==="delivery"||v.fulfilment_method==="auspost";
+  const pending=shipping&&v.delivery_fee==null;
+  const subtotal=v.subtotal==null?null:Number(v.subtotal);
+  const discount=Number(v.discount_amount||0);
+  const amount=subtotal===null?v.total:Math.max(0,subtotal+(shipping&&!pending?Number(v.delivery_fee):0)-discount);
+  return {shipping,pending,amount,discount,label:pending?"Tạm tính":"Tổng"};
+}
+function normalizedOrderText(v){
+  const pricing=pricingSummary(v),lines=String(v.raw||"").split(/\r?\n/);
+  const summaryLines=lines.map((line,index)=>/^(?:Tổng|Total|Tạm tính|Provisional total|Subtotal|Items subtotal|Tiền món):/.test(line)?index:-1).filter(index=>index>=0);
+  summaryLines.forEach((index,i)=>{
+    lines[index]=i===summaryLines.length-1?pricing.label+": "+money(pricing.amount):pricing.shipping?lines[index].replace(/^[^:]+:/,"Tiền món:"):"";
+  });
+  return lines.join("\n").replace(/((?:Ngày pick up|Pickup date):\s*)(\d{4}-\d{2}-\d{2})/gi,(all,label,date)=>label+displayDate(date));
+}
+function buildCopyText(v){
+  const lines=[v.customer_name||""];
+  (v.items||[]).forEach(it=>{
+    lines.push((it.qty||1)+" x "+(it.name||"Món")+(it.option_text?" — "+it.option_text:"")+" $"+Number(it.line_total||0).toFixed(2).replace(".00",""));
+  });
+  const pricing=pricingSummary(v);
+  lines.push(pricing.label+": "+money(pricing.amount));
+  const f=v.fulfilment_method==="delivery"?"Delivery Melbourne":v.fulfilment_method==="auspost"?"AusPost":"Pick up Springvale";
+  lines.push("Nhận hàng: "+f);
+  if(v.recipient_name)lines.push("Tên người nhận: "+v.recipient_name);
+  if(v.pickup_date)lines.push("Ngày pick up: "+displayDate(v.pickup_date));
+  if(v.pickup_time)lines.push("Giờ pick up: "+String(v.pickup_time).slice(0,5));
+  lines.push("Sđt: "+(v.phone||""));
+  if(v.shipping_address)lines.push("Địa chỉ: "+v.shipping_address);
+  if(pricing.shipping)lines.push((v.fulfilment_method==="auspost"?"AusPost":"Delivery")+": "+(pricing.pending?"Chờ báo giá":money(v.delivery_fee)));
+  if(pricing.discount>0)lines.push("Discount: -"+money(pricing.discount)+(v.discount_type==="percent"&&v.discount_value!==null?" ("+Number(v.discount_value).toFixed(2).replace(".00","")+"%)":""));
+  lines.push("Ghi chú: "+(v.customer_note&&v.customer_note!=="Không có"?v.customer_note:""));
+  return lines.filter(Boolean).join("\n");
+}
+
+async function saveEditedItems(){
+  if(!currentView)return;
+  const payload=editorPayload();
+  if(!payload.length){editMsg.textContent="Đơn phải có ít nhất 1 món.";return}
+  if(payload.some(x=>!Number.isInteger(x.qty)||x.qty<1||x.qty>99999||(!x.is_custom&&!x.id))){editMsg.textContent="Kiểm tra lại món và số lượng (1–99999).";return}
+  if(payload.some(x=>!x.is_custom&&(!Number.isFinite(x.unit_price)||x.unit_price<0||x.unit_price>1000000||Math.abs(x.unit_price*100-Math.round(x.unit_price*100))>0.000001))){editMsg.textContent="Đơn giá cần hợp lệ, tối đa 2 chữ số thập phân.";return}
+  if(payload.some(x=>x.is_custom&&(!x.name||x.name.length>200||x.unit_price===null||!Number.isFinite(x.unit_price)||x.unit_price<0||x.unit_price>1000000||Math.abs(x.unit_price*100-Math.round(x.unit_price*100))>0.000001))){editMsg.textContent="Món ngoài menu cần tên và đơn giá hợp lệ, tối đa 2 chữ số thập phân.";return}
+  saveItems.disabled=true;saveItems.textContent="Đang lưu...";
+  try{
+    await rpc("update_order_items_v3",{p_passcode:code,p_order_token:currentView.order_token,p_items:payload});
+    await fetchOrders();
+    editMsg.textContent="Đã lưu món, đơn giá và tính lại tổng đơn ✓";
+  }catch(e){
+    if(String(e.message).includes("invalid_custom_item"))editMsg.textContent="Kiểm tra lại tên, số lượng và đơn giá món ngoài menu.";
+    else if(String(e.message).includes("insufficient_stock"))editMsg.textContent="Không đủ tồn kho cho một trong các món mới.";
+    else if(String(e.message).includes("product_unavailable"))editMsg.textContent="Một món hiện không còn bán.";
+    else editMsg.textContent="Không lưu được thay đổi món. Vui lòng thử lại.";
+  }
+  saveItems.disabled=false;saveItems.textContent="Lưu thay đổi món";
+}
+
+function renderOrder(o){
+  clearReceiptImage();
+  const v=viewOf(o);currentView=v;
+  renderEditor(v);
+  orderStatus.value=v.status||"new";
+  statusMsg.textContent="";
+  setText("orderNumber",v.order_number);setText("createdAt",fmt(v.created_at));setText("customerName",v.customer_name);setText("phone",v.phone);
+  const fulfilLabels={pickup:"Pick up Springvale",delivery:"Delivery Melbourne",auspost:"AusPost"};
+  setText("fulfilment",fulfilLabels[v.fulfilment_method]||v.fulfilment_method||"—");
+  setText("recipient",v.recipient_name);setText("address",v.shipping_address);
+  setText("pickup",v.pickup_date?(displayDate(v.pickup_date)+(v.pickup_time?" • "+String(v.pickup_time).slice(0,5):"")):"");
+  document.getElementById("recipientRow").style.display=v.recipient_name&&v.recipient_name!==v.customer_name?"flex":"none";
+  document.getElementById("pickupRow").style.display=v.pickup_date?"flex":"none";
+  document.getElementById("addressRow").style.display=v.shipping_address?"flex":"none";
+
+  const box=document.getElementById("items");box.innerHTML="";
+  if(v.items.length){
+    v.items.forEach(it=>{
+      const w=document.createElement("div");w.className="item";
+      const m=document.createElement("div");m.className="item-main";
+      const l=document.createElement("span");l.textContent=(it.qty||1)+" × "+(it.name||"Món");
+      const r=document.createElement("span");r.className="price-only";r.textContent=money(it.line_total!==undefined?it.line_total:Number(it.unit_price||0)*Number(it.qty||1));
+      m.appendChild(l);m.appendChild(r);w.appendChild(m);
+      if(it.option_text){const op=document.createElement("div");op.className="item-opt";op.textContent="↳ "+it.option_text;w.appendChild(op)}
+      box.appendChild(w);
+    });
+  }else{
+    const d=document.createElement("div");d.className="item";d.textContent="Không đọc được danh sách món từ đơn cũ.";box.appendChild(d);
+  }
+
+  setText("subtotal",money(v.subtotal));
+  const isShipping=v.fulfilment_method==="delivery"||v.fulfilment_method==="auspost";
+  document.getElementById("subtotalRow").style.display=isShipping?"flex":"none";
+  document.getElementById("panelSubtotalBox").classList.toggle("hidden",!isShipping);
+  document.getElementById("feeRow").style.display=isShipping?"flex":"none";
+  setText("feeLabel",v.fulfilment_method==="auspost"?"AusPost":"Delivery");
+  setText("deliveryFee",money(v.delivery_fee));
+  const discountValueText=v.discount_type==="percent"&&v.discount_value!==null
+    ? money(v.discount_amount)+" ("+Number(v.discount_value).toFixed(2).replace(".00","")+"%)"
+    : money(v.discount_amount||0);
+  setText("discountAmount",v.discount_amount>0?"-"+money(v.discount_amount):money(0));
+  setText("panelDiscount",v.discount_amount>0?"-"+discountValueText:money(0));
+  document.getElementById("discountRow").style.display=v.discount_amount>0?"flex":"none";
+
+  const pricing=pricingSummary(v);
+  const displayTotal=pricing.amount;
+  setText("total",money(displayTotal));
+  setText("totalLabel",pricing.label.toUpperCase());
+  setText("panelTotalLabel",pricing.label);
+  setText("payment",v.payment_method);
+  setText("note",v.customer_note||"Không có");
+  setText("rawText",normalizedOrderText(v));
+
+  setText("panelSubtotal",money(v.subtotal));setText("panelTotal",money(displayTotal));
+  if(isShipping){
+    deliveryEditor.classList.remove("hidden");
+    deliveryInput.value=v.delivery_fee===null?"":String(v.delivery_fee);
+    deliveryInput.placeholder=v.fulfilment_method==="auspost"?"Nhập phí AusPost":"Nhập phí delivery";
+  }else{
+    deliveryEditor.classList.add("hidden");deliveryInput.value="";
+  }
+  discountType.value=v.discount_type||"";
+  discountInput.value=v.discount_value===null?"":String(v.discount_value);
+  discountInput.disabled=!discountType.value;
+  saveMsg.textContent="";
+}
+
+async function saveOrderStatus(){
+  if(!currentView)return;
+  saveStatus.disabled=true;saveStatus.textContent="Đang lưu...";
+  try{
+    await rpc("update_order_manager_status_v1",{p_passcode:code,p_order_token:currentView.order_token,p_status:orderStatus.value});
+    statusMsg.textContent="Đã cập nhật trạng thái ✓";
+    const previousToken=currentView.order_token;
+    await fetchOrders();
+    const currentStillVisible=orders.find(o=>o.order_token===previousToken&&(status.value==="all"||o.status===status.value));
+    if(!currentStillVisible){
+      const next=orders.find(o=>status.value==="all"||o.status===status.value);
+      if(next) selectOrder(next.order_token);
+    }
+  }catch(e){
+    statusMsg.textContent="Không cập nhật được trạng thái.";
+  }
+  saveStatus.disabled=false;saveStatus.textContent="Lưu trạng thái";
+}
+
+async function savePricing(){
+  if(!currentView)return;
+  const raw=deliveryInput.value.trim();
+  if(raw===""){saveMsg.textContent="Vui lòng nhập phí giao hàng.";return}
+  const fee=Number(raw);
+  if(!Number.isFinite(fee)||fee<0){saveMsg.textContent="Phí giao hàng không hợp lệ.";return}
+  if(currentView.subtotal===null){saveMsg.textContent="Không xác định được tiền món của đơn này.";return}
+  savePrice.disabled=true;savePrice.textContent="Đang lưu...";
+  try{
+    await rpc("update_print_order_pricing_v2",{
+      p_passcode:code,p_order_token:currentView.order_token,p_subtotal:currentView.subtotal,p_delivery_fee:fee,
+      p_discount_type:currentView.discount_type||null,p_discount_value:currentView.discount_value
+    });
+    saveMsg.textContent="Đã lưu phí và cập nhật tổng đơn ✓";
+    await fetchOrders();
+  }catch(e){saveMsg.textContent="Không lưu được giá. Vui lòng thử lại."}
+  savePrice.disabled=false;savePrice.textContent="Lưu giá";
+}
+
+async function saveOrderDiscount(){
+  if(!currentView)return;
+  if(currentView.subtotal===null){saveMsg.textContent="Không xác định được tiền món của đơn này.";return}
+  const type=discountType.value||null;
+  const raw=discountInput.value.trim();
+  let value=null;
+  if(type){
+    if(raw===""){saveMsg.textContent="Vui lòng nhập giá trị discount.";return}
+    value=Number(raw);
+    if(!Number.isFinite(value)||value<0){saveMsg.textContent="Discount không hợp lệ.";return}
+    if(type==="percent"&&value>100){saveMsg.textContent="Discount % phải từ 0 đến 100.";return}
+    if(type==="amount"&&value>Number(currentView.subtotal)){saveMsg.textContent="Discount $ không thể lớn hơn tiền món.";return}
+  }
+  saveDiscount.disabled=true;saveDiscount.textContent="Đang lưu...";
+  try{
+    await rpc("update_print_order_pricing_v2",{
+      p_passcode:code,p_order_token:currentView.order_token,p_subtotal:currentView.subtotal,
+      p_delivery_fee:currentView.delivery_fee,p_discount_type:type,p_discount_value:value
+    });
+    saveMsg.textContent=type?"Đã lưu discount và cập nhật tổng đơn ✓":"Đã xoá discount ✓";
+    await fetchOrders();
+  }catch(e){
+    saveMsg.textContent=String(e.message).includes("discount")?"Discount không hợp lệ. Vui lòng kiểm tra lại.":"Không lưu được discount. Vui lòng thử lại.";
+  }
+  saveDiscount.disabled=false;saveDiscount.textContent="Lưu discount";
+}
+
+async function openManager(){
+  code=passcode.value.trim();if(!code){loginMsg.textContent="Vui lòng nhập mã quản trị.";loginMsg.classList.remove("hidden");return}
+  unlock.disabled=true;unlock.textContent="Đang mở...";
+  try{
+    await fetchOrders();
+    sessionStorage.setItem("cct_print_code",code);
+    login.classList.add("hidden");app.classList.remove("hidden");loginMsg.classList.add("hidden");
+    await recoverManualOrder();
+  }catch(e){
+    loginMsg.textContent=e&&e.message==="not_authorized"?"Mã quản trị không đúng.":"Không tải được danh sách đơn. Vui lòng thử lại.";
+    loginMsg.classList.remove("hidden");
+  }
+  unlock.disabled=false;unlock.textContent="Mở Order Manager";
+}
+
+unlock.addEventListener("click",openManager);
+passcode.addEventListener("keydown",e=>{if(e.key==="Enter")openManager()});
+ordersEl.addEventListener("click",e=>{const row=e.target.closest("[data-token]");if(row)selectOrder(row.dataset.token)});
+search.addEventListener("input",renderList);
+status.addEventListener("change",function(){
+  renderList();
+  const next=orders.find(o=>status.value==="all"||o.status===status.value);
+  if(next) selectOrder(next.order_token);
+});
+mode.addEventListener("change",()=>paper.classList.toggle("kitchen",mode.value==="kitchen"));
+savePrice.addEventListener("click",savePricing);
+saveDiscount.addEventListener("click",saveOrderDiscount);
+discountType.addEventListener("change",function(){
+  discountInput.disabled=!discountType.value;
+  if(!discountType.value)discountInput.value="";
+  discountInput.placeholder=discountType.value==="percent"?"Ví dụ 10 = 10%":discountType.value==="amount"?"Ví dụ 5 = $5":"Nhập discount";
+});
+discountInput.addEventListener("keydown",e=>{if(e.key==="Enter")saveOrderDiscount()});
+saveStatus.addEventListener("click",saveOrderStatus);
+copyBtn.addEventListener("click",async function(){
+  if(!currentView)return;
+  try{
+    await navigator.clipboard.writeText(buildCopyText(currentView));
+    copyBtn.textContent="Đã copy ✓";
+    setTimeout(()=>copyBtn.textContent="Copy đơn",1200);
+  }catch(e){alert("Không copy được tự động.");}
+});
+addItemRow.addEventListener("click",()=>addEditorRow());
+document.getElementById("addCustomItemRow").addEventListener("click",()=>{if(currentView)addCustomEditorRow()});
+editRows.addEventListener("change",e=>{
+  const select=e.target.closest(".product-select");
+  if(!select)return;
+  const row=select.closest(".edit-row");
+  const priceInput=row&&row.querySelector(".override-price");
+  const product=productCatalog.find(p=>Number(p.id)===Number(select.value));
+  if(priceInput&&product)priceInput.value=Number(product.price||0).toFixed(2).replace(".00","");
+});
+editRows.addEventListener("click",e=>{
+  const btn=e.target.closest(".remove-item");
+  if(!btn)return;
+  const rows=editRows.querySelectorAll(".edit-row");
+  if(rows.length<=1){editMsg.textContent="Đơn phải có ít nhất 1 món.";return}
+  btn.closest(".edit-row").remove();
+});
+saveItems.addEventListener("click",saveEditedItems);
+deliveryInput.addEventListener("keydown",e=>{if(e.key==="Enter")savePricing()});
+document.getElementById("printBtn").addEventListener("click",()=>window.print());
+document.getElementById("reload").addEventListener("click",async()=>{await fetchOrders();await recoverManualOrder()});
+document.getElementById("lock").addEventListener("click",()=>{if(manualBusy)return;clearReceiptImage();manualCard.classList.add("hidden");manualToken=null;manualSaved=null;productCatalog=[];sessionStorage.removeItem("cct_print_code");code="";orders=[];selectedToken=null;currentView=null;app.classList.add("hidden");login.classList.remove("hidden");passcode.value=""});
+let receiptBlob=null,receiptUrl=null,receiptFilename="CCT-58mm.png";
+const imageBtn=document.getElementById("imageBtn"),imageStatus=document.getElementById("imageStatus"),imageResult=document.getElementById("imageResult");
+function clearReceiptImage(){
+  receiptBlob=null;
+  if(receiptUrl){URL_GLOBAL.revokeObjectURL(receiptUrl);receiptUrl=null}
+  imageResult.classList.add("hidden");document.getElementById("receiptImage").removeAttribute("src");imageStatus.textContent="";
+}
+const URL_GLOBAL=window.URL;
+function makeReceiptCanvas(v,kitchen){
+  // 384 dots is the printer's stated printable width on 58 mm paper.
+  const width=384,pad=16,usable=width-pad*2,lines=[];
+  const measure=document.createElement("canvas").getContext("2d");
+  function add(value,size=20,bold=false,center=false){
+    size+=4; // Two font-size steps larger for every receipt text style.
+    measure.font=(bold?"bold ":"")+size+"px Arial, sans-serif";
+    const paragraphs=String(value??"").split(/\r?\n/);
+    for(const paragraph of paragraphs){
+      let line="";
+      for(const word of paragraph.split(/\s+/).filter(Boolean)){
+        if(line&&measure.measureText(line+" "+word).width>usable){lines.push({text:line,size,bold,center});line=""}
+        // Split addresses, URLs or other tokens wider than the printable area.
+        for(const character of (line?" ":"")+word){
+          if(measure.measureText(line+character).width>usable){lines.push({text:line,size,bold,center});line=""}
+          line+=character;
+        }
+      }
+      lines.push({text:line,size,bold,center});
+    }
+  }
+  function rule(){lines.push({rule:true})}
+  add("CÓ CÁI TIỆM",28,true,true);
+  add("Ăn Vặt Melbourne",18,false,true);rule();
+  add(v.order_number,25,true);add(fmt(v.created_at),18);
+  add("Khách: "+(v.customer_name||"—"));add("SĐT: "+(v.phone||"—"));rule();
+  add("MÓN HÀNG",20,true);
+  if(!v.items.length)add("Không đọc được danh sách món. Xem nội dung đơn gốc.");
+  for(const it of v.items){
+    add((it.qty||1)+" × "+(it.name||"Món"),22,true);
+    if(it.option_text)add(it.option_text,19);
+    if(!kitchen)add("Thành tiền: "+money(it.line_total!==undefined?it.line_total:Number(it.unit_price||0)*Number(it.qty||1)),19);
+    lines.push({gap:6});
+  }
+  rule();add("GIAO NHẬN",20,true);
+  add(({pickup:"Pick up Springvale",delivery:"Delivery Melbourne",auspost:"AusPost"})[v.fulfilment_method]||v.fulfilment_method||"—");
+  if(v.recipient_name&&v.recipient_name!==v.customer_name)add("Người nhận: "+v.recipient_name);
+  if(v.pickup_date)add("Pick up: "+displayDate(v.pickup_date)+(v.pickup_time?" • "+String(v.pickup_time).slice(0,5):""));
+  if(v.shipping_address)add("Địa chỉ: "+v.shipping_address);
+  if(!kitchen){
+    rule();add("THANH TOÁN",20,true);
+    const shipping=v.fulfilment_method==="delivery"||v.fulfilment_method==="auspost";
+    if(shipping)add("Tiền món: "+money(v.subtotal));
+    if(shipping)add((v.fulfilment_method==="auspost"?"AusPost":"Delivery")+": "+money(v.delivery_fee));
+    const pricing=pricingSummary(v);
+    if(pricing.discount>0)add("Discount: -"+money(pricing.discount)+(v.discount_type==="percent"&&v.discount_value!==null?" ("+Number(v.discount_value).toFixed(2).replace(".00","")+"%)":""),19);
+    add(pricing.label.toUpperCase()+": "+money(pricing.amount),26,true);
+    add("Phương thức: "+(v.payment_method||"—"),19);
+  }
+  rule();add("GHI CHÚ",20,true);add(v.customer_note||"Không có",20,kitchen);
+  if(!kitchen){rule();add("Cảm ơn bạn đã ủng hộ",19,false,true);add("Có Cái Tiệm",20,true,true);add("@cocaitiem.o.melbourne",17,false,true)}
+  const height=pad*2+lines.reduce((sum,l)=>sum+(l.rule?16:l.gap||Math.ceil(l.size*1.35)),0);
+  if(height>30000)throw new Error("Phiếu quá dài. Vui lòng in từng phần.");
+  const canvas=document.createElement("canvas");canvas.width=width;canvas.height=height;
+  const ctx=canvas.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,width,height);ctx.fillStyle="#000";ctx.textBaseline="top";
+  let y=pad;
+  for(const line of lines){
+    if(line.rule){ctx.fillRect(pad,y+8,usable,1);y+=16;continue}
+    if(line.gap){y+=line.gap;continue}
+    ctx.font=(line.bold?"bold ":"")+line.size+"px Arial, sans-serif";
+    ctx.textAlign=line.center?"center":"left";ctx.fillText(line.text,line.center?width/2:pad,y);y+=Math.ceil(line.size*1.35);
+  }
+  // Remove grey antialiasing pixels before the print app processes the image.
+  // Keep the native 384-dot width; enlarging then shrinking softens small letters.
+  const pixels=ctx.getImageData(0,0,width,height);
+  for(let i=0;i<pixels.data.length;i+=4){
+    const value=pixels.data[i]<160?0:255;
+    pixels.data[i]=pixels.data[i+1]=pixels.data[i+2]=value;
+    pixels.data[i+3]=255;
+  }
+  ctx.putImageData(pixels,0,0);
+  return canvas;
+}
+imageBtn.addEventListener("click",async()=>{
+  if(!currentView){imageStatus.textContent="Vui lòng chọn một đơn hàng.";return}
+  imageBtn.disabled=true;
+  try{
+    clearReceiptImage();
+    const v=currentView,kitchen=mode.value==="kitchen";
+    const canvas=makeReceiptCanvas(v,kitchen);
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
+    if(!blob)throw new Error("Không tạo được ảnh.");
+    // Do not show a stale receipt if selection changed during image generation.
+    if(currentView!==v||mode.value!==(kitchen?"kitchen":"receipt"))return;
+    receiptBlob=blob;receiptFilename=String(v.order_number).replace(/[^a-zA-Z0-9_-]/g,"_")+(kitchen?"-bep":"")+"-58mm.png";
+    receiptUrl=URL_GLOBAL.createObjectURL(blob);
+    document.getElementById("receiptImage").src=receiptUrl;
+    imageResult.classList.remove("hidden");imageStatus.textContent="Đã tạo ảnh phiếu 58 mm. Nhấn giữ ảnh để lưu.";
+    imageResult.scrollIntoView({behavior:"smooth",block:"start"});
+  }catch(e){imageStatus.textContent=e.message||"Không tạo được ảnh. Vui lòng thử lại."}
+  finally{imageBtn.disabled=false}
+});
+document.getElementById("shareImageBtn").addEventListener("click",async()=>{
+  if(!receiptBlob)return;
+  const file=new File([receiptBlob],receiptFilename,{type:"image/png"});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title:"Phiếu đơn Có Cái Tiệm"})}
+    catch(e){if(e.name!=="AbortError")imageStatus.textContent="Chị nhấn giữ ảnh bên trên để lưu vào Ảnh nhé."}
+  }else{
+    const link=document.createElement("a");link.href=receiptUrl;link.download=receiptFilename;link.click();
+  }
+});
+mode.addEventListener("change",clearReceiptImage);
+const saved=sessionStorage.getItem("cct_print_code");if(saved){passcode.value=saved;openManager()}
+})();
+</script>
+
+<script>
+(function(){
+  function ready(fn){
+    if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",fn);
+    else fn();
+  }
+  ready(function(){
+    var app=document.getElementById("app");
+    var left=document.querySelector(".layout .left");
+    var selectedControls=document.querySelector(".selected-controls");
+    var editItems=document.querySelector(".edit-items");
+    var preview=document.querySelector(".selected-order-preview");
+    var stats=document.querySelector(".stats");
+    var status=document.getElementById("status");
+    if(!app||!left||!selectedControls||!editItems||!preview||!status) return;
+
+    document.body.classList.add("v9-active");
+    app.classList.add("v9-inbox");
+
+    // Hide the old section labels but keep the functional elements.
+    Array.from(app.children).forEach(function(el){
+      if(el.tagName==="DIV" && /ĐƠN ĐANG CHỌN|ĐƠN HÀNG ĐANG CHỌN/.test(el.textContent||"")){
+        el.classList.add("v9-hidden-heading");
+      }
+    });
+
+    var tabs=document.createElement("div");
+    tabs.className="v9-status-tabs";
+    tabs.setAttribute("role","tablist");
+    var statuses=[
+      ["new","Mới","s-new"],
+      ["confirmed","Đã xác nhận","s-confirmed"],
+      ["preparing","Đang chuẩn bị","s-preparing"],
+      ["ready","Sẵn sàng","s-ready"],
+      ["completed","Hoàn tất","s-completed"],
+      ["cancelled","Đã huỷ","s-cancelled"],
+      ["all","Tất cả",null]
+    ];
+    statuses.forEach(function(item){
+      var button=document.createElement("button");
+      button.type="button";
+      button.className="v9-status-tab";
+      button.dataset.status=item[0];
+      button.innerHTML='<span>'+item[1]+'</span>'+(item[2]?'<b data-count-source="'+item[2]+'">0</b>':'');
+      tabs.appendChild(button);
+    });
+
+    var top=app.querySelector(":scope > .top");
+    if(top) top.insertAdjacentElement("afterend",tabs);
+    else app.insertBefore(tabs,app.firstChild);
+
+    var shell=document.createElement("div");
+    shell.className="v9-shell";
+    var listPane=document.createElement("section");
+    listPane.className="v9-list-pane";
+    listPane.setAttribute("aria-label","Danh sách đơn");
+    var detailPane=document.createElement("section");
+    detailPane.className="v9-detail-pane";
+    detailPane.setAttribute("aria-label","Chi tiết đơn");
+
+    var detailTitle=document.createElement("div");
+    detailTitle.className="v9-detail-title";
+    detailTitle.innerHTML='<strong>Đơn đang chọn</strong><span>Bấm đơn bên trái để xem & xử lý</span>';
+    detailPane.appendChild(detailTitle);
+
+    left.parentNode && left.parentNode.removeChild(left);
+    listPane.appendChild(left);
+
+    preview.parentNode && preview.parentNode.removeChild(preview);
+    selectedControls.parentNode && selectedControls.parentNode.removeChild(selectedControls);
+    editItems.parentNode && editItems.parentNode.removeChild(editItems);
+
+    detailPane.appendChild(preview);
+    detailPane.appendChild(selectedControls);
+    detailPane.appendChild(editItems);
+
+    shell.appendChild(listPane);
+    shell.appendChild(detailPane);
+    app.appendChild(shell);
+
+    function syncTabs(){
+      tabs.querySelectorAll(".v9-status-tab").forEach(function(btn){
+        btn.classList.toggle("active",btn.dataset.status===status.value);
+        var count=btn.querySelector("[data-count-source]");
+        if(count){
+          var source=document.getElementById(count.dataset.countSource);
+          count.textContent=source?source.textContent:"0";
+        }
+      });
+    }
+
+    tabs.addEventListener("click",function(event){
+      var button=event.target.closest(".v9-status-tab");
+      if(!button) return;
+      status.value=button.dataset.status;
+      status.dispatchEvent(new Event("change",{bubbles:true}));
+      syncTabs();
+    });
+
+    if(stats){
+      new MutationObserver(syncTabs).observe(stats,{subtree:true,childList:true,characterData:true});
+    }
+    status.addEventListener("change",syncTabs);
+    syncTabs();
+
+    // Keep selected order visible in its own list pane without moving the whole page.
+    document.getElementById("orders").addEventListener("click",function(event){
+      var row=event.target.closest("[data-token]");
+      if(!row) return;
+      requestAnimationFrame(function(){
+        if(window.innerWidth<=760) detailPane.scrollTop=0;
+      });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
