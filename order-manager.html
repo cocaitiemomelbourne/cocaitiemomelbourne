@@ -136,6 +136,8 @@ button,input,select{font:inherit}
 #manualRows{display:grid;gap:10px;margin:12px 0}
 .manual-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 #manualCard{padding:18px;margin-bottom:18px}
+#manualMsg:not(:empty){position:sticky;bottom:0;z-index:2;padding:12px;border:1px solid #d8cec3;border-radius:10px;background:#fff8ef;color:var(--ink);font-size:14px;line-height:1.5}
+#manualMsg[data-error="true"]{background:#fff0ed;border-color:#c87160;color:#8d3428}
 @media(max-width:600px){.manual-fields{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.top>div:last-child{display:flex;gap:7px;flex-wrap:wrap}}
 @media(max-width:760px){
   .custom-row{grid-template-columns:1fr 80px}
@@ -472,7 +474,7 @@ body.v9-active{overflow:hidden}
   <section id="manualCard" class="card hidden" aria-labelledby="manualTitle">
     <h2 id="manualTitle">Tạo đơn mới</h2>
     <div class="muted">Đơn inbox / điện thoại • tự cấp mã CCT • gửi email về tiệm khi lưu.</div>
-    <form id="manualForm">
+    <form id="manualForm" novalidate>
       <fieldset id="manualFieldset">
         <div class="manual-fields">
           <label>Tên khách *<input id="manualName" required maxlength="200" autocomplete="name"></label>
@@ -493,7 +495,7 @@ body.v9-active{overflow:hidden}
         <div id="manualSummary" class="price-box" style="margin-top:14px" aria-live="polite"></div>
       </fieldset>
       <div class="manual-actions"><button id="manualSave" type="submit" class="btn primary">Lưu đơn & gửi email</button><button id="manualCancel" type="button" class="btn alt">Đóng</button></div>
-      <div id="manualMsg" class="save-msg" role="status"></div>
+      <div id="manualMsg" class="save-msg" role="status" aria-live="polite" aria-atomic="true" tabindex="-1"></div>
     </form>
   </section>
 
@@ -882,6 +884,33 @@ const manualCard=document.getElementById("manualCard"),manualForm=document.getEl
   manualRows=document.getElementById("manualRows"),manualFieldset=document.getElementById("manualFieldset"),
   manualSave=document.getElementById("manualSave"),manualMsg=document.getElementById("manualMsg");
 let manualToken=null,manualSaved=null,manualBusy=false,manualAttempted=false;
+function showManualError(message){
+  manualMsg.textContent=message;
+  manualMsg.dataset.error="true";
+  manualMsg.focus({preventScroll:true});
+  manualMsg.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+function validateManualFields(){
+  // novalidate lets submit reach our handler, including on iPhone.
+  // Keep native constraints, but report failures inside the order form.
+  const invalid=Array.from(manualFieldset.querySelectorAll("input,select,textarea"))
+    .find(field=>field.willValidate&&!field.validity.valid);
+  if(!invalid)return;
+  const messages={
+    manualName:"Vui lòng nhập tên khách.",
+    manualPhone:"Vui lòng nhập số điện thoại.",
+    manualAddress:"Vui lòng nhập địa chỉ giao hàng.",
+    manualFee:"Phí giao hàng cần là số từ 0 đến 999999.99, tối đa 2 số lẻ.",
+    manualPickupDate:"Ngày pick up không hợp lệ.",
+    manualPickupTime:"Giờ pick up không hợp lệ."
+  };
+  const message=messages[invalid.id]||
+    (invalid.classList.contains("qty-input")?"Số lượng cần là số nguyên từ 1 đến 99999.":
+    invalid.classList.contains("custom-price")?"Đơn giá cần là số từ 0 đến 1000000, tối đa 2 số lẻ.":
+    "Vui lòng kiểm tra "+(invalid.getAttribute("aria-label")||"thông tin món hàng")+".");
+  invalid.focus();
+  throw new Error(message);
+}
 function manualValue(id){return document.getElementById(id).value.trim()}
 function manualDetails(){
   const method=manualValue("manualMethod"),fee=manualValue("manualFee");
@@ -932,7 +961,7 @@ async function openManualOrder(){
     const data=await rpc("get_order_editor_products_v1",{p_passcode:code});
     productCatalog=Array.isArray(data)?data:[];
     manualForm.reset();manualRows.innerHTML="";manualToken="manual-"+crypto.randomUUID();
-    manualSaved=null;manualAttempted=false;manualFieldset.disabled=false;manualMsg.textContent="";
+    manualSaved=null;manualAttempted=false;manualFieldset.disabled=false;manualMsg.textContent="";delete manualMsg.dataset.error;
     manualSave.textContent="Lưu đơn & gửi email";manualSave.disabled=false;
     if(productCatalog.length)addEditorRow({},manualRows);else addCustomEditorRow({},manualRows);
     manualCard.classList.remove("hidden");updateManualSummary();manualCard.scrollIntoView({behavior:"smooth"});
@@ -974,10 +1003,13 @@ document.getElementById("manualAddCustom").addEventListener("click",()=>{addCust
 document.getElementById("newOrder").addEventListener("click",openManualOrder);
 document.getElementById("manualCancel").addEventListener("click",closeManualOrder);
 manualForm.addEventListener("submit",async e=>{
-  e.preventDefault();if(manualBusy||!manualToken)return;
+  e.preventDefault();
+  if(manualBusy)return;
+  if(!manualToken){showManualError("Phiên tạo đơn chưa sẵn sàng. Chị đóng form rồi bấm Tạo đơn mới lại nhé.");return}
+  delete manualMsg.dataset.error;
   let items,details;
-  try{items=editorPayload(manualRows);details=manualDetails();if(!manualAttempted)validateManual(items,details)}
-  catch(error){manualMsg.textContent=error.message;return}
+  try{if(!manualAttempted)validateManualFields();items=editorPayload(manualRows);details=manualDetails();if(!manualAttempted)validateManual(items,details)}
+  catch(error){showManualError(error.message);return}
   manualBusy=true;manualAttempted=true;manualSave.disabled=true;manualFieldset.disabled=true;
   sessionStorage.setItem("cct_manual_pending_token",manualToken);
   manualMsg.textContent="Đang lưu đơn và xếp hàng gửi email…";
@@ -1001,6 +1033,7 @@ manualForm.addEventListener("submit",async e=>{
     manualMsg.textContent=error.message.startsWith("insufficient_stock")?"Món không đủ tồn kho. Đơn chưa lưu; chị chỉnh số lượng nhé.":known?"Đơn chưa lưu: "+error.message:"Chưa xác nhận được kết quả. Bấm thử lại sẽ kiểm tra cùng đơn, không tạo trùng.";
     if(known){manualAttempted=false;manualFieldset.disabled=false;sessionStorage.removeItem("cct_manual_pending_token")}
     manualSave.textContent="Thử lưu / gửi email lại";manualSave.disabled=false;
+    showManualError(manualMsg.textContent);
   }finally{manualBusy=false}
 });
 
