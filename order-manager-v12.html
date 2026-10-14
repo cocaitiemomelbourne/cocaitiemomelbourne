@@ -742,6 +742,7 @@ function viewOf(o){
   const subtotal=o.subtotal!==null&&o.subtotal!==undefined?Number(o.subtotal):(legacy.subtotal!==null?Number(legacy.subtotal):null);
   return {
     order_token:o.order_token,
+    language:o.language||(/(?:^|\n)Fulfilment:/.test(o.order_text||"")?"en":"vi"),
     order_number:o.order_number||o.order_token,
     created_at:o.created_at,
     customer_name:o.customer_name||legacy.customer_name||o.recipient_name||legacy.recipient_name||"",
@@ -754,8 +755,8 @@ function viewOf(o){
     payment_method:o.payment_method||legacy.payment_method||"",
     customer_note:(o.customer_note&&o.customer_note!=="Không có")?o.customer_note:(legacy.customer_note||o.customer_note||""),
     fulfilment_method:fulfil,
-    pickup_date:o.pickup_date||"",
-    pickup_time:o.pickup_time||"",
+    pickup_date:o.pickup_date||String(o.order_text||"").match(/(?:Ngày pick up|Pickup date):\s*([^\n]+)/i)?.[1]||"",
+    pickup_time:o.pickup_time||String(o.order_text||"").match(/(?:Giờ pick up|Pickup time):\s*([^\n]+)/i)?.[1]||"",
     subtotal:subtotal,
     delivery_fee:o.delivery_fee!==null&&o.delivery_fee!==undefined?Number(o.delivery_fee):legacy.delivery_fee,
     discount_type:o.discount_type||"",
@@ -1299,6 +1300,7 @@ function clearReceiptImage(){
 }
 const URL_GLOBAL=window.URL;
 function makeReceiptCanvas(v,kitchen){
+  const en=v.language==="en",t=(vi,english)=>en?english:vi;
   // 384 dots is the printer's stated printable width on 58 mm paper.
   const width=384,pad=16,usable=width-pad*2,lines=[];
   const measure=document.createElement("canvas").getContext("2d");
@@ -1321,34 +1323,34 @@ function makeReceiptCanvas(v,kitchen){
   }
   function rule(){lines.push({rule:true})}
   add("CÓ CÁI TIỆM",28,true,true);
-  add("Ăn Vặt Melbourne",18,false,true);rule();
+  add(t("Ăn Vặt Melbourne","Vietnamese Snacks Melbourne"),18,false,true);rule();
   add(v.order_number,25,true);add(fmt(v.created_at),18);
-  add("Khách: "+(v.customer_name||"—"));add("SĐT: "+(v.phone||"—"));rule();
-  add("MÓN HÀNG",20,true);
-  if(!v.items.length)add("Không đọc được danh sách món. Xem nội dung đơn gốc.");
+  add(t("Khách: ","Customer: ")+(v.customer_name||"—"));add(t("SĐT: ","Phone: ")+(v.phone||"—"));rule();
+  add(t("MÓN HÀNG","ITEMS"),20,true);
+  if(!v.items.length)add(t("Không đọc được danh sách món. Xem nội dung đơn gốc.","Items unavailable. Please check the original order."));
   for(const it of v.items){
     add((it.qty||1)+" × "+(it.name||"Món"),22,true);
     if(it.option_text)add(it.option_text,19);
-    if(!kitchen)add("Thành tiền: "+money(it.line_total!==undefined?it.line_total:Number(it.unit_price||0)*Number(it.qty||1)),19);
+    if(!kitchen)add(t("Thành tiền: ","Line total: ")+money(it.line_total!==undefined?it.line_total:Number(it.unit_price||0)*Number(it.qty||1)),19);
     lines.push({gap:6});
   }
-  rule();add("GIAO NHẬN",20,true);
+  rule();add(t("GIAO NHẬN","FULFILMENT"),20,true);
   add(({pickup:"Pick up Springvale",delivery:"Delivery Melbourne",auspost:"AusPost"})[v.fulfilment_method]||v.fulfilment_method||"—");
-  if(v.recipient_name&&v.recipient_name!==v.customer_name)add("Người nhận: "+v.recipient_name);
+  if(v.recipient_name&&v.recipient_name!==v.customer_name)add(t("Người nhận: ","Recipient: ")+v.recipient_name);
   if(v.pickup_date)add("Pick up: "+displayDate(v.pickup_date)+(v.pickup_time?" • "+String(v.pickup_time).slice(0,5):""));
-  if(v.shipping_address)add("Địa chỉ: "+v.shipping_address);
+  if(v.shipping_address)add(t("Địa chỉ: ","Address: ")+v.shipping_address);
   if(!kitchen){
-    rule();add("THANH TOÁN",20,true);
+    rule();add(t("THANH TOÁN","PAYMENT"),20,true);
     const shipping=v.fulfilment_method==="delivery"||v.fulfilment_method==="auspost";
-    if(shipping)add("Tiền món: "+money(v.subtotal));
+    if(shipping)add(t("Tiền món: ","Items subtotal: ")+money(v.subtotal));
     if(shipping)add((v.fulfilment_method==="auspost"?"AusPost":"Delivery")+": "+money(v.delivery_fee));
     const pricing=pricingSummary(v);
     if(pricing.discount>0)add("Discount: -"+money(pricing.discount)+(v.discount_type==="percent"&&v.discount_value!==null?" ("+Number(v.discount_value).toFixed(2).replace(".00","")+"%)":""),19);
-    add(pricing.label.toUpperCase()+": "+money(pricing.amount),26,true);
-    add("Phương thức: "+(v.payment_method||"—"),19);
+    add((en?(pricing.pending?"PROVISIONAL TOTAL":"TOTAL"):pricing.label.toUpperCase())+": "+money(pricing.amount),26,true);
+    add(t("Phương thức: ","Payment method: ")+(v.payment_method||"—"),19);
   }
-  rule();add("GHI CHÚ",20,true);add(v.customer_note||"Không có",20,kitchen);
-  if(!kitchen){rule();add("Cảm ơn bạn đã ủng hộ",19,false,true);add("Có Cái Tiệm",20,true,true);add("@cocaitiem.o.melbourne",17,false,true)}
+  rule();add(t("GHI CHÚ","NOTE"),20,true);add(!v.customer_note||v.customer_note==="Không có"?t("Không có","None"):v.customer_note,20,kitchen);
+  if(!kitchen){rule();add(t("Cảm ơn bạn đã ủng hộ","Thank you for your support"),19,false,true);add("Có Cái Tiệm",20,true,true);add("@cocaitiem.o.melbourne",17,false,true)}
   const height=pad*2+lines.reduce((sum,l)=>sum+(l.rule?16:l.gap||Math.ceil(l.size*1.35)),0);
   if(height>30000)throw new Error("Phiếu quá dài. Vui lòng in từng phần.");
   const canvas=document.createElement("canvas");canvas.width=width;canvas.height=height;
