@@ -542,7 +542,9 @@ body.v9-active{overflow:hidden}
         </select>
         <button id="saveStatus" class="btn primary">Lưu trạng thái</button>
       </div>
-      <div id="statusMsg" class="save-msg"></div>
+      <div style="margin-top:10px"><button id="confirmEmailBtn" class="btn primary" type="button">✓ Xác nhận đơn &amp; gửi email</button></div>
+      <div class="muted" style="margin-top:6px">Chỉ gửi khi bấm nút này. Mỗi đơn chỉ gửi xác nhận một lần; nếu chưa rõ kết quả, kiểm tra lịch sử trước khi thử lại.</div>
+      <div id="statusMsg" class="save-msg" role="status" aria-live="polite"></div>
     </div>
 
     <div class="top-print card">
@@ -1255,6 +1257,49 @@ async function saveOrderStatus(){
   saveStatus.disabled=false;saveStatus.textContent="Lưu trạng thái";
 }
 
+async function confirmOrderAndEmail(){
+  if(!currentView)return;
+  const token=currentView.order_token;
+  const orderNumber=currentView.order_number||"đơn này";
+  const button=document.getElementById("confirmEmailBtn");
+  if(!window.confirm("Xác nhận "+orderNumber+" và gửi email cho khách?\\nChỉ thực hiện khi thông tin món, tổng tiền và ngày nhận hàng đã lưu chính xác."))return;
+  button.disabled=true;saveStatus.disabled=true;
+  button.textContent="Đang xác nhận & gửi...";
+  try{
+    if(currentView.status!=="confirmed"){
+      await rpc("update_order_manager_status_v1",{p_passcode:code,p_order_token:token,p_status:"confirmed"});
+    }
+    const response=await fetch(URL+"/functions/v1/confirm-order-email",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":KEY,"Authorization":"Bearer "+KEY},
+      body:JSON.stringify({passcode:code,order_token:token})
+    });
+    let outcome={};
+    try{outcome=await response.json()}catch(e){}
+    if(!response.ok||outcome.success!==true){
+      if(outcome.alreadyProcessed){
+        statusMsg.textContent="Email đã có lịch sử xử lý ("+(outcome.status||"không rõ")+"). Không gửi lại. Kiểm tra lịch sử email trước.";
+      }else{
+        statusMsg.textContent="Đơn đã xác nhận; email chưa được xác nhận gửi thành công ("+(outcome.error||response.status)+"). Kiểm tra Supabase/Gmail trước khi thử lại.";
+      }
+    }else if(outcome.alreadyProcessed){
+      statusMsg.textContent="Email đã được gửi trước đó. Không gửi trùng ✓";
+    }else{
+      statusMsg.textContent="Đã xác nhận đơn và gửi email thành công ✓";
+    }
+    const feedback=statusMsg.textContent;
+    await fetchOrders();
+    const matching=orders.find(o=>o.order_token===token);
+    if(matching)renderOrder(matching);
+    statusMsg.textContent=feedback;
+  }catch(e){
+    statusMsg.textContent="Có lỗi khi xác nhận/gửi email. Kiểm tra trạng thái đơn và lịch sử gửi trước khi thử lại.";
+  }finally{
+    button.disabled=false;saveStatus.disabled=false;
+    button.textContent="✓ Xác nhận đơn & gửi email";
+  }
+}
+
 async function savePricing(){
   if(!currentView)return;
   const raw=deliveryInput.value.trim();
@@ -1335,6 +1380,7 @@ discountType.addEventListener("change",function(){
 });
 discountInput.addEventListener("keydown",e=>{if(e.key==="Enter")saveOrderDiscount()});
 saveStatus.addEventListener("click",saveOrderStatus);
+document.getElementById("confirmEmailBtn").addEventListener("click",confirmOrderAndEmail);
 copyBtn.addEventListener("click",async function(){
   if(!currentView)return;
   try{
