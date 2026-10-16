@@ -500,13 +500,6 @@ body.v9-active{overflow:hidden}
   </section>
 
   <div style="font-size:14px;font-weight:900;margin:4px 0 8px">ĐƠN ĐANG CHỌN — XỬ LÝ NHANH</div>
-  <div class="card" id="receiptDateEditor" style="padding:12px;margin-bottom:12px">
-<h3 style="margin:0 0 8px">📅 Ngày khách nhận hàng</h3>
-<div class="row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
-<label style="flex:1;min-width:160px">Ngày nhận hàng<input id="receiptDateInput" type="date" style="display:block;width:100%;padding:10px;border:1px solid #d8cec3;border-radius:9px"></label>
-<label id="receiptTimeWrap" style="flex:1;min-width:130px">Giờ Pick up<input id="receiptTimeInput" type="time" style="display:block;width:100%;padding:10px;border:1px solid #d8cec3;border-radius:9px"></label>
-<button id="saveReceiptDate" class="btn primary" type="button">Lưu ngày nhận</button></div>
-<div id="receiptDateMsg" class="muted" role="status" style="margin-top:8px">Chọn một đơn để chỉnh ngày nhận hàng.</div></div>
 <div class="selected-controls">
     <div class="pricing card">
       <h3>Giá đơn đang chọn</h3>
@@ -578,6 +571,14 @@ body.v9-active{overflow:hidden}
   <div style="font-size:14px;font-weight:900;margin:10px 0 8px">ĐƠN HÀNG ĐANG CHỌN</div>
   <div class="selected-order-preview">
     <div class="preview-card card">
+  <div class="card" id="receiptDateEditor" style="padding:12px;margin-bottom:12px">
+<h3 style="margin:0 0 8px">📅 Ngày khách nhận hàng</h3>
+<div class="row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
+<label style="flex:1;min-width:160px">Ngày nhận hàng<input id="receiptDateInput" type="date" style="display:block;width:100%;padding:10px;border:1px solid #d8cec3;border-radius:9px"></label>
+<label id="receiptTimeWrap" style="flex:1;min-width:130px">Giờ Pick up<input id="receiptTimeInput" type="time" style="display:block;width:100%;padding:10px;border:1px solid #d8cec3;border-radius:9px"></label>
+<button id="saveReceiptDate" class="btn primary" type="button">Lưu ngày nhận</button></div>
+<div id="receiptDateMsg" class="muted" role="status" style="margin-top:8px">Chọn một đơn để chỉnh ngày nhận hàng.</div></div>
+
       <div id="imageStatus" class="muted" role="status"></div>
         <div id="imageResult" class="hidden" style="margin:10px 0">
           <div class="notice">Trên iPhone: nhấn giữ ảnh bên dưới → Lưu vào Ảnh. Sau đó mở Express Thermal Print, chọn ảnh và in khổ 58 mm.</div>
