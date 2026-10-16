@@ -661,7 +661,7 @@ body.v9-active{overflow:hidden}
         </select>
       </div>
       <div id="orders" class="orders"></div>
-  <div class="card" id="receiptDateEditor" style="padding:12px;margin:10px 0 0;display:none">
+  <div class="card" id="receiptDateEditor" style="padding:12px;margin:10px 0">
 <h3 style="margin:0 0 8px">📅 Ngày khách nhận hàng</h3>
 <div class="row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
 <label style="flex:1;min-width:160px">Ngày nhận hàng<input id="receiptDateInput" type="date" style="display:block;width:100%;padding:10px;border:1px solid #d8cec3;border-radius:9px"></label>
@@ -1552,8 +1552,7 @@ const saved=sessionStorage.getItem("cct_print_code");if(saved){passcode.value=sa
     editItems.parentNode && editItems.parentNode.removeChild(editItems);
 
     var dateEditor=document.getElementById("receiptDateEditor");
-    var previewCard=preview.querySelector(".preview-card");
-    if(dateEditor&&previewCard){previewCard.insertBefore(dateEditor,previewCard.firstChild);dateEditor.style.display="block"}
+    if(dateEditor){detailPane.appendChild(dateEditor);dateEditor.style.setProperty("display","block","important")}
     detailPane.appendChild(preview);
     detailPane.appendChild(selectedControls);
     detailPane.appendChild(editItems);
