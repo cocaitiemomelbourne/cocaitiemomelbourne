@@ -571,14 +571,6 @@ body.v9-active{overflow:hidden}
   <div style="font-size:14px;font-weight:900;margin:10px 0 8px">ĐƠN HÀNG ĐANG CHỌN</div>
   <div class="selected-order-preview">
     <div class="preview-card card">
-  <div class="card" id="receiptDateEditor" style="padding:12px;margin-bottom:12px">
-<h3 style="margin:0 0 8px">📅 Ngày khách nhận hàng</h3>
-<div class="row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
-<label style="flex:1;min-width:160px">Ngày nhận hàng<input id="receiptDateInput" type="date" style="display:block;width:100%;padding:10px;border:1px solid #d8cec3;border-radius:9px"></label>
-<label id="receiptTimeWrap" style="flex:1;min-width:130px">Giờ Pick up<input id="receiptTimeInput" type="time" style="display:block;width:100%;padding:10px;border:1px solid #d8cec3;border-radius:9px"></label>
-<button id="saveReceiptDate" class="btn primary" type="button">Lưu ngày nhận</button></div>
-<div id="receiptDateMsg" class="muted" role="status" style="margin-top:8px">Chọn một đơn để chỉnh ngày nhận hàng.</div></div>
-
       <div id="imageStatus" class="muted" role="status"></div>
         <div id="imageResult" class="hidden" style="margin:10px 0">
           <div class="notice">Trên iPhone: nhấn giữ ảnh bên dưới → Lưu vào Ảnh. Sau đó mở Express Thermal Print, chọn ảnh và in khổ 58 mm.</div>
@@ -669,6 +661,15 @@ body.v9-active{overflow:hidden}
         </select>
       </div>
       <div id="orders" class="orders"></div>
+  <div class="card" id="receiptDateEditor" style="padding:12px;margin:10px 0 0;display:none">
+<h3 style="margin:0 0 8px">📅 Ngày khách nhận hàng</h3>
+<div class="row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
+<label style="flex:1;min-width:160px">Ngày nhận hàng<input id="receiptDateInput" type="date" style="display:block;width:100%;padding:10px;border:1px solid #d8cec3;border-radius:9px"></label>
+<label id="receiptTimeWrap" style="flex:1;min-width:130px">Giờ Pick up<input id="receiptTimeInput" type="time" style="display:block;width:100%;padding:10px;border:1px solid #d8cec3;border-radius:9px"></label>
+<button id="saveReceiptDate" class="btn primary" type="button">Lưu ngày nhận</button></div>
+<div id="receiptDateMsg" class="muted" role="status" style="margin-top:8px">Chọn một đơn để chỉnh ngày nhận hàng.</div></div>
+
+
     </div>
 
 
@@ -812,6 +813,7 @@ async function rpc(name,body){
   return r.json();
 }
 
+document.getElementById("receiptDateEditor").addEventListener("click",e=>e.stopPropagation());
 document.getElementById("saveReceiptDate").addEventListener("click",async function(){
   if(!currentView){document.getElementById("receiptDateMsg").textContent="Chưa chọn đơn.";return}
   const d=document.getElementById("receiptDateInput").value,t=document.getElementById("receiptTimeInput").value;
@@ -858,6 +860,9 @@ function renderList(){
       '<div class="order-meta">'+esc(fmt(v.created_at))+' • '+esc(statusLabels[o.status]||o.status||"")+'</div>'+
       '<div class="order-name">'+esc(v.customer_name||"—")+(v.phone?' • '+esc(v.phone):'')+'</div></div>';
   }).join("");
+  const editor=document.getElementById("receiptDateEditor");
+  const active=Array.from(ordersEl.querySelectorAll(".order")).find(node=>node.dataset.token===selectedToken);
+  if(active){active.appendChild(editor);editor.style.display="block"}else{ordersEl.after(editor);editor.style.display="none"}
 }
 
 function selectOrder(token){selectedToken=token;const o=orders.find(x=>x.order_token===token);if(o){renderOrder(o);renderList()}}
