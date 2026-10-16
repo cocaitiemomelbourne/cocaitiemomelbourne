@@ -25,7 +25,7 @@ button,input,select{font:inherit}
 .top h1{margin:0;font-size:30px}
 .layout{display:block}
 .left{padding:14px}
-.selected-order-preview{display:flex;justify-content:center;margin-bottom:14px}
+.selected-order-preview{display:flex;flex-direction:column;justify-content:center;margin-bottom:14px}
 .selected-order-preview .preview-card{width:100%;padding:12px}
 .selected-order-preview .paper{margin:auto}
 .toolbar{display:grid;grid-template-columns:1fr 180px;gap:8px;margin-bottom:10px}
@@ -110,6 +110,7 @@ button,input,select{font:inherit}
 @media(max-width:930px){.orders{max-height:none}.toolbar{grid-template-columns:1fr}.paper{margin-top:4px}.preview-card{overflow-x:auto}}
 @media(max-width:520px){.wrap{padding:10px}.price-grid{grid-template-columns:1fr 1fr}.delivery-editor{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
 @media print{
+  #receiptDateEditor{display:none!important}
   body{background:#fff}
   .top,.selected-controls,.edit-items,.stats,.left,.preview-tools,.pricing,.order-actions,.top-print,.raw,#manualCard,#manualRecoveryMsg,#imageStatus,#imageResult{display:none!important}
   .layout{display:block}
