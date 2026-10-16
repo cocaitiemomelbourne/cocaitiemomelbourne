@@ -500,7 +500,14 @@ body.v9-active{overflow:hidden}
   </section>
 
   <div style="font-size:14px;font-weight:900;margin:4px 0 8px">ĐƠN ĐANG CHỌN — XỬ LÝ NHANH</div>
-  <div class="selected-controls">
+  <div class="card" id="receiptDateEditor" style="padding:12px;margin-bottom:12px">
+<h3 style="margin:0 0 8px">📅 Ngày khách nhận hàng</h3>
+<div class="row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
+<label style="flex:1;min-width:160px">Ngày nhận hàng<input id="receiptDateInput" type="date" style="display:block;width:100%;padding:10px;border:1px solid #d8cec3;border-radius:9px"></label>
+<label id="receiptTimeWrap" style="flex:1;min-width:130px">Giờ Pick up<input id="receiptTimeInput" type="time" style="display:block;width:100%;padding:10px;border:1px solid #d8cec3;border-radius:9px"></label>
+<button id="saveReceiptDate" class="btn primary" type="button">Lưu ngày nhận</button></div>
+<div id="receiptDateMsg" class="muted" role="status" style="margin-top:8px">Chọn một đơn để chỉnh ngày nhận hàng.</div></div>
+<div class="selected-controls">
     <div class="pricing card">
       <h3>Giá đơn đang chọn</h3>
       <div class="price-grid">
@@ -804,6 +811,18 @@ async function rpc(name,body){
   return r.json();
 }
 
+document.getElementById("saveReceiptDate").addEventListener("click",async function(){
+  if(!currentView){document.getElementById("receiptDateMsg").textContent="Chưa chọn đơn.";return}
+  const d=document.getElementById("receiptDateInput").value,t=document.getElementById("receiptTimeInput").value;
+  if(!d){document.getElementById("receiptDateMsg").textContent="Vui lòng chọn ngày nhận hàng.";return}
+  const pickup=String(currentView.fulfilment_method||"").toLowerCase()==="pickup",btn=this;
+  btn.disabled=true;document.getElementById("receiptDateMsg").textContent="Đang lưu...";
+  try{
+    await rpc("cct_update_order_dates_v1",{p_passcode:code,p_order_token:currentView.order_token,p_pickup_date:pickup?d:null,p_pickup_time:pickup?(t||null):null,p_delivery_date:pickup?null:d});
+    await fetchOrders();document.getElementById("receiptDateMsg").textContent="Đã lưu ngày nhận hàng ✓";
+  }catch(e){document.getElementById("receiptDateMsg").textContent="Không lưu được: "+e.message}
+  finally{btn.disabled=false}
+});
 async function fetchOrders(){
   const translations=await fetch(URL+"/rest/v1/products?select=id,name,name_en,option_groups,option_groups_en",{headers:{apikey:KEY,Authorization:"Bearer "+KEY}});
   if(!translations.ok)throw new Error("Không tải được tên món song ngữ. Vui lòng thử tải lại.");
@@ -1137,6 +1156,13 @@ function translateReceiptLabels(language){
 }
 
 function renderOrder(o){
+  const receiptDateInput=document.getElementById("receiptDateInput"),receiptTimeInput=document.getElementById("receiptTimeInput"),receiptTimeWrap=document.getElementById("receiptTimeWrap");
+  const isPickup=String(o.fulfilment_method||"").toLowerCase()==="pickup";
+  receiptDateInput.value=String(isPickup?(o.pickup_date||""):(o.delivery_date||"")).slice(0,10);
+  receiptTimeInput.value=String(o.pickup_time||"").slice(0,5);
+  receiptTimeWrap.style.display=isPickup?"block":"none";
+  document.getElementById("receiptDateMsg").textContent=isPickup?"Ngày Pick up được dùng trong báo cáo tuần.":"Ngày Delivery/AusPost được dùng trong báo cáo tuần.";
+
   clearReceiptImage();
   const v=viewOf(o);currentView=v;
   translateReceiptLabels(v.language);
