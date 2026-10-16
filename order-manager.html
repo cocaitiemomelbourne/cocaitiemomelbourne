@@ -848,8 +848,6 @@ function updateStats(){
   });
 }
 function renderList(){
-  const editor=document.getElementById("receiptDateEditor");
-  if(editor&&ordersEl.contains(editor))ordersEl.after(editor);
   updateStats();
   const q=search.value.trim().toLowerCase(),st=status.value;
   const list=orders.filter(o=>(st==="all"||o.status===st)&&(!q||[o.order_number,o.customer_name,o.phone,o.recipient_name,o.shipping_address,o.order_text].join(" ").toLowerCase().includes(q)));
@@ -862,8 +860,7 @@ function renderList(){
       '<div class="order-meta">'+esc(fmt(v.created_at))+' • '+esc(statusLabels[o.status]||o.status||"")+'</div>'+
       '<div class="order-name">'+esc(v.customer_name||"—")+(v.phone?' • '+esc(v.phone):'')+'</div></div>';
   }).join("");
-  const active=Array.from(ordersEl.querySelectorAll(".order")).find(node=>node.dataset.token===selectedToken);
-  if(active){active.appendChild(editor);editor.style.display="block"}else{ordersEl.after(editor);editor.style.display="none"}
+
 }
 
 function selectOrder(token){selectedToken=token;const o=orders.find(x=>x.order_token===token);if(o){renderOrder(o);renderList()}}
@@ -1554,6 +1551,9 @@ const saved=sessionStorage.getItem("cct_print_code");if(saved){passcode.value=sa
     selectedControls.parentNode && selectedControls.parentNode.removeChild(selectedControls);
     editItems.parentNode && editItems.parentNode.removeChild(editItems);
 
+    var dateEditor=document.getElementById("receiptDateEditor");
+    var previewCard=preview.querySelector(".preview-card");
+    if(dateEditor&&previewCard){previewCard.insertBefore(dateEditor,previewCard.firstChild);dateEditor.style.display="block"}
     detailPane.appendChild(preview);
     detailPane.appendChild(selectedControls);
     detailPane.appendChild(editItems);
