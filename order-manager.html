@@ -848,6 +848,8 @@ function updateStats(){
   });
 }
 function renderList(){
+  const editor=document.getElementById("receiptDateEditor");
+  if(editor&&ordersEl.contains(editor))ordersEl.after(editor);
   updateStats();
   const q=search.value.trim().toLowerCase(),st=status.value;
   const list=orders.filter(o=>(st==="all"||o.status===st)&&(!q||[o.order_number,o.customer_name,o.phone,o.recipient_name,o.shipping_address,o.order_text].join(" ").toLowerCase().includes(q)));
@@ -860,7 +862,6 @@ function renderList(){
       '<div class="order-meta">'+esc(fmt(v.created_at))+' • '+esc(statusLabels[o.status]||o.status||"")+'</div>'+
       '<div class="order-name">'+esc(v.customer_name||"—")+(v.phone?' • '+esc(v.phone):'')+'</div></div>';
   }).join("");
-  const editor=document.getElementById("receiptDateEditor");
   const active=Array.from(ordersEl.querySelectorAll(".order")).find(node=>node.dataset.token===selectedToken);
   if(active){active.appendChild(editor);editor.style.display="block"}else{ordersEl.after(editor);editor.style.display="none"}
 }
