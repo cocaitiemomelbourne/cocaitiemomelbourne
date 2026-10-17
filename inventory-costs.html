@@ -35,7 +35,7 @@ table{font-size:13px;min-width:650px}td,th{padding:13px 11px;border-color:#edf0f
 .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.metric{padding:13px;min-height:105px;font-size:12px}.metric strong{font-size:clamp(22px,6vw,30px)}.metric:last-child strong{font-size:17px}
 .dash-two-col{grid-template-columns:1fr;gap:11px;margin-top:11px}.chart{height:185px;gap:5px}.bar-value{font-size:9px}.bar-label{font-size:10px}.table-toolbar{display:block}.table-toolbar input{max-width:none}.cost-fields{grid-template-columns:repeat(2,minmax(0,1fr))}table{min-width:660px}
 }
-.edit-batch-date{white-space:nowrap;padding:8px 12px;font-size:12px;background:#f3f5f7;color:#344252;border:1px solid #dce2e8;border-radius:9px}</style><style id="cct-responsive-fix">
+.edit-batch-date{white-space:nowrap;padding:8px 12px;font-size:12px;background:#f3f5f7;color:#344252;border:1px solid #dce2e8;border-radius:9px}.batch-date-editor{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;padding:13px 0 16px;border-bottom:1px solid #ebe8e3;margin-bottom:12px}.batch-date-editor label{font-size:12px;font-weight:700;margin:0}.batch-date-editor #batchEditSelect{grid-column:1/-1;width:100%;min-width:0;max-width:100%;height:46px}.batch-date-editor #batchEditDate{grid-column:1/-1;width:100%;min-width:0;height:46px}.batch-date-editor button{grid-column:1/-1;min-height:44px}.batch-date-editor p{grid-column:1/-1;margin:0;font-size:12px;overflow-wrap:anywhere}</style><style id="cct-responsive-fix">
 /* Mobile-first reporting controls */
 .filters-card .row{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:12px!important;align-items:end!important}
 .filters-card .row>div{min-width:0!important;flex:initial!important}
@@ -84,13 +84,13 @@ table{font-size:13px;min-width:650px}td,th{padding:13px 11px;border-color:#edf0f
 <button class="save-batch" type="submit">Lưu lô hàng <span aria-hidden="true">→</span></button><p id="saveMsg" role="status" aria-live="polite"></p>
 </form>
 <p class="cost-tip">Lô giá vốn chỉ dùng để tính lợi nhuận, <strong>không tự cộng vào tồn kho bán hàng</strong>.</p>
-<details class="batch-history"><summary><span><strong>Lịch sử nhập hàng</strong><small id="batchCount">0 lô hàng</small></span><span aria-hidden="true">⌄</span></summary><div class="scroll"><table><thead><tr><th>Ngày nhập</th><th>Sản phẩm</th><th>SL nhập</th><th>Vốn / món</th><th>Tổng vốn</th><th>Ghi chú</th><th>Sửa ngày</th></tr></thead><tbody id="batches"></tbody></table></div></details>
+<details class="batch-history"><summary><span><strong>Lịch sử nhập hàng</strong><small id="batchCount">0 lô hàng</small></span><span aria-hidden="true">⌄</span></summary><div class="batch-date-editor"><label for="batchEditSelect">Chọn lô cần sửa</label><select id="batchEditSelect"></select><label for="batchEditDate">Ngày nhận đúng</label><input id="batchEditDate" type="date"><button id="batchEditSave" type="button">Lưu ngày nhận mới</button><p id="batchEditMsg" role="status"></p></div><div class="scroll"><table><thead><tr><th>Ngày nhập</th><th>Sản phẩm</th><th>SL nhập</th><th>Vốn / món</th><th>Tổng vốn</th><th>Ghi chú</th><th>Sửa ngày</th></tr></thead><tbody id="batches"></tbody></table></div></details>
 </div></details>
 <div class="card data-quality"><h2>Kiểm tra dữ liệu</h2><p class="muted">Đơn hoàn thành thiếu ngày nhận hàng sẽ không được đưa vào tuần bất kỳ.</p><div id="missing"></div></div></section></main>
 <script>
 (()=>{'use strict';const URL='https://eswrqkhsvlqndjbrgsqo.supabase.co',KEY='sb_publishable_-6iIwPaZQRMkkWAROdfvxg_dmVB81E2';let pass='',orders=[],products=[],batches=[];const el=id=>document.getElementById(id),money=n=>'$'+Number(n).toFixed(2),safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const tzdate=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());const dateUTC=s=>new Date(s+'T12:00:00Z');function monday(s){let d=dateUTC(s),w=(d.getUTCDay()+6)%7;d.setUTCDate(d.getUTCDate()-w);return d.toISOString().slice(0,10)}function range(){const d=dateUTC(el('week').value),m=el('mode').value;if(m==='month'){const start=el('week').value.slice(0,7)+'-01',end=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,1)).toISOString().slice(0,10);return[start,end]}const start=monday(el('week').value),e=dateUTC(start);e.setUTCDate(e.getUTCDate()+7);return[start,e.toISOString().slice(0,10)]}
 async function rpc(name,body){const r=await fetch(URL+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok){let msg='Không thể kết nối';try{const j=await r.json();msg=j.message||msg}catch{}throw Error(msg)}return r.json()}
-async function load(){const [o,p,b]=await Promise.all([rpc('get_print_orders_v3',{p_passcode:pass,p_limit:500}),rpc('get_order_editor_products_v1',{p_passcode:pass}),rpc('cct_cost_batches_admin_v1',{p_passcode:pass,p_action:'list'})]);orders=Array.isArray(o)?o:[];products=Array.isArray(p)?p:[];batches=Array.isArray(b)?b:[];populateProducts();el('batchCount').textContent=batches.length+' lô hàng';render()}
+async function load(){const [o,p,b]=await Promise.all([rpc('get_print_orders_v3',{p_passcode:pass,p_limit:500}),rpc('get_order_editor_products_v1',{p_passcode:pass}),rpc('cct_cost_batches_admin_v1',{p_passcode:pass,p_action:'list'})]);orders=Array.isArray(o)?o:[];products=Array.isArray(p)?p:[];batches=Array.isArray(b)?b:[];populateProducts();el('batchCount').textContent=batches.length+' lô hàng';populateBatchEditor();render()}
 function populateProducts(){const q=el('productSearch').value.trim().toLocaleLowerCase('vi');const previous=el('product').value;const matches=products.filter(p=>String((p.sku||'')+' '+(p.name||'')).toLocaleLowerCase('vi').includes(q));el('product').innerHTML=matches.map(p=>'<option value="'+Number(p.id)+'">'+safe((p.sku?'['+p.sku+'] ':'')+p.name)+'</option>').join('')||'<option value="">Không tìm thấy sản phẩm</option>';if(matches.some(p=>String(p.id)===previous))el('product').value=previous}
 function updateBatchTotal(){const q=Number(el('quantity').value),u=Number(el('unitcost').value);el('batchTotal').textContent=money(Number.isFinite(q*u)&&q>=0&&u>=0?q*u:0)}
 function received(o){return String(o.fulfilment_method||'').toLowerCase().includes('pickup')?o.pickup_date||o.delivery_date:o.delivery_date||o.pickup_date}
@@ -124,18 +124,24 @@ function filterRows(){const q=el('tableSearch').value.trim().toLocaleLowerCase('
 function selectPeriod(period){const today=tzdate(),d=dateUTC(today);let target=today,mode='week';if(period==='lastweek'){const x=dateUTC(monday(today));x.setUTCDate(x.getUTCDate()-7);target=x.toISOString().slice(0,10)}if(period==='month'){mode='month'}if(period==='lastmonth'){mode='month';d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()-1);target=d.toISOString().slice(0,10)}el('mode').value=mode;el('week').value=mode==='week'?monday(target):target;document.querySelectorAll('[data-period]').forEach(b=>b.classList.toggle('active',b.dataset.period===period));render()}
 document.querySelectorAll('[data-period]').forEach(b=>b.addEventListener('click',()=>selectPeriod(b.dataset.period)));el('tableSearch').addEventListener('input',filterRows);
 
-el('batches').addEventListener('click',async event=>{
- const button=event.target.closest('.edit-batch-date');if(!button)return;
- const b=batches.find(x=>Number(x.id)===Number(button.dataset.id));if(!b)return;
- const name=products.find(x=>Number(x.id)===Number(b.product_id))?.name||'Sản phẩm';
- const next=prompt('Sửa ngày nhận lô: '+name+'\\nNgày hiện tại: '+b.received_on+'\\nNhập ngày mới theo YYYY-MM-DD:',b.received_on);
- if(next===null||next===b.received_on)return;
- if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(next)||Number.isNaN(Date.parse(next))||new Date(next+'T12:00:00Z').toISOString().slice(0,10)!==next){alert('Ngày không hợp lệ, nhập YYYY-MM-DD.');return}
- if(!confirm('Xác nhận đổi ngày nhận lô '+name+' từ '+b.received_on+' thành '+next+'? Giá vốn FIFO có thể được tính lại; số lượng và giá vốn mỗi món không thay đổi.'))return;
- button.disabled=true;
- try{await rpc('cct_cost_batch_date_edit_v1',{p_passcode:pass,p_batch_id:Number(b.id),p_old_date:b.received_on,p_new_date:next});await load();alert('Đã sửa ngày nhận lô. Lịch sử chỉnh sửa đã được ghi lại.')}
- catch(err){alert('Không sửa được: '+err.message)}finally{button.disabled=false}
-});
+function populateBatchEditor(){
+ const sel=el('batchEditSelect'),current=sel.value;
+ sel.innerHTML=[...batches].reverse().map(b=>{const p=products.find(x=>Number(x.id)===Number(b.product_id));return '<option value="'+Number(b.id)+'">'+safe(b.received_on+' · '+(p?.sku||'')+' '+(p?.name||b.product_id)+' · '+b.quantity+' món')+'</option>'}).join('');
+ if(batches.some(b=>String(b.id)===current))sel.value=current;
+ syncBatchDate();
+}
+function syncBatchDate(){const batch=batches.find(b=>String(b.id)===el('batchEditSelect').value);el('batchEditDate').value=batch?.received_on||''}
+el('batchEditSelect').onchange=syncBatchDate;
+el('batchEditSave').onclick=async()=>{
+ const b=batches.find(b=>String(b.id)===el('batchEditSelect').value),input=el('batchEditDate'),msg=el('batchEditMsg');if(!b)return;
+ const next=input.value;if(!next||!input.checkValidity()){msg.textContent='Vui lòng chọn ngày hợp lệ.';return}
+ if(next===b.received_on){msg.textContent='Ngày chưa thay đổi.';return}
+ if(!confirm('Đổi ngày nhận lô từ '+b.received_on+' thành '+next+'? FIFO sẽ tính lại, số lượng và đơn giá vốn giữ nguyên.'))return;
+ const btn=el('batchEditSave');btn.disabled=true;msg.textContent='Đang lưu…';
+ try{await rpc('cct_cost_batch_date_edit_v1',{p_passcode:pass,p_batch_id:Number(b.id),p_old_date:b.received_on,p_new_date:next});b.received_on=next;render();populateBatchEditor();msg.textContent='Đã cập nhật ngày nhận lô. Lịch sử sửa được lưu.'}
+ catch(err){msg.textContent='Không sửa được: '+err.message}
+ finally{btn.disabled=false}
+};
 el('productSearch').addEventListener('input',populateProducts);el('quantity').addEventListener('input',updateBatchTotal);el('unitcost').addEventListener('input',updateBatchTotal);el('week').value=monday(tzdate());el('received').value=tzdate();el('enter').onclick=async()=>{pass=el('pass').value;el('loginMsg').textContent='Đang tải…';try{await load();el('login').classList.add('hide');el('app').classList.remove('hide');sessionStorage.setItem('cct_print_code',pass)}catch(e){el('loginMsg').textContent=e.message}};el('refresh').onclick=()=>load().catch(e=>alert(e.message));el('week').onchange=render;el('mode').onchange=render;el('batchForm').onsubmit=async e=>{e.preventDefault();if(!confirm('Xác nhận lưu lô hàng? Dữ liệu sẽ được dùng để tính FIFO.'))return;const btn=e.target.querySelector('button');btn.disabled=true;el('saveMsg').textContent='Đang lưu…';try{await rpc('cct_cost_batches_admin_v1',{p_passcode:pass,p_action:'add',p_product_id:Number(el('product').value),p_received_on:el('received').value,p_quantity:Number(el('quantity').value),p_unit_cost:Number(el('unitcost').value),p_note:el('note').value});await load();el('saveMsg').textContent='Đã lưu lô hàng.'}catch(err){el('saveMsg').textContent='Lỗi: '+err.message}finally{btn.disabled=false}};
 const priorCode=sessionStorage.getItem('cct_print_code');if(priorCode){el('pass').value=priorCode;el('enter').click()}
 })();
