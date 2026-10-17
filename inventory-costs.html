@@ -192,10 +192,53 @@ el('batchEditSave').onclick=async()=>{
  finally{btn.disabled=false}
 };
 el('productSearch').addEventListener('input',populateProducts);el('quantity').addEventListener('input',updateBatchTotal);el('unitcost').addEventListener('input',updateBatchTotal);el('week').value=monday(tzdate());el('received').value=tzdate();el('enter').onclick=async()=>{pass=el('pass').value;el('loginMsg').textContent='Đang tải…';try{await load();el('login').classList.add('hide');el('app').classList.remove('hide');sessionStorage.setItem('cct_print_code',pass);loadIngredients().catch(err=>{el('ingredientMsg').textContent=err.message})}catch(e){el('loginMsg').textContent=e.message}};el('refresh').onclick=()=>load().catch(e=>alert(e.message));el('week').onchange=render;el('mode').onchange=render;el('batchForm').onsubmit=async e=>{e.preventDefault();if(!confirm('Xác nhận lưu lô hàng? Dữ liệu sẽ được dùng để tính FIFO.'))return;const btn=e.target.querySelector('button');btn.disabled=true;el('saveMsg').textContent='Đang lưu…';try{await rpc('cct_cost_batches_admin_v1',{p_passcode:pass,p_action:'add',p_product_id:Number(el('product').value),p_received_on:el('received').value,p_quantity:Number(el('quantity').value),p_unit_cost:Number(el('unitcost').value),p_note:el('note').value});await load();el('saveMsg').textContent='Đã lưu lô hàng.'}catch(err){el('saveMsg').textContent='Lỗi: '+err.message}finally{btn.disabled=false}};
-let ingredientCatalog=[],ingredientLots=[];async function ingredientRpc(fn,payload){return rpc(fn,{p_passcode:pass,...payload})}function ingredientChoices(){const term=el('ingredientSearch').value.toLowerCase(),previous=el('ingredientSku').value;const rows=ingredientCatalog.filter(i=>(i.sku+' '+i.name).toLowerCase().includes(term));el('ingredientSku').innerHTML=rows.map(i=>'<option value="'+i.id+'">['+i.sku+'] '+i.name+'</option>').join('');if(rows.some(i=>String(i.id)===previous))el('ingredientSku').value=previous;ingredientPreview()}function ingredientPreview(){const i=ingredientCatalog.find(x=>String(x.id)===el('ingredientSku').value),q=Number(el('ingredientQty').value),c=Number(el('ingredientCost').value);el('ingredientUnit').value=i?.unit||'';el('ingredientPreview').textContent=q>0?'Giá vốn dự kiến: if(priorCode){el('pass').value=priorCode;el('enter').click()}
-})();
-</script></body></html>+(c/q).toFixed(6)+'/'+(i?.unit||''):''}async function loadIngredients(){const [a,b]=await Promise.all([ingredientRpc('cct_standard_recipe_admin_v1',{p_action:'list'}),ingredientRpc('cct_ingredient_fifo_admin_v1',{p_action:'list'})]);ingredientCatalog=(a.ingredients||[]).filter(x=>x.unit!=='bag');ingredientLots=b.lots||[];ingredientChoices();el('ingredientHistory').innerHTML=ingredientLots.slice().reverse().map(l=>'<div class="lot-line"><strong>'+String(l.ingredient_name).replace(/</g,'&lt;')+'</strong><small>'+l.received_on+' · '+l.remaining+'/'+l.quantity+' '+l.unit+' · if(priorCode){el('pass').value=priorCode;el('enter').click()}
-})();
-</script></body></html>+Number(l.total_cost).toFixed(2)+' · '+(ingredientCatalog.find(i=>i.id===l.ingredient_id)?.sku||'SKU chưa liên kết')+'</small></div>').join('')||'<p class="muted">Chưa có lô nguyên liệu.</p>'}el('ingredientSearch').oninput=ingredientChoices;el('ingredientSku').onchange=ingredientPreview;el('ingredientQty').oninput=ingredientPreview;el('ingredientCost').oninput=ingredientPreview;el('ingredientDate').value=tzdate();el('ingredientForm').onsubmit=async e=>{e.preventDefault();const i=ingredientCatalog.find(x=>String(x.id)===el('ingredientSku').value);if(!i||!confirm('Nhập lô FIFO cho '+i.name+'?'))return;const btn=el('ingredientSave');btn.disabled=true;try{const x=await ingredientRpc('cct_ingredient_receive_sku_v1',{p_ingredient_id:i.id,p_received_on:el('ingredientDate').value,p_quantity:Number(el('ingredientQty').value),p_total_cost:Number(el('ingredientCost').value),p_note:el('ingredientNote').value});el('ingredientMsg').textContent='Đã lưu lô #'+x.id;el('ingredientQty').value='';el('ingredientCost').value='';await loadIngredients()}catch(err){el('ingredientMsg').textContent='Lỗi: '+err.message}finally{btn.disabled=false}};const priorCode=sessionStorage.getItem('cct_print_code');if(priorCode){el('pass').value=priorCode;el('enter').click()}
+let ingredientCatalog=[],ingredientLots=[];
+async function ingredientRpc(fn,payload){return rpc(fn,{p_passcode:pass,...payload})}
+function ingredientChoices(){
+ const term=el('ingredientSearch').value.toLowerCase(),previous=el('ingredientSku').value;
+ const rows=ingredientCatalog.filter(i=>(i.sku+' '+i.name).toLowerCase().includes(term));
+ el('ingredientSku').innerHTML=rows.map(i=>'<option value="'+i.id+'">['+i.sku+'] '+i.name+'</option>').join('');
+ if(rows.some(i=>String(i.id)===previous))el('ingredientSku').value=previous;
+ ingredientPreview();
+}
+function ingredientPreview(){
+ const i=ingredientCatalog.find(x=>String(x.id)===el('ingredientSku').value),q=Number(el('ingredientQty').value),c=Number(el('ingredientCost').value);
+ el('ingredientUnit').value=i?.unit||'';
+ el('ingredientPreview').textContent=q>0?'Giá vốn dự kiến: $'+(c/q).toFixed(6)+'/'+(i?.unit||''):'';
+}
+async function loadIngredients(){
+ const [a,b]=await Promise.all([ingredientRpc('cct_standard_recipe_admin_v1',{p_action:'list'}),ingredientRpc('cct_ingredient_fifo_admin_v1',{p_action:'list'})]);
+ ingredientCatalog=(a.ingredients||[]).filter(x=>x.unit!=='bag');
+ ingredientLots=b.lots||[];
+ ingredientChoices();
+ el('ingredientHistory').replaceChildren();
+ for(const l of ingredientLots.slice().reverse()){
+  const row=document.createElement('div');row.className='lot-line';
+  const title=document.createElement('strong');title.textContent=l.ingredient_name;
+  const detail=document.createElement('small');
+  detail.textContent=l.received_on+' · '+l.remaining+'/'+l.quantity+' '+l.unit+' · $'+Number(l.total_cost).toFixed(2)+' · '+(ingredientCatalog.find(i=>i.id===l.ingredient_id)?.sku||'SKU chưa liên kết');
+  row.append(title,detail);el('ingredientHistory').append(row);
+ }
+ if(!ingredientLots.length)el('ingredientHistory').textContent='Chưa có lô nguyên liệu.';
+}
+el('ingredientSearch').oninput=ingredientChoices;
+el('ingredientSku').onchange=ingredientPreview;
+el('ingredientQty').oninput=ingredientPreview;
+el('ingredientCost').oninput=ingredientPreview;
+el('ingredientDate').value=tzdate();
+el('ingredientForm').onsubmit=async e=>{
+ e.preventDefault();
+ const i=ingredientCatalog.find(x=>String(x.id)===el('ingredientSku').value);
+ if(!i||!confirm('Nhập lô FIFO cho '+i.name+'?'))return;
+ const btn=el('ingredientSave');btn.disabled=true;
+ try{
+  const x=await ingredientRpc('cct_ingredient_receive_sku_v1',{p_ingredient_id:i.id,p_received_on:el('ingredientDate').value,p_quantity:Number(el('ingredientQty').value),p_total_cost:Number(el('ingredientCost').value),p_note:el('ingredientNote').value});
+  el('ingredientMsg').textContent='Đã lưu lô #'+x.id;
+  el('ingredientQty').value='';el('ingredientCost').value='';
+  await loadIngredients();
+ }catch(err){el('ingredientMsg').textContent='Lỗi: '+err.message}
+ finally{btn.disabled=false}
+};
+const priorCode=sessionStorage.getItem('cct_print_code');if(priorCode){el('pass').value=priorCode;el('enter').click()}
 })();
 </script></body></html>
