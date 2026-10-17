@@ -151,7 +151,20 @@
         return toggle;
       }
       makeToggle(dateEditor,"📅 Chỉnh ngày / giờ nhận","Chỉ mở khi cần thay đổi");
-      makeToggle(receiptCard,"🧾 Xem bill & in đơn","Mở bản in đầy đủ khi cần");
+      // Receipt is always visible; print and copy actions share the same section.
+      receiptCard.classList.add("v13-receipt-visible");
+      var printTools=document.querySelector(".v9-detail-pane .top-print");
+      if(printTools){
+        printTools.classList.add("v14-print-tools");
+        printTools.querySelector("h3").textContent="In & sao chép đơn";
+        preview.insertBefore(printTools,receiptCard);
+      }
+      // Keep order item editing immediately after the visible order receipt.
+      var editPanel=document.querySelector(".v9-detail-pane .edit-items");
+      if(editPanel){
+        editPanel.classList.add("v14-edit-panel");
+        preview.insertAdjacentElement("afterend",editPanel);
+      }
       var nodeIds={number:"orderNumber",customer:"customerName",pickup:"pickup",total:"total"};
       function syncOverview(){
         Object.keys(nodeIds).forEach(function(key){
