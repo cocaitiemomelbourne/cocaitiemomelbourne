@@ -330,6 +330,67 @@ body.v9-active{overflow:hidden}
   #app.v9-inbox #manualCard:not(.hidden){inset:8px;padding:14px}
 }
 
+
+/* CCT Admin visual refresh — styles only, keeps all existing workflows. */
+:root{--ink:#302b26;--muted:#81796e;--line:#eae5dc;--bg:#f7f6f2;--accent:#e9a632;--dark:#302d29}
+body{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);letter-spacing:-.008em}
+.card,.v9-list-pane>.left{border-color:var(--line);border-radius:18px;box-shadow:0 3px 18px rgba(43,32,19,.035)}
+.btn,button{transition:background .15s ease,border-color .15s ease,transform .15s ease}
+.btn:hover:not(:disabled){filter:brightness(.95)}
+.btn:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid rgba(215,146,35,.45);outline-offset:2px}
+#app.v9-inbox>.top{background:#fff;border:1px solid var(--line);border-radius:20px;padding:16px 18px;margin-bottom:12px;box-shadow:0 3px 20px #34291c08}
+#app.v9-inbox>.top h1{font-size:27px;letter-spacing:-.045em;font-weight:850}
+#app.v9-inbox>.top .muted{margin-top:5px}
+#app.v9-inbox>.top>div:last-child{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+#app.v9-inbox>.top .btn{display:inline-flex!important;align-items:center;justify-content:center;text-decoration:none!important;border-radius:11px;min-height:39px;padding:10px 12px;white-space:nowrap;font-size:12px}
+#app.v9-inbox>.top #newOrder{background:#c88717;color:#fff}
+#app.v9-inbox>.top #lock{background:#f5f3f0;color:#786f65}
+.v9-status-tabs{gap:8px;padding:1px 1px 12px}
+.v9-status-tab{border-radius:12px;padding:11px 13px;font-size:12px;background:#fff;border-color:#e6e1d7}
+.v9-status-tab.active{background:#302d29;border-color:#302d29;box-shadow:0 3px 10px #302d2918}
+.v9-status-tab b{border-radius:7px;background:#f5f2eb;min-width:22px;padding:2px 4px;color:#706557}
+.v9-status-tab.active b{background:#ffffff29;color:#fff}
+.v9-shell{gap:14px;grid-template-columns:minmax(290px,355px) minmax(0,1fr)}
+.v9-list-pane>.left{padding:14px}
+.v9-list-pane .toolbar input{border-color:#e3dfd8;border-radius:12px;background:#faf9f7;padding:12px 14px}
+.v9-list-pane .orders{gap:9px}
+.v9-list-pane .order{border:1px solid #e9e4dc;border-radius:13px;padding:13px 14px;box-shadow:0 1px 4px #34291c06;transition:background .15s,border-color .15s}
+.v9-list-pane .order:hover{background:#fffaf1;border-color:#e2b979}
+.v9-list-pane .order.active{background:#fff8e9;border-color:#d4a353;box-shadow:inset 3px 0 #e5a735}
+.order-no{font-size:14px;letter-spacing:.015em}
+.order-name{font-weight:600;line-height:1.5}
+.order-meta{line-height:1.5}
+.v9-detail-pane{padding-right:5px}
+.v9-detail-title{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 15px;box-shadow:0 2px 12px #34291c08}
+.v9-detail-title strong{font-size:15px}
+.v9-detail-title span{font-size:11px}
+.v9-detail-pane .pricing,.v9-detail-pane .order-actions,.v9-detail-pane .top-print,.v9-detail-pane .edit-items{border-radius:15px}
+.price-box{background:#f7f6f3}
+.price-value{letter-spacing:-.035em}
+#app.v9-inbox #manualCard:not(.hidden){border-radius:22px;background:#fff;box-shadow:0 24px 100px #19130b55}
+.login{box-shadow:0 20px 60px #352b1c0c;border-radius:24px;padding:30px}
+.login h1{letter-spacing:-.04em}
+@media(max-width:760px){
+ .wrap{padding:8px}
+ #app.v9-inbox{height:calc(100dvh - 16px)}
+ #app.v9-inbox>.top{display:block;padding:12px;margin-bottom:9px}
+ #app.v9-inbox>.top h1{font-size:22px}
+ #app.v9-inbox>.top>div:last-child{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:11px}
+ #app.v9-inbox>.top .btn{font-size:11px;padding:9px 5px;min-width:0;white-space:normal;line-height:1.15;text-align:center;min-height:39px}
+ #app.v9-inbox>.top #newOrder{grid-column:span 2;order:-2}
+ #app.v9-inbox>.top a[href="./stock-check.html"]{order:-1}
+ #app.v9-inbox>.top a[href="./sales-analytics.html"]{grid-column:span 1}
+ .v9-status-tabs{gap:6px;padding-bottom:8px}
+ .v9-status-tab{padding:9px 11px;border-radius:10px}
+ .v9-shell{grid-template-columns:1fr;grid-template-rows:minmax(160px,31dvh) minmax(0,1fr);gap:9px}
+ .v9-list-pane>.left{padding:10px;border-radius:14px}
+ .v9-list-pane .order{padding:10px;border-radius:11px}
+ .v9-detail-pane{border-top:2px solid #e8ddd0}
+ .v9-detail-title{padding:9px 11px;border-radius:12px}
+ .v9-detail-title span{display:none}
+}
+@media(max-width:390px){#app.v9-inbox>.top .btn{font-size:10px} .v9-shell{grid-template-rows:minmax(150px,29dvh) minmax(0,1fr)}}
+
 </style>
 
 <style id="v12-mobile-app-style">
