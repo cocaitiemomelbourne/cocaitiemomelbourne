@@ -74,15 +74,15 @@ el('missing').textContent=undated.length?undated.length+' đơn: '+undated.slice
 
 function fmtDay(s){const a=s.split('-');return a[2]+'/'+a[1]}
 function renderChart(sorted,from,to){
- const days=[];let d=dateUTC(from),end=dateUTC(to);while(d<end&&days.length<35){days.push(d.toISOString().slice(0,10));d.setUTCDate(d.getUTCDate()+1)}
- const daily=new Map(days.map(d=>[d,0]));const prod=new Map(products.map(p=>[Number(p.id),p]));
- for(const o of sorted){const d=String(received(o)).slice(0,10);if(!daily.has(d))continue;let total=0;for(const item of items(o)){const q=Number(item.qty)||0,p=prod.get(Number(item.id??item.product_id));const price=Number(item.unit_price??item.menu_price??p?.price??0);total+=Number(item.line_total??price*q)||0}daily.set(d,daily.get(d)+total)}
- const groups=[];const monthly=days.length>10;const step=monthly?7:1;
- for(let i=0;i<days.length;i+=step){const ds=days.slice(i,i+step),v=ds.reduce((a,x)=>a+daily.get(x),0);groups.push({label:monthly?fmtDay(ds[0]):fmtDay(ds[0]),value:v})}
- const max=Math.max(1,...groups.map(x=>x.value));el('chartPeriod').textContent=fmtDay(from)+' – '+fmtDay(days[days.length-1]||from);
- el('revenueChart').innerHTML=groups.map(x=>'<div class="bar-col '+(x.value===max&&x.value>0?'is-max':'')+'"><span class="bar-value">'+(x.value?('el('quantity').addEventListener('input',updateBatchTotal);el('unitcost').addEventListener('input',updateBatchTotal);el('week').value=monday(tzdate());el('received').value=tzdate();el('enter').onclick=async()=>{pass=el('pass').value;el('loginMsg').textContent='Đang tải…';try{await load();el('login').classList.add('hide');el('app').classList.remove('hide')}catch(e){el('loginMsg').textContent=e.message}};el('refresh').onclick=()=>load().catch(e=>alert(e.message));el('week').onchange=()=>{document.querySelectorAll('[data-period]').forEach(b=>b.classList.remove('active'));render()};el('mode').onchange=()=>{document.querySelectorAll('[data-period]').forEach(b=>b.classList.remove('active'));render()};el('batchForm').onsubmit=async e=>{e.preventDefault();if(!confirm('Xác nhận lưu lô hàng? Dữ liệu sẽ được dùng để tính FIFO.'))return;const btn=e.target.querySelector('button');btn.disabled=true;el('saveMsg').textContent='Đang lưu…';try{await rpc('cct_cost_batches_admin_v1',{p_passcode:pass,p_action:'add',p_product_id:Number(el('product').value),p_received_on:el('received').value,p_quantity:Number(el('quantity').value),p_unit_cost:Number(el('unitcost').value),p_note:el('note').value});await load();el('saveMsg').textContent='Đã lưu lô hàng.'}catch(err){el('saveMsg').textContent='Lỗi: '+err.message}finally{btn.disabled=false}};
-})();
-</script></body></html>+Math.round(x.value)):'—')+'</span><div class="bar-shell"><div class="bar" style="height:'+Math.max(3,100*x.value/max)+'%" title="'+safe(x.label)+': '+money(x.value)+'"></div></div><span class="bar-label">'+safe(x.label)+'</span></div>').join('');
+const days=[],d=dateUTC(from),end=dateUTC(to);
+while(d<end&&days.length<35){days.push(d.toISOString().slice(0,10));d.setUTCDate(d.getUTCDate()+1)}
+const totals=new Map(days.map(x=>[x,0])),prod=new Map(products.map(p=>[Number(p.id),p]));
+for(const o of sorted){const date=String(received(o)).slice(0,10);if(!totals.has(date))continue;let sum=0;for(const item of items(o)){const q=Number(item.qty)||0,p=prod.get(Number(item.id??item.product_id)),unit=Number(item.unit_price??item.menu_price??p?.price??0);sum+=Number(item.line_total??unit*q)||0}totals.set(date,totals.get(date)+sum)}
+const monthly=days.length>10,step=monthly?7:1,groups=[];
+for(let i=0;i<days.length;i+=step){const segment=days.slice(i,i+step);groups.push({day:segment[0],value:segment.reduce((v,x)=>v+totals.get(x),0)})}
+const max=Math.max(1,...groups.map(x=>x.value));
+el('chartPeriod').textContent=fmtDay(from)+' – '+fmtDay(days[days.length-1]||from);
+el('revenueChart').innerHTML=groups.map(x=>'<div class="bar-col '+(x.value===max&&x.value>0?'is-max':'')+'"><span class="bar-value">'+(x.value?'$'+Math.round(x.value):'—')+'</span><div class="bar-shell"><div class="bar" style="height:'+Math.max(3,100*x.value/max)+'%" title="'+safe(x.day)+': '+money(x.value)+'"></div></div><span class="bar-label">'+fmtDay(x.day)+'</span></div>').join('');
 }
 function renderInsights(by,revenue,ordersCount,quantity,missing){
 const best=[...by.values()].sort((a,b)=>b.q-a.q)[0],average=ordersCount?revenue/ordersCount:0;
