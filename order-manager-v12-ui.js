@@ -127,6 +127,46 @@
       }
     }
 
+
+    /* Compact mobile order view: actions first, optional editors and receipt. */
+    var preview=document.querySelector(".v9-detail-pane .selected-order-preview");
+    var dateEditor=document.getElementById("receiptDateEditor");
+    var receiptCard=preview&&preview.querySelector(".preview-card");
+    if(preview&&dateEditor&&receiptCard){
+      var summary=document.createElement("div");
+      summary.className="v13-overview card";
+      summary.innerHTML='<div class="v13-overview-head"><span>THÔNG TIN ĐƠN</span><strong data-v13="number">—</strong></div><div class="v13-overview-customer" data-v13="customer">Chọn một đơn hàng</div><div class="v13-overview-grid"><div><small>Nhận hàng</small><b data-v13="pickup">—</b></div><div><small>Tổng thanh toán</small><b data-v13="total">—</b></div></div>';
+      preview.insertBefore(summary,dateEditor);
+      function makeToggle(target,title,caption){
+        var toggle=document.createElement("button");
+        toggle.type="button";toggle.className="v13-fold-toggle";
+        toggle.setAttribute("aria-expanded","false");
+        toggle.innerHTML='<span>'+title+'<small>'+caption+'</small></span><span class="v13-chevron">⌄</span>';
+        target.parentNode.insertBefore(toggle,target);
+        target.classList.add("v13-fold-content");
+        toggle.addEventListener("click",function(){
+          var open=target.classList.toggle("v13-expanded");
+          toggle.setAttribute("aria-expanded",String(open));
+        });
+        return toggle;
+      }
+      makeToggle(dateEditor,"📅 Chỉnh ngày / giờ nhận","Chỉ mở khi cần thay đổi");
+      makeToggle(receiptCard,"🧾 Xem bill & in đơn","Mở bản in đầy đủ khi cần");
+      var nodeIds={number:"orderNumber",customer:"customerName",pickup:"pickup",total:"total"};
+      function syncOverview(){
+        Object.keys(nodeIds).forEach(function(key){
+          var src=document.getElementById(nodeIds[key]);
+          var dest=summary.querySelector('[data-v13="'+key+'"]');
+          if(dest&&src)dest.textContent=src.textContent.trim()||"—";
+        });
+      }
+      Object.keys(nodeIds).forEach(function(key){
+        var src=document.getElementById(nodeIds[key]);
+        if(src)new MutationObserver(syncOverview).observe(src,{childList:true,characterData:true,subtree:true});
+      });
+      syncOverview();
+    }
+
     /* Start on list screen on phone */
     if(isMobile()) document.body.classList.remove("v12-detail-open");
   });
