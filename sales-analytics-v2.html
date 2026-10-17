@@ -57,9 +57,37 @@ table{font-size:13px;min-width:650px}td,th{padding:13px 11px;border-color:#edf0f
  .chart{height:200px}.bar-value{font-size:10px}
 }
 @media(max-width:360px){.filters-card .row{grid-template-columns:1fr!important}.filters-card .row>div:last-child{grid-column:1}.dash-header a{margin-left:0}}
-.dashboard-nav{display:flex;justify-content:flex-end;margin:6px 0 12px}.dashboard-nav a{display:inline-block;padding:10px 13px;border:1px solid #dfe3e8;border-radius:10px;background:white;text-decoration:none;font-weight:700;font-size:13px}</style></head><body><main class="wrap"><header class="dash-header"><div><span class="eyebrow">CÓ CÁI TIỆM / BÁO CÁO KINH DOANH · V2.1</span><h1>Sales Analytics</h1><p class="muted">Tổng quan kinh doanh · Doanh thu theo ngày nhận hàng</p></div><a href="./order-manager.html">← Quản lý đơn</a></header>
-<nav class="dashboard-nav"><a href="./inventory-costs.html">📦 Giá vốn & lô nhập hàng →</a></nav><section class="card" id="login"><h2>Quản trị viên</h2><label>Mật mã Order Manager</label><input id="pass" type="password" autocomplete="off" placeholder="Nhập mật mã"><button id="enter">Xem báo cáo</button><p id="loginMsg" class="error"></p></section>
-<section id="app" class="hide"><div class="card filters-card"><div class="period-bar" role="group" aria-label="Chọn kỳ báo cáo"><button type="button" class="period-btn active" data-period="week">Tuần này</button><button type="button" class="period-btn" data-period="lastweek">Tuần trước</button><button type="button" class="period-btn" data-period="month">Tháng này</button><button type="button" class="period-btn" data-period="lastmonth">Tháng trước</button></div><div class="row"><div><label id="periodDateLabel">Ngày trong kỳ</label><input id="week" type="date"></div><div><label>Chế độ</label><select id="mode"><option value="week">Tuần</option><option value="month">Tháng</option></select></div><div><label>&nbsp;</label><button id="refresh">Tải lại</button></div></div></div>
+.dashboard-nav{display:flex;justify-content:flex-end;margin:6px 0 12px}.dashboard-nav a{display:inline-block;padding:10px 13px;border:1px solid #dfe3e8;border-radius:10px;background:white;text-decoration:none;font-weight:700;font-size:13px}</style><style id="report-layout-v3">
+.report-header{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:0 0 17px}
+.report-brand{min-width:0}.report-brand .eyebrow{letter-spacing:.12em;font-weight:800;font-size:10px}
+.report-brand h1{margin:7px 0 4px;font-size:clamp(27px,4vw,36px)}
+.report-brand p{margin:0;font-size:13px}
+.report-links{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.report-links a{font-size:12px;text-decoration:none;font-weight:750;color:#394554;background:white;border:1px solid #e1e4e9;border-radius:10px;padding:10px 12px;white-space:nowrap}
+.filters-card{margin-top:0!important}
+.period-bar{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));overflow:visible!important;gap:7px}
+.period-btn{min-width:0!important;white-space:normal!important;font-size:13px!important;padding:10px 6px!important}
+.date-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:12px;align-items:end}
+.date-controls .date-field{min-width:0;display:flex;flex-direction:column;gap:7px}
+.date-controls label{display:block!important;min-height:unset!important;margin:0!important;line-height:1.25;color:#68717b;font-weight:700;font-size:12px}
+.date-controls input,.date-controls select{width:100%!important;min-width:0!important;max-width:none!important;margin:0!important;height:46px;border-radius:11px;font-size:15px;padding:8px 10px}
+.date-controls #refresh{min-width:110px!important;height:46px;padding:9px 13px}
+@media(max-width:760px){
+.report-header{display:block;margin:0 0 14px}
+.report-brand h1{font-size:29px}
+.report-links{margin-top:13px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.report-links a{white-space:normal;text-align:center;display:flex;align-items:center;justify-content:center;padding:9px 7px;font-size:11px;min-height:39px}
+.period-bar{gap:6px;padding-bottom:12px;margin-bottom:13px}
+.period-btn{font-size:11px!important;line-height:1.2;min-height:43px;padding:8px 4px!important}
+.date-controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:10px;align-items:end}
+.date-controls .date-field{min-width:0}
+.date-controls input,.date-controls select{font-size:14px;padding:7px 8px;height:44px;min-height:44px}
+.date-controls #refresh{grid-column:1/-1;width:100%;height:42px;min-height:42px}
+.filters-card{padding:14px!important}
+}
+@media(max-width:370px){.date-controls{grid-template-columns:1fr!important}.date-controls #refresh{grid-column:1}.period-btn{font-size:10px!important}}
+</style></head><body><main class="wrap"><header class="report-header"><div class="report-brand"><span class="eyebrow">CÓ CÁI TIỆM · QUẢN TRỊ KINH DOANH</span><h1>Sales Analytics</h1><p class="muted">Doanh thu và hiệu suất bán hàng</p></div><nav class="report-links" aria-label="Điều hướng quản trị"><a href="./order-manager.html">← Quản lý đơn</a><a href="./inventory-costs.html">📦 Giá vốn & lô nhập</a></nav></header><section class="card" id="login"><h2>Quản trị viên</h2><label>Mật mã Order Manager</label><input id="pass" type="password" autocomplete="off" placeholder="Nhập mật mã"><button id="enter">Xem báo cáo</button><p id="loginMsg" class="error"></p></section>
+<section id="app" class="hide"><div class="card filters-card"><div class="period-bar" role="group" aria-label="Chọn kỳ báo cáo"><button type="button" class="period-btn active" data-period="week">Tuần này</button><button type="button" class="period-btn" data-period="lastweek">Tuần trước</button><button type="button" class="period-btn" data-period="month">Tháng này</button><button type="button" class="period-btn" data-period="lastmonth">Tháng trước</button></div><div class="date-controls"><div class="date-field"><label for="week" id="periodDateLabel">Ngày trong kỳ</label><input id="week" type="date"></div><div class="date-field"><label for="mode">Xem theo</label><select id="mode"><option value="week">Tuần</option><option value="month">Tháng</option></select></div><button type="button" id="refresh">↻ Làm mới</button></div></div>
 <div class="grid"><div class="metric">Doanh thu sản phẩm<strong id="sales">—</strong></div><div class="metric">Đơn hoàn thành<strong id="count">—</strong></div><div class="metric">Số món bán<strong id="qty">—</strong></div><div class="metric">Lợi nhuận gộp xác định<strong id="profit">—</strong></div></div>
 <div class="dash-two-col"><section class="card"><div class="chart-header"><div><h2>Xu hướng doanh thu</h2><span class="small-note">Giá trị hàng bán từ đơn đã hoàn thành</span></div><small id="chartPeriod">—</small></div><div id="revenueChart" class="chart" aria-label="Biểu đồ doanh thu"></div></section><section class="card"><h2>Điểm nổi bật</h2><div id="insights"></div><p class="small-note">Các chỉ số không bao gồm đơn chưa hoàn tất; báo cáo dựa trên ngày khách nhận hàng.</p></section></div>
 <div class="card"><h2>Hiệu suất sản phẩm</h2><p class="section-intro">Xem món bán chạy, doanh thu và lợi nhuận FIFO. Những món chưa đủ giá vốn sẽ không được tính là có vốn bằng 0.</p><div class="table-toolbar"><input type="search" id="tableSearch" placeholder="🔎 Tìm món trong báo cáo..." aria-label="Tìm món trong báo cáo"></div><div class="hide" id="originalHint"><p class="muted">Lợi nhuận = doanh thu sản phẩm trừ giá vốn FIFO. Chưa trừ chi phí giao hàng, bao bì, phí thanh toán và chiết khấu phân bổ. Món thiếu giá vốn được đánh dấu, không coi vốn bằng 0.</p></div><div id="alerts" class="warning"></div><div class="scroll"><table><thead><tr><th>Sản phẩm</th><th>SL bán</th><th>Doanh thu</th><th>Giá vốn FIFO</th><th>Lợi nhuận gộp</th></tr></thead><tbody id="lines"></tbody></table></div></div>
