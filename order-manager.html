@@ -514,6 +514,39 @@ body{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial
   .preview-tools{gap:6px!important}
   .preview-tools .btn,.preview-tools select{font-size:12px!important;padding:9px 10px!important}
 }
+
+/* v13 streamlined mobile order detail */
+.v13-overview,.v13-fold-toggle{display:none}
+@media(max-width:760px){
+  .v9-detail-pane{background:#f7f6f2}
+  .v9-detail-pane .selected-order-preview{display:flex;flex-direction:column;gap:9px;margin:0 0 10px}
+  .v13-overview{display:block;padding:16px!important;margin:0!important;border-radius:16px!important}
+  .v13-overview-head{display:flex;justify-content:space-between;gap:8px;font-size:11px;font-weight:800;letter-spacing:.05em;color:#8b8176}
+  .v13-overview-head strong{color:#8f671d;font-size:13px}
+  .v13-overview-customer{font-size:19px;font-weight:850;line-height:1.35;margin:11px 0 14px;overflow-wrap:anywhere}
+  .v13-overview-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:9px}
+  .v13-overview-grid>div{background:#faf8f4;border:1px solid #eee8df;border-radius:12px;padding:11px}
+  .v13-overview-grid small{display:block;color:#8b8176;font-size:11px;margin-bottom:5px}
+  .v13-overview-grid b{font-size:13px;line-height:1.4;overflow-wrap:anywhere}
+  .v13-overview-grid>div:last-child b{font-size:19px;color:#2e2923}
+  .v13-fold-toggle{display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;background:white!important;color:#302b26!important;border:1px solid #eae5dc;border-radius:14px;padding:13px 15px;font-weight:800;font-size:14px;box-shadow:0 2px 8px #302d2908}
+  .v13-fold-toggle small{display:block;font-size:11px;font-weight:500;color:#8b8176;margin-top:3px}
+  .v13-chevron{font-size:21px;color:#8b8176}
+  .v13-fold-content{display:none!important}
+  .v13-fold-content.v13-expanded{display:block!important}
+  #receiptDateEditor{margin:0!important;padding:13px!important;border-radius:14px!important}
+  #receiptDateEditor h3{font-size:14px;margin-bottom:8px!important}
+  #receiptDateEditor .row{display:grid!important;grid-template-columns:1fr 1fr;gap:9px!important}
+  #receiptDateEditor .row label{min-width:0!important;font-size:12px!important}
+  #receiptDateEditor input{min-width:0;height:42px;font-size:14px!important;padding:7px!important}
+  #saveReceiptDate{grid-column:1/-1;width:100%;padding:10px}
+  #receiptDateMsg{font-size:11px}
+  .v9-detail-pane .preview-card{border-radius:14px!important}
+}
+@media print{
+  .v13-overview,.v13-fold-toggle{display:none!important}
+  .v13-fold-content.preview-card{display:block!important}
+}
 </style>
 </head>
 <body>
@@ -1705,7 +1738,7 @@ const saved=sessionStorage.getItem("cct_print_code");if(saved){passcode.value=sa
 })();
 </script>
 
-<script src="./order-manager-v12-ui.js?v=1"></script>
+<script src="./order-manager-v12-ui.js?v=13"></script>
 </body>
 </html>
 
