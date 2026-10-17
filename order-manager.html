@@ -547,6 +547,25 @@ body{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial
   .v13-overview,.v13-fold-toggle{display:none!important}
   .v13-fold-content.preview-card{display:block!important}
 }
+
+/* v14: one visible receipt, a single print toolbar, editing next */
+@media(max-width:760px){
+  .v9-detail-pane .selected-order-preview .preview-card.v13-receipt-visible{display:block!important;order:5;margin:0!important}
+  .v9-detail-pane .selected-order-preview .v14-print-tools{order:4;margin:0!important;padding:12px!important;border-radius:14px}
+  .v9-detail-pane .selected-order-preview .v13-overview{order:0}
+  .v9-detail-pane .selected-order-preview .v13-fold-toggle{order:1}
+  .v9-detail-pane .selected-order-preview #receiptDateEditor{order:2}
+  .v9-detail-pane .selected-order-preview .v14-print-tools h3{margin:0 0 8px;font-size:14px}
+  .v9-detail-pane .v14-edit-panel{margin:0 0 10px!important}
+  .v9-detail-pane .pricing .price-grid>.discount-box{display:none!important}
+  .v9-detail-pane .pricing .price-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:6px!important}
+  .v9-detail-pane .pricing #panelSubtotalBox{display:none!important}
+  .v9-detail-pane .pricing .price-grid>.price-box:last-child{background:#faf6ec;padding:12px!important}
+  .v9-detail-pane .pricing .price-grid>.price-box:last-child .price-value{font-size:24px!important}
+  .v9-detail-pane .pricing .v12-discount-trigger{margin-top:8px;font-size:13px;padding:9px 11px}
+  .v9-detail-pane .selected-controls{margin-top:0}
+}
+@media print{.v14-print-tools{display:none!important}.v13-receipt-visible{display:block!important}}
 </style>
 </head>
 <body>
@@ -1738,7 +1757,7 @@ const saved=sessionStorage.getItem("cct_print_code");if(saved){passcode.value=sa
 })();
 </script>
 
-<script src="./order-manager-v12-ui.js?v=13"></script>
+<script src="./order-manager-v12-ui.js?v=14"></script>
 </body>
 </html>
 
