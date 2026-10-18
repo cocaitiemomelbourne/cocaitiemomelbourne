@@ -33,7 +33,7 @@ function range(){const selected=isoFromDisplay($('date').value);if(!selected)thr
 function formatDate(s){const d=s.split('-');return d[2]+'/'+d[1]}
 function formatDateLong(s){const d=s.split('-');return d[2]+'/'+d[1]+'/'+d[0]}
 function render(){
- const [rangeFrom,rangeTo]=range();const allocated=(sauceReport.allocations||[]).filter(x=>x.order_date>=rangeFrom&&x.order_date<rangeTo);const unresolved=(sauceReport.unresolved||[]).filter(x=>x.order_date>=rangeFrom&&x.order_date<rangeTo);const sum=allocated.reduce((a,x)=>a+Number(x.cost||0),0);$('sauceCostSummary').textContent='Đã liên kết '+allocated.length+' phần sốt · '+money(sum)+' giá vốn · '+unresolved.length+' phần cần xác định (chưa trừ kho). Giá vốn sốt hiển thị riêng, chưa cộng vào lãi gộp phía dưới.';
+ const [rangeFrom,rangeTo]=range();const allocated=(sauceReport.allocations||[]).filter(x=>x.order_date>=rangeFrom&&x.order_date<rangeTo);const unresolved=(sauceReport.unresolved||[]).filter(x=>x.order_date>=rangeFrom&&x.order_date<rangeTo);const sum=allocated.reduce((a,x)=>a+Number(x.cost||0),0);$('sauceCostSummary').textContent='Đã liên kết '+allocated.length+' phần sốt · '+money(sum)+' giá vốn · '+unresolved.length+' phần cần xác định (chưa trừ kho). Giá vốn sốt đã liên kết được cộng vào tổng vốn và lợi nhuận bên dưới.';
  const [from,to]=range(),prod=new Map(products.map(x=>[Number(x.id),x])),pools=new Map();
  for(const b of [...batches].sort((a,b)=>String(a.received_on).localeCompare(String(b.received_on))||Number(a.id)-Number(b.id))){const id=Number(b.product_id);if(!pools.has(id))pools.set(id,[]);pools.get(id).push({...b,left:Number(b.quantity)})}
  const completed=orders.filter(o=>o.status==='completed'),missingDate=completed.filter(o=>!received(o));
@@ -48,10 +48,10 @@ function render(){
  const key=id&&prod.has(id)?String(id):'name:'+match.name.toLocaleLowerCase('vi'),x=by.get(key)||{name:match.name,sku:p?.sku||'',q:0,sales:0,cost:0,missing:0};
  x.q+=q;x.sales+=line;x.cost+=cost;x.missing+=remaining;by.set(key,x)
  }}
- $('costMatched').textContent=money(spent);$('costMissing').textContent=unpriced+' món';$('sales').textContent=money(total);$('orders').textContent=count;$('qty').textContent=quantity;$('profit').textContent=unpriced?'Chưa đủ vốn':money(total-spent);
+ $('costMatched').textContent=money(spent+sum);$('costMissing').textContent=unpriced+' món';$('sales').textContent=money(total);$('orders').textContent=count;$('qty').textContent=quantity;$('profit').textContent=(unpriced||unresolved.length)?'Chưa đủ vốn':money(total-spent-sum);
  $('range').textContent=formatDate(from)+' – '+formatDate(dates[dates.length-1]||from);
  $('aov').textContent=money(count?total/count:0);const ranked=[...by.values()].sort((a,b)=>b.q-a.q);$('best').textContent=ranked[0]?.name||'Chưa có dữ liệu';
- $('warning').hidden=!unpriced;$('warning').textContent=unpriced?'Có '+unpriced+' đơn vị đã bán chưa có đủ giá vốn FIFO. Kiểm tra ngày nhập lô so với ngày khách nhận hàng và số lượng lô. Giá vốn đã ghép vẫn được hiển thị trong mục Điểm nổi bật.':'';
+ $('warning').hidden=!(unpriced||unresolved.length);$('warning').textContent=(unpriced||unresolved.length)?'Có '+unpriced+' đơn vị chưa đủ giá vốn FIFO và '+unresolved.length+' phần sốt chưa xác định. Kiểm tra ngày nhập lô, ngày sản xuất mẻ và lựa chọn sốt. Giá vốn đã ghép vẫn được hiển thị trong mục Điểm nổi bật.':'';
  const step=dates.length>10?7:1,groups=[];for(let i=0;i<dates.length;i+=step){let segment=dates.slice(i,i+step);groups.push({day:segment[0],value:segment.reduce((a,k)=>a+(dayRevenue.get(k)||0),0)})}
  const max=Math.max(1,...groups.map(g=>g.value));
  $('chart').innerHTML=groups.map(g=>'<div class="baritem"><span class="barvalue">'+(g.value?'$'+Math.round(g.value):'–')+'</span><div class="bartrack"><div class="barfill" style="height:'+Math.max(2,g.value/max*100)+'%" title="'+safe(g.day)+' · '+money(g.value)+'"></div></div><span class="barlabel">'+formatDate(g.day)+'</span></div>').join('');
