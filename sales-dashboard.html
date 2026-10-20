@@ -72,4 +72,5 @@ $('date').value=formatDateLong(monday(today()));$('datePicker').value=monday(tod
 $('loginBtn').onclick=async()=>{pass=$('password').value.trim();if(!pass)return;$('loginBtn').disabled=true;$('loginMsg').textContent='Đang tải dữ liệu...';try{await load();$('login').hidden=true;$('dashboard').hidden=false;sessionStorage.setItem('cct_print_code',pass)}catch(e){$('loginMsg').textContent=e.message==='not_authorized'?'Mã quản trị không đúng.':e.message}finally{$('loginBtn').disabled=false}};
 $('password').onkeydown=e=>{if(e.key==='Enter')$('loginBtn').click()};
 const stored=sessionStorage.getItem('cct_print_code');if(stored){$('password').value=stored;$('loginBtn').click()}
-})();</script></body></html>
+})();</script><div style="position:fixed;bottom:8px;right:8px;background:#eef2f5;color:#53606b;border:1px solid #d7dde2;border-radius:8px;padding:3px 8px;font-size:11px;z-index:5;opacity:.85">Sales v21.10 · cập nhật vốn đặc biệt</div>
+</body></html>
