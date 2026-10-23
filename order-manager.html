@@ -888,6 +888,20 @@ function localizeReceiptItems(items,language,legacyItems=[]){
   });
 }
 
+function restoreJellyfishOptions(items,raw){
+ const source=String(raw||"").split(/\r?\n/).map(line=>line.match(/^\s*\d+\s*x\s+(.+?)\s+\$[\d,.]+\s*$/i)).filter(Boolean).map(m=>m[1]);
+ const normalize=v=>String(v||"").toLocaleLowerCase("vi").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d").replace(/[^a-z0-9]+/g," ").trim();
+ return items.map((item,i)=>{
+  const name=String(item.name||"");if(!/sứa\s*(?:single|trộn)|jellyfish/i.test(name))return item;
+  const line=source[i];if(!line)return item;
+  const chosen=line.match(/\(([^()]*(?:sứa|đạn|hồ ly|cánh tiên|bông tuyết|trân châu)[^()]*)\)/i);if(!chosen)return item;
+  const before=line.slice(0,line.indexOf(chosen[0])).trim();
+  if(!normalize(before).includes(normalize(name).slice(0,15))&&!normalize(name).includes(normalize(before).slice(0,15)))return item;
+  const existing=String(item.option_text||"").trim(),selected=chosen[1].trim();
+  const merged=existing&&normalize(existing).includes(normalize(selected))?existing:selected+(existing?" • "+existing:"");
+  return {...item,option_text:merged};
+ });
+}
 function viewOf(o){
   const legacy=parseLegacy(o);
   const structuredItems=Array.isArray(o.order_items)&&o.order_items.length?o.order_items:null;
@@ -917,10 +931,10 @@ function viewOf(o){
     discount_value:o.discount_value!==null&&o.discount_value!==undefined?Number(o.discount_value):null,
     discount_amount:o.discount_amount!==null&&o.discount_amount!==undefined?Number(o.discount_amount):0,
     total:o.total!==null&&o.total!==undefined?Number(o.total):null,
-    items:localizeReceiptItems(structuredItems||(legacy.items||[]).map((item,index)=>{
+    items:restoreJellyfishOptions(localizeReceiptItems(structuredItems||(legacy.items||[]).map((item,index)=>{
       const committed=Array.isArray(o.items)&&o.items.length===legacy.items.length?o.items[index]:null;
       return {...item,id:committed&&Number(committed.qty)===Number(item.qty)?committed.id:null};
-    }),language,legacy.items),
+    }),language,legacy.items),o.order_text),
     raw:o.order_text||"",
     status:o.status||""
   };
