@@ -1020,7 +1020,7 @@ function addEditorRow(item,target=editRows){
 
   const row=document.createElement("div");
   row.className="edit-row";
-  row.innerHTML='<select class="product-select">'+productOptions(id)+'</select>'+
+  row.innerHTML='<input class="product-search" type="search" autocomplete="off" placeholder="🔎 Gõ tên món hoặc SKU để tìm" aria-label="Tìm món trong menu">'+'<select class="product-select">'+productOptions(id)+'</select>'+
     '<input class="qty-input" type="number" min="1" step="1" value="'+esc(item.qty||1)+'" aria-label="Số lượng">'+
     (true
       ? '<label class="edit-price-wrap"><small>Đơn giá</small><input class="override-price" type="number" min="0" max="1000000" step="0.01" inputmode="decimal" value="'+esc(item.unit_price!==undefined&&item.unit_price!==null?item.unit_price:(productCatalog.find(p=>Number(p.id)===Number(id))||{}).price??"")+'" placeholder="$"></label>'
@@ -1028,6 +1028,19 @@ function addEditorRow(item,target=editRows){
     '<input class="option-input" type="text" value="'+esc(item.option_text||"")+'" placeholder="Option / ghi chú món">'+
     '<button type="button" class="btn alt remove-item">Xoá</button>';
   target.appendChild(row);
+  const searchInput=row.querySelector(".product-search"),productSelect=row.querySelector(".product-select");
+  const normalizeSearch=v=>String(v||"").toLocaleLowerCase("vi").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").replace(/đ/g,"d");
+  searchInput.addEventListener("input",()=>{
+    const term=normalizeSearch(searchInput.value.trim());
+    const previous=productSelect.value;
+    const matches=term?productCatalog.filter(p=>normalizeSearch((p.sku||"")+" "+p.name+" "+(p.name_en||"")).includes(term)):productCatalog;
+    const selected=productCatalog.find(p=>String(p.id)===previous);
+    const visible=selected&&!matches.some(p=>String(p.id)===previous)?[selected,...matches]:matches;
+    productSelect.innerHTML=visible.map(p=>'<option value="'+esc(p.id)+'">'+esc((p.sku?'['+p.sku+'] ':'')+p.name)+' — '+esc(money(p.price))+' — stock '+esc(p.stock_qty??"∞")+'</option>').join("");
+    productSelect.value=previous;
+    if(term&&matches.length===1&&String(matches[0].id)!==previous){productSelect.value=String(matches[0].id);productSelect.dispatchEvent(new Event("change"));}
+    searchInput.setCustomValidity(term&&!matches.length?"Không tìm thấy món phù hợp.":"");
+  });
   row.querySelector(".product-select").addEventListener("change",function(){
     const p=productCatalog.find(x=>String(x.id)===this.value);
     const input=row.querySelector(".override-price");
