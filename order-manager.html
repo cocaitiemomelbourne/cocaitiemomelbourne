@@ -902,9 +902,32 @@ function restoreJellyfishOptions(items,raw){
   return {...item,option_text:merged};
  });
 }
+function receiptLineTotal(item){
+  const valid=v=>v!==null&&v!==undefined&&v!==""&&Number.isFinite(Number(v))&&Number(v)>=0;
+  if(valid(item.line_total))return Number(item.line_total);
+  if(valid(item.unit_price)&&valid(item.qty))return Number(item.unit_price)*Number(item.qty);
+  return null;
+}
+function receiptItemMoney(item,language){
+  const value=receiptLineTotal(item);
+  return value===null?(language==="en"?"Price unavailable":"Chưa có giá"):money(value);
+}
+function restoreReceiptPrices(items,legacyItems,subtotal){
+  const key=i=>String(i.name||"").replace(/\s*\([^)]*\)\s*$/g,"").trim().toLowerCase()+"|"+Number(i.qty);
+  const rawTotal=legacyItems.reduce((sum,i)=>sum+(receiptLineTotal(i)??0),0);
+  const safe=legacyItems.length===items.length&&subtotal!==null&&Math.abs(rawTotal-Number(subtotal))<0.005;
+  return items.map(item=>{
+    if(receiptLineTotal(item)!==null)return {...item};
+    const matches=safe?legacyItems.filter(i=>key(i)===key(item)):[];
+    if(matches.length!==1)return {...item};
+    const line_total=receiptLineTotal(matches[0]);
+    return {...item,line_total,unit_price:line_total/Number(item.qty)};
+  });
+}
+
 function viewOf(o){
   const legacy=parseLegacy(o);
-  const structuredItems=Array.isArray(o.order_items)&&o.order_items.length?o.order_items:null;
+  const structuredItems=Array.isArray(o.order_items)&&o.order_items.length?restoreReceiptPrices(o.order_items,legacy.items,o.subtotal):null;
   const fulfil=o.fulfilment_method||legacy.fulfilment_method||"";
   const subtotal=o.subtotal!==null&&o.subtotal!==undefined?Number(o.subtotal):(legacy.subtotal!==null?Number(legacy.subtotal):null);
   const language=o.language||(/(?:^|\n)Fulfilment:/.test(o.order_text||"")?"en":"vi");
@@ -1282,7 +1305,7 @@ function buildCopyText(v){
   const en=v.language==="en",t=(vi,english)=>en?english:vi;
   const lines=[v.customer_name||""];
   (v.items||[]).forEach(it=>{
-    lines.push((it.qty||1)+" x "+(it.name||"Món")+(it.option_text?" — "+it.option_text:"")+" $"+Number(it.line_total||0).toFixed(2).replace(".00",""));
+    lines.push((it.qty||1)+" x "+(it.name||"Món")+(it.option_text?" — "+it.option_text:"")+" "+receiptItemMoney(it,v.language));
   });
   const pricing=pricingSummary(v);
   if(v.fulfilment_method==="delivery"){
@@ -1369,7 +1392,7 @@ function renderOrder(o){
       const w=document.createElement("div");w.className="item";
       const m=document.createElement("div");m.className="item-main";
       const l=document.createElement("span");l.textContent=(it.qty||1)+" × "+(it.name||"Món");
-      const r=document.createElement("span");r.className="price-only";r.textContent=money(it.line_total!==undefined?it.line_total:Number(it.unit_price||0)*Number(it.qty||1));
+      const r=document.createElement("span");r.className="price-only";r.textContent=receiptItemMoney(it,v.language);
       m.appendChild(l);m.appendChild(r);w.appendChild(m);
       if(it.option_text){const op=document.createElement("div");op.className="item-opt";op.textContent="↳ "+it.option_text;w.appendChild(op)}
       box.appendChild(w);
@@ -1628,7 +1651,7 @@ function makeReceiptCanvas(v,kitchen){
   for(const it of v.items){
     add((it.qty||1)+" × "+(it.name||"Món"),22,true);
     if(it.option_text)add(it.option_text,19);
-    if(!kitchen)add(t("Thành tiền: ","Line total: ")+money(it.line_total!==undefined?it.line_total:Number(it.unit_price||0)*Number(it.qty||1)),19);
+    if(!kitchen)add(t("Thành tiền: ","Line total: ")+receiptItemMoney(it,v.language),19);
     lines.push({gap:6});
   }
   rule();add(t("GIAO NHẬN","FULFILMENT"),20,true);
@@ -2011,4 +2034,5 @@ const saved=sessionStorage.getItem("cct_print_code");if(saved){passcode.value=sa
 </script>
 </body>
 </html>
+
 
