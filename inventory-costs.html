@@ -1,316 +1,182 @@
-<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Quản lý giá vốn & lô nhập | Có Cái Tiệm</title><meta http-equiv="Cache-Control" content="no-store"><style>
-:root{font-family:Arial,sans-serif;color:#30251b;background:#fff8ef}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1150px;margin:auto;padding:20px}h1{margin:8px 0}h2{font-size:19px}.muted{color:#766b60;font-size:13px}.card{background:white;border:1px solid #e7d8c9;border-radius:16px;padding:18px;margin:14px 0}input,select,button{font:inherit;padding:11px;border:1px solid #d8c7b5;border-radius:9px;max-width:100%}button{background:#33291f;color:white;cursor:pointer;border:0}button:disabled{opacity:.5}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.metric{background:#f8f2e9;border-radius:12px;padding:14px}.metric strong{display:block;font-size:24px;margin-top:8px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.row>*{flex:1}table{border-collapse:collapse;width:100%;font-size:13px}td,th{text-align:left;padding:10px;border-bottom:1px solid #eee3d6}th{background:#faf5ef}.scroll{overflow:auto}.warning{background:#fff2d8;border-radius:10px;padding:12px}.error{color:#a32626}a{color:#68451c}label{display:block;font-size:13px;margin:8px 0 4px}.hide{display:none}@media(max-width:720px){.grid{grid-template-columns:repeat(2,1fr)}.row>*{flex-basis:100%}.wrap{padding:12px}}
-
-/* Compact inventory entry */
-.cost-card{padding:22px}.cost-heading{display:flex;justify-content:space-between;gap:12px;align-items:start;margin-bottom:16px}.cost-heading h2{font-size:22px;margin:4px 0 6px}.cost-heading .muted{margin:0;line-height:1.45}.eyebrow{font-size:10px;letter-spacing:.14em;font-weight:700;color:#9a7a59}.cost-tag{border:1px solid #e6d7c6;border-radius:20px;padding:7px 10px;font-size:11px;font-weight:700;white-space:nowrap}.cost-card label{font-weight:600;margin:13px 0 6px}.cost-card input,.cost-card select{width:100%;min-width:0;background:#fff;border:1px solid #ded3c8;border-radius:10px;min-height:45px}.cost-card input:focus,.cost-card select:focus{outline:2px solid #aa8765;outline-offset:1px}.cost-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.cost-summary{display:flex;justify-content:space-between;align-items:center;background:#f8f4ee;border-radius:11px;padding:13px 15px;margin-top:17px;font-size:14px}.cost-summary strong{font-size:19px}.optional-note{margin:12px 0}.optional-note summary{cursor:pointer;font-size:13px;color:#715e4b}.save-batch{width:100%;margin-top:8px;min-height:46px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:12px}.cost-tip{font-size:12px;line-height:1.5;color:#756b61;margin:14px 0 0}.batch-history{border-top:1px solid #e8dfd5;margin-top:18px;padding-top:16px}.batch-history>summary{cursor:pointer;display:flex;justify-content:space-between;align-items:center;list-style:none}.batch-history>summary::-webkit-details-marker{display:none}.batch-history small{display:block;font-weight:400;color:#837669;margin-top:4px}.batch-history .scroll{margin-top:16px}.batch-history table{min-width:590px}@media(max-width:720px){.cost-card{padding:17px}.cost-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.cost-fields>div:first-child{grid-column:1/-1}.cost-heading h2{font-size:20px}.cost-card input,.cost-card select{font-size:16px}.cost-tag{padding:6px 8px}}
-
-/* Analytics dashboard v2 */
-:root{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#292b30;background:#f6f7f8}
-body{background:#f6f7f8} .wrap{max-width:1240px;padding:24px}
-h1{font-size:clamp(27px,4vw,36px);letter-spacing:-.045em;line-height:1.12;margin:4px 0 7px}
-h2{font-size:17px;letter-spacing:-.025em;margin:0 0 11px}
-.muted{color:#737a83;line-height:1.55}.card{border-color:#e7e9ed;border-radius:18px;margin:14px 0;padding:22px;box-shadow:0 4px 20px #17203207}
-a{color:#63583f}input,select,button{border-radius:11px;min-height:44px;border-color:#dfe3e8}
-button{background:#303a46;font-weight:750}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #b3caef;outline-offset:2px}
-.dash-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin:0 0 20px}.dash-header a{text-decoration:none;font-size:13px;font-weight:700;border:1px solid #e3e5e8;border-radius:11px;padding:11px 13px;background:#fff;white-space:nowrap}
-.dash-header p{margin:0}.eyebrow{font-size:10px;color:#8b929b}
-.filters-card{padding:15px 17px}.period-bar{display:flex;gap:8px;overflow-x:auto;padding:0 0 12px;margin-bottom:11px;border-bottom:1px solid #eceef1}.period-btn{background:#f1f3f5;color:#536071;white-space:nowrap;font-size:13px;padding:10px 13px;min-height:39px}.period-btn.active{background:#293743;color:white}
-.filters-card .row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;align-items:end;gap:12px}.filters-card .row>*{min-width:0}.filters-card label{font-weight:700;color:#68717b;margin:0 0 6px}.filters-card input,.filters-card select{width:100%;background:#fff}
-.grid{gap:12px}.metric{background:#fff;border:1px solid #e7e9ed;border-radius:16px;padding:18px;min-height:114px;box-shadow:0 3px 15px #17203206;font-size:13px;font-weight:600;color:#78818b}.metric strong{font-size:clamp(23px,3vw,31px);color:#232b32;letter-spacing:-.05em;margin-top:11px;line-height:1.2}.metric:last-child strong{font-size:clamp(17px,2vw,25px)}
-.dash-two-col{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(250px,.85fr);gap:14px;margin-top:14px}.dash-two-col>.card{margin:0;min-width:0}
-.chart-header{display:flex;justify-content:space-between;align-items:start;gap:12px;margin-bottom:8px}.chart-header small{color:#868f98}.chart{display:flex;gap:8px;align-items:stretch;height:225px;padding:15px 0 4px}.bar-col{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:7px}.bar-shell{flex:1;width:100%;max-width:50px;display:flex;align-items:flex-end;justify-content:center;background:linear-gradient(to top,#f5f6f8 1px,transparent 1px);background-size:100% 25%}.bar{width:100%;max-width:38px;border-radius:7px 7px 3px 3px;background:#c4d5e8;min-height:3px;transition:height .25s}.bar-col.is-max .bar{background:#516b87}.bar-label{font-size:10px;color:#868e96;white-space:nowrap;text-align:center}.bar-value{font-size:10px;font-weight:650;color:#616e7b;white-space:nowrap}.insight-row{display:flex;justify-content:space-between;gap:12px;margin-top:15px;padding:13px 0;border-bottom:1px solid #edf0f2;font-size:13px}.insight-row:last-child{border:0}.insight-row strong{font-size:15px}.small-note{font-size:11px;color:#858b92;line-height:1.5}
-#alerts{font-size:13px;line-height:1.55;margin-bottom:14px}.warning{background:#fff7e8;color:#81551d;border:1px solid #f1dfbe}
-.table-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:12px 0 16px}.table-toolbar input{width:100%;max-width:370px;background:#fafbfc}
-table{font-size:13px;min-width:650px}td,th{padding:13px 11px;border-color:#edf0f2}th{background:#f7f8fa;color:#67727d;font-size:12px;font-weight:750;white-space:nowrap}tbody tr:hover{background:#fafbfc}td:first-child{font-weight:650;max-width:320px}
-.cost-card{padding:22px}.cost-card,.data-quality{margin-top:14px}
-#costs>summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px}#costs>summary::-webkit-details-marker{display:none}
-#costs>summary .summary-copy{display:block;font-size:12px;font-weight:400;margin-top:6px;color:#7a838d;line-height:1.5}
-#costs>summary .summary-arrow{font-size:23px;color:#87909a}
-#costs[open]>summary{padding-bottom:17px;margin-bottom:17px;border-bottom:1px solid #edf0f2}
-#costs .cost-heading{margin-top:0}
-.section-intro{font-size:13px;color:#747e88;line-height:1.6}
-@media(max-width:760px){
-.wrap{padding:14px}.dash-header{align-items:center;margin-bottom:15px}.dash-header a{font-size:11px;padding:9px}
-.card{padding:16px;border-radius:15px}.filters-card .row{grid-template-columns:1fr 1fr;gap:8px}.filters-card .row>div:last-child{grid-column:1/-1}.filters-card #refresh{width:100%}
-.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.metric{padding:13px;min-height:105px;font-size:12px}.metric strong{font-size:clamp(22px,6vw,30px)}.metric:last-child strong{font-size:17px}
-.dash-two-col{grid-template-columns:1fr;gap:11px;margin-top:11px}.chart{height:185px;gap:5px}.bar-value{font-size:9px}.bar-label{font-size:10px}.table-toolbar{display:block}.table-toolbar input{max-width:none}.cost-fields{grid-template-columns:repeat(2,minmax(0,1fr))}table{min-width:660px}
-}
-.edit-batch-date{white-space:nowrap;padding:8px 12px;font-size:12px;background:#f3f5f7;color:#344252;border:1px solid #dce2e8;border-radius:9px}.batch-date-editor{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;padding:13px 0 16px;border-bottom:1px solid #ebe8e3;margin-bottom:12px}.batch-date-editor label{font-size:12px;font-weight:700;margin:0}.batch-date-editor #batchEditSelect{grid-column:1/-1;width:100%;min-width:0;max-width:100%;height:46px}.batch-date-editor #batchEditCost{grid-column:1/-1;width:100%;min-width:0;height:46px}.batch-date-editor #batchEditDate{grid-column:1/-1;width:100%;min-width:0;height:46px}.batch-date-editor button{grid-column:1/-1;min-height:44px}.batch-date-editor p{grid-column:1/-1;margin:0;font-size:12px;overflow-wrap:anywhere}</style><style id="cct-responsive-fix">
-/* Mobile-first reporting controls */
-.filters-card .row{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:12px!important;align-items:end!important}
-.filters-card .row>div{min-width:0!important;flex:initial!important}
-.filters-card .row>div:last-child{grid-column:1/-1}
-.filters-card .row label{display:block;white-space:normal;min-height:19px;margin:0 0 7px;font-size:12px}
-.filters-card .row input,.filters-card .row select{width:100%!important;min-width:0!important;max-width:100%!important;height:46px;font-size:15px;padding:8px}
-.filters-card .row #refresh{width:100%;min-height:42px}
-.period-bar{scrollbar-width:none}.period-bar::-webkit-scrollbar{display:none}
-.dash-header{flex-wrap:wrap}.dash-header>div{min-width:0}
-.chart{overflow:hidden}.bar-shell{min-height:0}.bar-col{min-width:0}
-@media(max-width:720px){
- .filters-card .row>*{flex-basis:auto!important}
- .filters-card .row{gap:10px!important}
- .filters-card{padding:14px!important}
- .period-btn{font-size:12px;padding:10px 12px;flex:0 0 auto}
- .dash-header h1{font-size:30px}
- .dash-header p{font-size:12px;max-width:280px}
- .dash-header a{margin-left:auto}
- .chart{height:200px}.bar-value{font-size:10px}
-}
-@media(max-width:360px){.filters-card .row{grid-template-columns:1fr!important}.filters-card .row>div:last-child{grid-column:1}.dash-header a{margin-left:0}}
-.dashboard-nav{display:flex;justify-content:flex-end;margin:6px 0 12px}.dashboard-nav a{display:inline-block;padding:10px 13px;border:1px solid #dfe3e8;border-radius:10px;background:white;text-decoration:none;font-weight:700;font-size:13px}</style><style>
-/* Dedicated inventory cost workspace */
-#app>.filters-card,#app>.grid,#app>.dash-two-col,#app>.card:not(.cost-card){display:none!important}
-#costs{display:block!important;max-width:850px;margin:20px auto!important}
-#costs>summary{display:none!important}
-#costs .cost-heading{margin-bottom:22px}
-#costs .cost-heading h2{font-size:23px}
-#costs .cost-content{display:block}
-.dashboard-nav{justify-content:flex-start}
-@media(max-width:720px){.dash-header{display:block}.dash-header a{display:inline-flex;margin-top:12px}#costs{padding:17px!important;margin-top:14px!important}}
-</style><style id="inventory-ui-clean-v4">
-:root{color:#292b30;background:#f6f7f8;font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-body{background:#f6f7f8}
-.wrap{max-width:1100px;padding:22px}
-.dash-header{display:block;margin:0 0 14px}
-.dash-header h1{font-size:clamp(28px,4vw,35px);letter-spacing:-.045em;line-height:1.15;margin:7px 0}
-.dash-header p{font-size:13px;color:#737a83}
-.eyebrow{font-size:11px;color:#8b929b;letter-spacing:.13em}
-.inventory-nav{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;margin:16px 0 20px}
-.inventory-nav a{display:flex;align-items:center;justify-content:center;text-align:center;min-height:46px;padding:10px;border:1px solid #e3e5e8;border-radius:12px;background:#fff;text-decoration:none;font-size:13px;font-weight:700;color:#536071;line-height:1.35}
-.inventory-nav a:last-child{background:#293743;color:white;border-color:#293743}
-#costs{max-width:100%;margin:0 auto!important}
-#costs .cost-heading{margin-bottom:15px}
-#costs .cost-heading h2{font-size:22px}
-#costs .cost-heading .muted{font-size:13px}
-#costs .cost-tag{color:#536071;border-color:#e3e5e8;background:#f7f8fa}
-.cost-card{padding:22px}
-.cost-card label{font-size:12px;color:#68717b;font-weight:750;margin:13px 0 6px}
-.cost-card input,.cost-card select{width:100%;max-width:100%;min-width:0;min-height:46px;border:1px solid #dfe3e8;border-radius:11px;font-size:16px;box-sizing:border-box;background:white}
-.cost-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.cost-fields>div{min-width:0}
-.cost-fields>div:nth-child(1),.cost-fields>div:nth-child(2),.cost-fields>div:nth-child(3){grid-column:1/-1}
-.cost-fields input[type=date],input[type=date]{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;-webkit-appearance:none;appearance:none;font-size:16px}
-.cost-summary{background:#f7f8fa;color:#303a46}
-.cost-card .save-batch{background:#303a46;border-radius:11px}
-.cost-card .optional-note summary{color:#536071}
-@media(max-width:720px){
-.wrap{padding:15px}
-.dash-header h1{font-size:30px}
-.inventory-nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:14px 0 16px}
-.inventory-nav a{font-size:12px;min-height:46px;padding:9px 7px}
-#costs{padding:17px!important}
-#costs .cost-heading{align-items:center;gap:8px}
-#costs .cost-heading h2{font-size:21px}
-.cost-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.cost-fields>div:nth-child(1),.cost-fields>div:nth-child(2),.cost-fields>div:nth-child(3){grid-column:1/-1}
-.cost-card input[type=date]{width:100%!important;max-width:100%!important;min-width:0!important}
-}
-</style><style id="ingredient-entry-css">#app>.ingredient-entry{display:none!important;max-width:850px;margin:16px auto!important}.ingredient-entry .cost-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.ingredient-entry .cost-fields>div{min-width:0}.ingredient-entry input,.ingredient-entry select{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;font-size:16px;min-height:45px}.ingredient-entry input[type=date]{-webkit-appearance:none;appearance:none}.ingredient-entry #ingredientSearch{margin-bottom:8px}.ingredient-entry .lot-line{padding:12px 0;border-bottom:1px solid #e7e9ed;font-size:13px}.ingredient-entry .lot-line small{display:block;color:#737a83;margin-top:5px}@media(max-width:650px){.ingredient-entry .cost-fields{grid-template-columns:minmax(0,1fr)}.ingredient-entry{padding:17px!important}}</style><style id="ingredient-history-design">#ingredientLotsPanel{margin-top:18px}#ingredientLotsPanel summary{cursor:pointer;list-style:none}#ingredientLotsPanel summary::-webkit-details-marker{display:none}#ingredientLotsPanel .ingredient-history-body{padding:14px 0 4px}#ingredientLotsPanel input{display:block;width:100%;box-sizing:border-box;min-width:0;max-width:100%;font-size:16px}#ingredientLotsPanel .ingredient-lot{border:1px solid #e5e8ec;background:#fafbfc;border-radius:12px;padding:14px;margin:10px 0}#ingredientLotsPanel .ingredient-lot-header{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}#ingredientLotsPanel .ingredient-lot-header strong{font-size:15px}#ingredientLotsPanel .ingredient-lot-header small{color:#6f7883;font-size:12px}#ingredientLotsPanel .ingredient-lot-detail{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0;font-size:13px;color:#5e6772}#ingredientLotsPanel .ingredient-lot-detail b{display:block;color:#293743;font-size:15px;margin-top:4px}#ingredientLotsPanel .ingredient-date-edit{display:flex;gap:9px;align-items:end;flex-wrap:wrap;border-top:1px solid #e4e8ec;padding-top:12px}#ingredientLotsPanel .ingredient-date-edit label{flex:1;min-width:140px;margin:0}#ingredientLotsPanel .ingredient-date-edit input{margin-top:6px;min-height:44px;appearance:none;-webkit-appearance:none}#ingredientLotsPanel .ingredient-date-edit button{width:auto;min-height:44px;padding:9px 16px;background:#293743;color:#fff;border-radius:9px}#ingredientLotsPanel .ingredient-lot-msg{font-size:12px;margin-top:7px;color:#596779}@media(max-width:540px){#ingredientLotsPanel .ingredient-lot-detail{grid-template-columns:repeat(2,minmax(0,1fr))}}</style></head><body><main class="wrap"><header class="dash-header"><div><span class="eyebrow">CÓ CÁI TIỆM / QUẢN LÝ GIÁ VỐN</span><h1>Giá vốn & lô nhập</h1><p class="muted">Theo dõi giá vốn FIFO, khai báo từng lô hàng</p></div></header>
-<nav class="inventory-nav" aria-label="Điều hướng quản lý"><a href="./order-manager.html">Quản lý đơn</a><a href="./sales-dashboard.html">Sales Analytics</a><a href="./product-catalog.html">Danh mục SKU</a><a href="./production.html">Sơ chế & Mẻ sốt</a><a href="./standard-recipe.html">Standard Recipe</a></nav><section class="card" id="login"><h2>Quản trị viên</h2><label>Mật mã Order Manager</label><input id="pass" type="password" autocomplete="off" placeholder="Nhập mật mã"><button id="enter">Xem báo cáo</button><p id="loginMsg" class="error"></p></section>
-<section id="app" class="hide"><div class="card hide" style="max-width:850px;margin:12px auto;padding:13px 17px;background:#f0f4f8"><strong>Chọn đúng loại nhập hàng</strong><p class="muted" style="margin:6px 0 10px">Nhập Sứa Đạn, Sứa Đạn Dù và các nguyên liệu: dùng mục <b>Nguyên liệu FIFO</b> ngay bên dưới. Nhập món bán sẵn: dùng mục <b>Nhập lô hàng</b>.</p><div class="row"><a href="#ingredientEntry" style="display:inline-block;padding:11px 14px;background:#293743;color:#fff;border-radius:10px;text-decoration:none;font-weight:700">Nhập nguyên liệu sứa ↓</a><a href="#costs" style="display:inline-block;padding:11px 14px;background:#fff;border:1px solid #dfe3e8;border-radius:10px;text-decoration:none">Nhập hàng bán sẵn ↓</a></div></div><section class="card ingredient-entry hide" id="ingredientEntry"><h2>Nguyên liệu FIFO · Sứa, sốt và sơ chế</h2><p class="muted">Sứa và nguyên liệu mua vào. Lô này dùng riêng cho tính giá vốn sơ chế; không nhập trùng vào lô thành phẩm.</p><form id="ingredientForm"><div class="cost-fields"><div><label>Tìm SKU nguyên liệu</label><input id="ingredientSearch" placeholder="Tìm sứa, mã SKU..." autocomplete="off"><select id="ingredientSku" required></select></div><div><label>Ngày nhận thực tế</label><input id="ingredientDate" type="date" required></div><div><label>Số lượng (đơn vị chuẩn)</label><input id="ingredientQty" type="number" min=".001" step="any" required></div><div><label>Tổng vốn lô (AUD)</label><input id="ingredientCost" type="number" min="0" step=".01" required></div><div><label>Đơn vị</label><input id="ingredientUnit" readonly></div></div><label>Ghi chú</label><input id="ingredientNote" placeholder="Nhà cung cấp, quy đổi từ kg..."><p class="muted" id="ingredientPreview"></p><button type="submit" id="ingredientSave" class="save-batch">Lưu lô nguyên liệu</button><p id="ingredientMsg" role="status" class="muted"></p></form><details class="batch-history"><summary><strong>Danh sách lô nguyên liệu FIFO</strong></summary><div id="ingredientHistory"></div></details></section><div class="card filters-card"><div class="period-bar" role="group" aria-label="Chọn kỳ báo cáo"><button type="button" class="period-btn active" data-period="week">Tuần này</button><button type="button" class="period-btn" data-period="lastweek">Tuần trước</button><button type="button" class="period-btn" data-period="month">Tháng này</button><button type="button" class="period-btn" data-period="lastmonth">Tháng trước</button></div><div class="row"><div><label id="periodDateLabel">Ngày trong kỳ</label><input id="week" type="date"></div><div><label>Chế độ</label><select id="mode"><option value="week">Tuần</option><option value="month">Tháng</option></select></div><div><label>&nbsp;</label><button id="refresh">Tải lại</button></div></div></div>
-<div class="grid"><div class="metric">Doanh thu sản phẩm<strong id="sales">—</strong></div><div class="metric">Đơn hoàn thành<strong id="count">—</strong></div><div class="metric">Số món bán<strong id="qty">—</strong></div><div class="metric">Lợi nhuận gộp xác định<strong id="profit">—</strong></div></div>
-<div class="dash-two-col"><section class="card"><div class="chart-header"><div><h2>Xu hướng doanh thu</h2><span class="small-note">Giá trị hàng bán từ đơn đã hoàn thành</span></div><small id="chartPeriod">—</small></div><div id="revenueChart" class="chart" aria-label="Biểu đồ doanh thu"></div></section><section class="card"><h2>Điểm nổi bật</h2><div id="insights"></div><p class="small-note">Các chỉ số không bao gồm đơn chưa hoàn tất; báo cáo dựa trên ngày khách nhận hàng.</p></section></div>
-<div class="card"><h2>Hiệu suất sản phẩm</h2><p class="section-intro">Xem món bán chạy, doanh thu và lợi nhuận FIFO. Những món chưa đủ giá vốn sẽ không được tính là có vốn bằng 0.</p><div class="table-toolbar"><input type="search" id="tableSearch" placeholder="🔎 Tìm món trong báo cáo..." aria-label="Tìm món trong báo cáo"></div><div class="hide" id="originalHint"><p class="muted">Lợi nhuận = doanh thu sản phẩm trừ giá vốn FIFO. Chưa trừ chi phí giao hàng, bao bì, phí thanh toán và chiết khấu phân bổ. Món thiếu giá vốn được đánh dấu, không coi vốn bằng 0.</p></div><div id="alerts" class="warning"></div><div class="scroll"><table><thead><tr><th>Sản phẩm</th><th>SL bán</th><th>Doanh thu</th><th>Giá vốn FIFO</th><th>Lợi nhuận gộp</th></tr></thead><tbody id="lines"></tbody></table></div></div>
-<details class="card cost-card" id="costs" open><summary><span><strong>Quản lý giá vốn & lô nhập hàng</strong><span class="summary-copy">Thêm giá vốn theo lô, theo dõi lịch sử FIFO · Không thay đổi số lượng tồn</span></span><span class="summary-arrow">⌄</span></summary><div class="cost-content">
-<div class="cost-heading"><div><span class="eyebrow">QUẢN LÝ GIÁ VỐN</span><h2>Nhập lô hàng</h2><p class="muted">Giá vốn bằng AUD, đã gồm phí vận chuyển về Úc.</p></div><span class="cost-tag">FIFO</span></div>
-<form id="batchForm">
-<label for="productSearch">Tìm sản phẩm hoặc nguyên liệu theo SKU</label><input id="productSearch" type="search" placeholder="Gõ tên món để tìm nhanh…" autocomplete="off">
-<label for="product">Chọn sản phẩm / nguyên liệu</label><select id="product" required></select>
-<div id="retailFields"><div class="cost-fields"><div><label for="received">Ngày hàng có sẵn</label><input id="received" type="date" required></div><div><label for="quantity">Số lượng nhập</label><input id="quantity" type="number" min="1" step="1" inputmode="numeric" placeholder="Ví dụ: 10" required></div><div><label for="unitcost">Vốn / món (AUD)</label><input id="unitcost" type="number" min="0" step=".01" inputmode="decimal" placeholder="Ví dụ: 11.00" required></div></div>
-</div><div id="ingredientFields" class="hide"><div class="cost-fields"><div><label for="inlineIngredientDate">Ngày nhận nguyên liệu thực tế</label><input id="inlineIngredientDate" type="date" required disabled></div><div><label id="inlineIngredientLabel" for="inlineIngredientQty">Số lượng nhập (g)</label><input id="inlineIngredientQty" type="number" min=".001" step="any"></div><div><label for="inlineIngredientCost">Tổng vốn nguyên liệu (AUD)</label><input id="inlineIngredientCost" type="number" min="0" step=".01"></div></div><p class="muted">Giá vốn được lưu theo SKU và từng lô FIFO.</p></div><div class="cost-summary"><span id="batchTotalLabel">Tổng vốn lô hàng</span><strong id="batchTotal">$0.00</strong></div>
-<details class="optional-note"><summary>+ Thêm ghi chú (không bắt buộc)</summary><label for="note">Ghi chú lô hàng</label><input id="note" maxlength="300" placeholder="Ví dụ: Lô nhập tháng 10"></details>
-<button class="save-batch" id="retailSave" type="submit">Lưu lô hàng <span aria-hidden="true">→</span></button><button class="save-batch hide" id="ingredientInlineSave" type="submit">Lưu lô nguyên liệu →</button><p id="saveMsg" role="status" aria-live="polite"></p><details class="batch-history" id="inlineIngredientHistory" open><summary><strong>Lịch sử nguyên liệu FIFO</strong> · <small id="inlineIngredientCount">0 lô</small></summary><div id="inlineIngredientRows"></div></details>
-</form>
-<p class="cost-tip">Lô hàng bán sẵn chỉ dùng để tính lợi nhuận. Lô nguyên liệu được theo dõi riêng theo SKU và số lượng còn lại.</p>
-<details class="batch-history" id="ingredientLotsPanel"><summary><span><strong>Lịch sử nhập nguyên liệu</strong><small id="allIngredientCount">Đang tải...</small></span><span aria-hidden="true">⌄</span></summary><div class="ingredient-history-body"><label for="allIngredientSearch">Tìm tên nguyên liệu, SKU hoặc mã lô</label><input id="allIngredientSearch" type="search" placeholder="Ví dụ: Sứa Trân Châu, #3" autocomplete="off"><div id="allIngredientRows" aria-live="polite"></div></div></details><details class="batch-history" id="retailHistory"><summary><span><strong>Lịch sử nhập hàng</strong><small id="batchCount">0 lô hàng</small></span><span aria-hidden="true">⌄</span></summary><div class="batch-date-editor"><label for="batchEditSelect">Chọn lô cần sửa</label><select id="batchEditSelect"></select><label for="batchEditDate">Ngày nhận đúng</label><input id="batchEditDate" type="date"><label for="batchEditCost">Giá vốn / món (AUD)</label><input id="batchEditCost" type="number" min="0" max="1000000" step="0.01" inputmode="decimal"><button id="batchEditSave" type="button">Lưu ngày nhận mới</button><button id="batchEditCostSave" type="button">Lưu giá vốn mới</button><p id="batchEditMsg" role="status"></p></div><div class="scroll"><table><thead><tr><th>Ngày nhập</th><th>Sản phẩm</th><th>SL nhập</th><th>Vốn / món</th><th>Tổng vốn</th><th>Ghi chú</th><th>Sửa ngày</th></tr></thead><tbody id="batches"></tbody></table></div></details>
-</div></details>
-<div class="card data-quality"><h2>Kiểm tra dữ liệu</h2><p class="muted">Đơn hoàn thành thiếu ngày nhận hàng sẽ không được đưa vào tuần bất kỳ.</p><div id="missing"></div></div></section></main>
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Giá vốn & lô nhập | Có Cái Tiệm</title><meta http-equiv="Cache-Control" content="no-store">
+<style>
+:root{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#27353b;background:#f6f7f9;font-synthesis:none;--ink:#27353b;--muted:#79838d;--line:#e8ebef;--accent:#ad572e;--soft:#fbede4;--green:#29735c}*{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit}button,a,input,select,textarea{-webkit-tap-highlight-color:transparent}button{cursor:pointer}button:disabled{cursor:wait;opacity:.55}a{color:inherit}button:focus-visible,a:focus-visible{outline:3px solid #c48b67;outline-offset:3px}input:focus,select:focus,textarea:focus{outline:2px solid #c48b67;outline-offset:1px}button svg,a svg{pointer-events:none}.icon{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}.shell{max-width:1280px;margin:auto;padding:28px 32px 50px}.topline{display:flex;justify-content:space-between;align-items:center;gap:16px}.brand{display:flex;align-items:center;gap:9px;font-size:12px;font-weight:800;letter-spacing:.06em}.brand-mark{height:29px;width:29px;display:grid;place-items:center;background:var(--ink);color:white;border-radius:9px}.build-label{font-size:11px;color:var(--muted)}h1{margin:22px 0 7px;font-size:34px;font-weight:750;letter-spacing:-1.3px}h2,h3,p{margin:0}.intro{display:flex;align-items:end;justify-content:space-between;gap:20px}.intro p{font-size:14px;color:#78828c;line-height:1.6}.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);border-radius:10px;min-height:42px;padding:10px 14px;background:#fff;color:var(--ink);font-weight:650;font-size:13px;text-decoration:none}.btn.primary{color:white;background:var(--ink);border-color:var(--ink)}.btn.accent{background:var(--accent);border-color:var(--accent);color:white}.btn.quiet{background:transparent}.actions{display:flex;gap:8px;flex-shrink:0}.nav{display:flex;gap:7px;flex-wrap:wrap;margin:22px 0 25px}.nav a{display:flex;align-items:center;gap:6px;font-size:12px;color:#6c7680;text-decoration:none;padding:8px 11px;border-radius:8px}.nav a:hover{background:#eaeef1;color:var(--ink)}.nav a:first-child{padding-left:0}.nav .active{background:white;border:1px solid var(--line);color:var(--ink);font-weight:700}.notice{display:flex;gap:10px;align-items:flex-start;background:#eef3f1;color:#48685c;border:1px solid #dfebe6;border-radius:12px;padding:12px 15px;font-size:12px;line-height:1.6;margin-bottom:20px}.notice svg{margin-top:1px}.metrics{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:12px;margin-bottom:23px}.metric{border:1px solid var(--line);background:white;border-radius:13px;padding:17px 19px;min-width:0}.metric.accent{background:var(--ink);border-color:var(--ink);color:white}.metric span{font-size:11px;letter-spacing:.01em;color:var(--muted)}.metric.accent span{color:#b8c9cb}.metric strong{display:block;font-size:27px;line-height:1.3;letter-spacing:-.7px;font-weight:720;margin-top:7px}.metric small{display:block;color:var(--muted);font-size:10px;margin-top:5px}.metric.accent small{color:#a5b9bd}.workspace{display:grid;grid-template-columns:325px minmax(0,1fr);gap:18px;align-items:start}.panel{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;min-width:0}.master-header{padding:19px 17px 14px;border-bottom:1px solid var(--line)}.section-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px}.section-heading h2{font-size:15px}.count{font-size:11px;color:var(--muted);white-space:nowrap}.search-box{position:relative}.search-box>svg{position:absolute;left:11px;top:12px;color:#8a949e;width:17px;height:17px}.search-box input{width:100%;min-width:0;border:1px solid #e1e5e9;background:#f9fafb;border-radius:9px;padding:11px 10px 11px 35px;font-size:13px;color:var(--ink)}.types{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;background:#f1f3f5;padding:3px;border-radius:8px;margin:12px 0}.types button{border:0;border-radius:6px;background:transparent;padding:8px 3px;font-size:11px;color:#7d8790;font-weight:650}.types button[aria-pressed=true]{background:white;color:var(--ink);box-shadow:0 1px 4px #18293414}.master-options{display:flex;align-items:center;justify-content:space-between;gap:6px}.check{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);cursor:pointer}.check input{accent-color:var(--accent);margin:0}.mini-select{font-size:10px;border:0;color:#6e7b85;background:white;max-width:108px;padding:5px 0}.item-list{max-height:660px;overflow:auto;overscroll-behavior:contain}.item{display:block;width:100%;text-align:left;padding:16px 17px;background:#fff;border:0;border-bottom:1px solid #eff1f3;border-left:3px solid transparent;color:var(--ink)}.item:last-child{border-bottom:0}.item:hover{background:#fafbfc}.item[aria-current=true]{background:#fbf4ef;border-left-color:var(--accent)}.item-top{display:flex;align-items:center;gap:9px;justify-content:space-between;margin-bottom:6px}.item-name{font-size:13px;font-weight:700;line-height:1.5;max-width:100%;overflow-wrap:anywhere}.item svg{width:15px;height:15px;color:#a8afb5}.item-bottom{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:10px;color:#8a929b}.item-sku{font-size:9px;letter-spacing:.04em;font-weight:700;color:#9a6c4c;margin-bottom:5px}.item-note{display:block;margin-top:6px;font-size:10px;color:#6a7b74}.detail-head{padding:23px 25px 20px;border-bottom:1px solid var(--line)}.breadcrumb{font-size:10px;color:var(--muted);display:flex;gap:8px;align-items:center;margin-bottom:12px}.badge{display:inline-block;border-radius:5px;background:#eef4f1;color:var(--green);padding:4px 7px;font-weight:650;font-size:9px;white-space:nowrap}.badge.retail{background:#eef2f8;color:#66799a}.badge.empty{background:#f2f3f5;color:#8a939b}.badge.warning{background:#fbefe0;color:#a17136}.detail-title{display:flex;justify-content:space-between;align-items:flex-start;gap:15px}.detail-title h2{font-size:23px;letter-spacing:-.6px;line-height:1.4;overflow-wrap:anywhere}.detail-title .btn{font-size:11px;min-height:36px;white-space:nowrap}.detail-stats{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:12px;margin-top:22px}.detail-stat span{display:block;font-size:10px;color:var(--muted);line-height:1.6}.detail-stat strong{display:block;font-size:21px;font-weight:700;letter-spacing:-.5px;margin-top:4px;overflow-wrap:anywhere}.detail-stat em{font-size:11px;font-style:normal;font-weight:500;color:var(--muted)}.detail-stat+div{border-left:1px solid var(--line);padding-left:16px}.history-head{padding:20px 25px 13px;display:flex;align-items:center;justify-content:space-between;gap:10px}.history-head h3{font-size:13px}.history-head select{font-size:11px;padding:6px 9px;border:1px solid var(--line);border-radius:7px;max-width:170px;background:white;color:var(--ink)}.history{padding:0 15px 10px}.lot-row{display:grid;grid-template-columns:minmax(96px,1fr) .95fr .9fr .9fr .9fr 32px;align-items:center;gap:9px;border-top:1px solid #edf0f3;padding:15px 10px;font-size:12px}.lot-row .strong{font-weight:700}.lot-row .secondary{display:block;color:var(--muted);font-size:10px;margin-top:6px;line-height:1.5}.lot-row.labels{color:#99a0a7;font-size:9px;border:0;padding-top:4px;padding-bottom:10px;letter-spacing:.02em}.icon-btn{border:1px solid var(--line);background:white;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;color:#7b8790;cursor:pointer}.icon-btn:hover{color:var(--accent);background:#fcf5ef}.lot-foot{padding:15px 25px;background:#fbfcfd;border-top:1px solid var(--line);font-size:11px;color:#879099;line-height:1.7}.lot-foot a{font-weight:650;color:#71634f}.no-data{padding:35px 22px;text-align:center;color:#8b959e;font-size:12px;line-height:1.8}.no-data svg{width:30px;height:30px;display:block;margin:0 auto 12px;color:#b4bec5}.no-data .btn{margin-top:15px}.mobile-back{display:none}.foot-links{font-size:11px;color:#8f98a0;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:20px;line-height:1.7}.foot-links a{text-decoration:none}.status-line{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:10px;color:var(--muted);margin-bottom:12px}.status-line .error{color:#a24f35}.error-box{border:1px solid #efd6cb;background:#fff4ef;border-radius:10px;padding:13px 15px;margin-bottom:16px;font-size:12px;color:#a05237;line-height:1.6}.login{max-width:440px;margin:65px auto;background:white;border:1px solid var(--line);border-radius:18px;padding:30px}.login h2{font-size:23px;letter-spacing:-.6px}.login p{font-size:13px;color:var(--muted);line-height:1.7;margin:8px 0 20px}.login .btn{width:100%;margin-top:15px}.field{display:flex;flex-direction:column;gap:7px;min-width:0}.field label{font-size:11px;font-weight:650;color:#65737b;line-height:1.5}.field input,.field select,.field textarea{width:100%;min-width:0;border:1px solid #dfe4e8;border-radius:9px;background:white;padding:11px 12px;font-size:14px;line-height:20px;color:var(--ink)}.field input:disabled,.field select:disabled{background:#f5f6f8;color:#89949d}.field small{font-size:10px;line-height:1.6;color:var(--muted)}.field textarea{resize:vertical;min-height:75px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:17px}.span2{grid-column:1/-1}.quantity-field{display:grid;grid-template-columns:minmax(0,1fr) 72px;gap:6px}.money-field{position:relative}.money-field>span{position:absolute;left:12px;top:12px;color:#8c969f;font-size:14px}.money-field input{padding-left:26px}.money-mode{display:flex;justify-content:space-between;align-items:center;gap:5px}.money-mode select{width:auto;padding:3px 6px;border:0;color:#92704d;font-size:10px;background:#fbf5ed}.preview-box{border:1px solid #e5e7e8;border-radius:12px;background:#f8faf9;padding:17px;margin-top:22px}.preview-box .pair{display:flex;justify-content:space-between;gap:15px;align-items:baseline;font-size:12px;color:#7a878b;line-height:1.8}.preview-box .pair.total{margin-top:8px;padding-top:10px;border-top:1px solid #e3e9e5;color:var(--ink)}.preview-box .pair.total strong{font-size:25px;letter-spacing:-.7px}.preview-box strong{font-weight:650;color:var(--ink)}dialog{width:min(510px,calc(100vw - 24px));max-height:calc(100dvh - 28px);border:1px solid var(--line);border-radius:18px;padding:0;color:var(--ink);box-shadow:0 20px 90px #152b3f24}dialog::backdrop{background:#18272d70;backdrop-filter:blur(3px)}.dialog-head{display:flex;align-items:start;justify-content:space-between;padding:22px 24px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:white;z-index:2}.dialog-head h2{font-size:21px;letter-spacing:-.5px}.dialog-head p{color:var(--muted);font-size:11px;margin-top:6px;line-height:1.7}.dialog-body{padding:21px 24px 5px}.dialog-actions{padding:19px 24px;display:flex;justify-content:end;gap:9px;position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);margin-top:18px;z-index:2}.form-note{font-size:11px;color:var(--muted);line-height:1.8;padding:14px 0 0}.form-error{font-size:12px;color:#a34f35;line-height:1.7;margin:14px 0 4px}.receipt-name{font-size:12px;color:#9a7453;line-height:1.6}.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:10px;padding:13px 20px;font-size:12px;box-shadow:0 8px 30px #1c333526;max-width:90vw;z-index:20;line-height:1.6;text-align:center}.loading-dot{display:inline-block;width:6px;height:6px;background:#578974;border-radius:50%;margin-right:6px}.help-card{background:#fbf9f6;border:1px solid #f0e9df;margin-top:14px;border-radius:12px;padding:16px 19px}.help-card summary{cursor:pointer;font-size:11px;font-weight:700;color:#7d6a53}.help-card p{font-size:11px;color:#8b806f;line-height:1.8;margin-top:10px}.summary-actions{display:flex;gap:7px}.btn-text{padding:0;border:0;background:none;color:#7c857e;font-size:11px;text-decoration:underline}.check input{min-height:16px;min-width:16px}[hidden]{display:none!important}
+@media(max-width:1000px){.workspace{grid-template-columns:285px minmax(0,1fr)}.shell{padding:24px 20px}.detail-head{padding:20px}.history-head{padding:18px 20px 13px}.history{padding:0 10px 10px}.lot-row{gap:5px;font-size:11px;padding:15px 8px;grid-template-columns:90px .8fr .9fr .8fr .8fr 30px}.detail-stats{gap:8px}.detail-stat strong{font-size:18px}.detail-stat+div{padding-left:11px}}
+@media(max-width:760px){.shell{padding:18px 14px 30px}h1{font-size:29px;margin-top:20px}.intro{display:block}.intro p{font-size:12px;max-width:330px}.intro .actions{margin-top:16px}.intro .actions .primary{flex:1}.nav{gap:3px;margin:16px 0 19px}.nav a{font-size:10px;padding:7px 8px}.nav a .icon{width:15px;height:15px}.metrics{grid-template-columns:1fr 1fr;gap:9px;margin-bottom:17px}.metric{padding:14px}.metric strong{font-size:25px}.metric span{font-size:10px}.metric small{font-size:9px}.notice{padding:11px 13px;font-size:11px}.workspace{display:block}.master-header{padding:18px 16px 14px}.types button{font-size:12px;padding:10px 5px}.master-options .check{font-size:11px}.mini-select{font-size:11px;max-width:130px}.item-list{max-height:none}.item{padding:17px 17px 17px 14px}.item-name{font-size:14px}.item-bottom,.item-note{font-size:11px}.detail-pane{display:none}.detail-open .master{display:none}.detail-open .detail-pane{display:block}.mobile-back{display:flex;align-items:center;gap:7px;background:none;border:0;padding:0;margin-bottom:15px;color:#737f85;font-size:12px}.detail-open .notice,.detail-open .metrics{display:none}.detail-head{padding:19px}.detail-title h2{font-size:22px}.detail-stats{grid-template-columns:1fr 1fr;row-gap:18px;margin-top:19px}.detail-stat strong{font-size:22px}.detail-stat:last-child{grid-column:1/-1;border:0;padding-left:0;padding-top:13px;border-top:1px solid var(--line)}.detail-stat:last-child strong{font-size:17px;display:inline-block;margin-right:6px}.history-head{padding:19px 18px 10px}.history{padding:0 16px 10px}.lot-row.labels{display:none}.lot-row{grid-template-columns:1fr 1fr 32px;gap:17px 9px;padding:19px 2px;font-size:13px}.lot-row>div:first-child{grid-column:1/3}.lot-row>.lot-qty{grid-column:1}.lot-row>.lot-price{grid-column:2}.lot-row>.lot-total{grid-column:1}.lot-row>.lot-remaining{grid-column:2}.lot-row>.icon-btn{grid-column:3;grid-row:1;align-self:start}.lot-row .secondary{font-size:10px;margin-top:5px}.lot-row .mobile-label{display:block;color:#929ca5;font-size:10px;margin-bottom:5px;font-weight:400}.lot-row>div:first-child .secondary{display:inline;margin-left:7px}.lot-foot{padding:15px 18px}.history-head select{font-size:11px;max-width:150px}.foot-links{font-size:10px}.brand{font-size:10px}.build-label{font-size:10px}.dialog-head{padding:19px 18px 15px}.dialog-body{padding:18px 18px 4px}.dialog-actions{padding:16px 18px}.dialog-actions .accent{flex:1}.field input,.field select,.field textarea{font-size:16px}.money-mode select{font-size:11px}.form-grid{gap:15px 11px}.field label{font-size:11px}.login{margin:30px auto;padding:24px}.status-line{line-height:1.6;font-size:10px}.btn{min-height:43px}.detail-title .btn{padding:8px 10px}.detail-title .btn .icon{width:16px}.help-card{padding:14px 16px}}
+@media(max-width:760px){.notice{display:none}.metrics .metric:nth-child(2),.metrics .metric:nth-child(4){display:none}.nav{margin:12px 0 16px}.detail-open .intro,.detail-open .nav,.detail-open .status-line{display:none}.detail-open .workspace{margin-top:18px}}
+@media(min-width:761px){.mobile-label{display:none}}
+@media(prefers-reduced-motion:no-preference){dialog[open]{animation:appear .16s ease-out}@keyframes appear{from{transform:translateY(8px);opacity:.6}to{transform:none;opacity:1}}}
+</style></head><body>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs>
+<symbol id="icon-box" viewBox="0 0 24 24"><path d="m3 7 9-4 9 4v11l-9 4-9-4Z"/><path d="m3 7 9 4 9-4M12 11v11M8 5l9 4"/></symbol>
+<symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="icon-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></symbol>
+<symbol id="icon-arrow" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+<symbol id="icon-back" viewBox="0 0 24 24"><path d="m14 5-7 7 7 7M7 12h14"/></symbol>
+<symbol id="icon-edit" viewBox="0 0 24 24"><path d="m15 4 5 5-11 11H4v-5ZM13 6l5 5"/></symbol>
+<symbol id="icon-reload" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2 6M20 4v7h-7"/></symbol>
+<symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+<symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+<symbol id="icon-chart" viewBox="0 0 24 24"><path d="M4 3v17h17M9 16V9M14 16V5M19 16v-5"/></symbol>
+</defs></svg>
+<main class="shell">
+<div class="topline"><div class="brand"><span class="brand-mark"><svg class="icon"><use href="#icon-box"/></svg></span>CÓ CÁI TIỆM <span style="color:#b2b9bf;font-weight:400">/ QUẢN TRỊ</span></div><span class="build-label">Inventory · v2.0</span></div>
+<header class="intro"><div><h1>Giá vốn & lô nhập</h1><p>Từng món, từng lô. Rõ số lượng, rõ chi phí.</p></div><div class="actions" id="topActions" hidden><button class="btn" id="reloadBtn" aria-label="Tải lại dữ liệu"><svg class="icon"><use href="#icon-reload"/></svg></button><button class="btn primary" id="newLotBtn"><svg class="icon"><use href="#icon-plus"/></svg>Nhập lô mới</button></div></header>
+<nav class="nav" aria-label="Điều hướng quản trị"><a href="./order-manager.html"><svg class="icon"><use href="#icon-back"/></svg>Quản lý đơn</a><a href="./inventory-costs.html" class="active">Giá vốn & lô nhập</a><a href="./sales-dashboard.html"><svg class="icon"><use href="#icon-chart"/></svg>Sale Analysis</a><a href="./production.html">Mẻ sốt & sản xuất ↗</a></nav>
+<section class="login" id="login"><h2>Đăng nhập quản trị</h2><p>Dùng cùng mã đăng nhập với Order Manager.</p><form id="loginForm"><div class="field"><label for="password">Mã quản trị</label><input id="password" type="password" autocomplete="current-password" required></div><button class="btn primary" id="loginBtn">Mở sổ lô nhập <svg class="icon"><use href="#icon-arrow"/></svg></button><div id="loginMessage" class="form-error" role="status"></div></form></section>
+<div id="app" hidden>
+<div class="notice"><svg class="icon"><use href="#icon-check"/></svg><span><strong>Nhập đúng một lần, tự đối soát giá vốn.</strong> Lô nguyên liệu và mẻ sốt hợp lệ sẽ tự bổ sung cho các đơn còn thiếu vốn. Số liệu bán hàng xem tại Sale Analysis.</span></div>
+<section class="metrics" aria-label="Tổng quan lô nhập"><div class="metric accent"><span>Tổng vốn đã nhập</span><strong id="metricCapital">—</strong><small>Hàng bán + nguyên liệu, chưa gồm mẻ sản xuất</small></div><div class="metric"><span>Mặt hàng đã có lô</span><strong id="metricItems">—</strong><small>Tìm theo tên món hoặc mã SKU</small></div><div class="metric"><span>Tổng số lô</span><strong id="metricLots">—</strong><small>Toàn bộ lịch sử đã ghi nhận</small></div><div class="metric"><span>Lô nguyên liệu đã hết</span><strong id="metricEmpty">—</strong><small>Đã phân bổ hết số lượng của lô</small></div></section>
+<div class="error-box" id="loadError" role="alert" hidden></div><div class="status-line"><span id="loadStatus" role="status"><span class="loading-dot"></span>Đang tải dữ liệu…</span><span>Đơn vị tiền: AUD</span></div>
+<div class="workspace">
+<section class="panel master" aria-label="Danh sách mặt hàng"><div class="master-header"><div class="section-heading"><h2>Sổ lô nhập</h2><span class="count" id="itemCount"></span></div><div class="search-box"><svg class="icon"><use href="#icon-search"/></svg><input type="search" id="search" placeholder="Tìm tên món, SKU hoặc #lô…" aria-label="Tìm mặt hàng hoặc lô nhập"></div><div class="types" role="group" aria-label="Loại mặt hàng"><button type="button" data-type="all" aria-pressed="true">Tất cả</button><button type="button" data-type="retail" aria-pressed="false">Hàng bán</button><button type="button" data-type="ingredient" aria-pressed="false">Nguyên liệu</button></div><div class="master-options"><label class="check"><input type="checkbox" id="showEmpty">Hiện cả món chưa có lô</label><select id="sort" class="mini-select" aria-label="Sắp xếp mặt hàng"><option value="recent">Nhập gần nhất</option><option value="name">Tên A → Z</option></select></div></div><div id="itemList" class="item-list"></div></section>
+<div class="detail-pane"><button class="mobile-back" id="backBtn"><svg class="icon"><use href="#icon-back"/></svg>Tất cả mặt hàng</button><section class="panel" id="detail"></section><details class="help-card"><summary>Hiểu đúng số lượng và giá vốn</summary><p><strong>Nguyên liệu:</strong> “Còn” là số lượng lô chưa được phân bổ. <strong>Hàng bán:</strong> “Còn FIFO” được đối chiếu với đơn đã hoàn thành, không phải số tồn bán trên menu.</p><p>Nhập lô giá vốn hàng bán không tự cộng tồn bán. Muốn kiểm kê tồn menu, chị vào <a href="./stock-check.html">trang kiểm kho</a>. Sốt thành phẩm nhập tại <a href="./production.html">Mẻ sốt & sản xuất</a>.</p></details></div>
+</div><footer class="foot-links"><span>Giá vốn rõ ràng để nhìn đúng lợi nhuận.</span><span><a href="./standard-recipe.html">Công thức định lượng ↗</a> &nbsp; · &nbsp; <a href="./product-catalog.html">Danh mục & SKU ↗</a></span></footer>
+</div></main>
+<dialog id="lotDialog" aria-labelledby="dialogTitle"><form id="lotForm"><div class="dialog-head"><div><h2 id="dialogTitle">Nhập lô mới</h2><p id="dialogSubtitle">Ghi nhận chi phí của một lô hàng.</p></div><button type="button" class="icon-btn" id="closeDialog" aria-label="Đóng"><svg class="icon"><use href="#icon-close"/></svg></button></div><div class="dialog-body">
+<div id="itemPicker"><div class="field"><label for="pickerSearch">Tìm mặt hàng</label><input id="pickerSearch" type="search" placeholder="Gõ tên hoặc SKU…" autocomplete="off"></div></div>
+<div class="field" style="margin-top:12px"><label for="formItem">Mặt hàng / nguyên liệu</label><select id="formItem" required></select><small id="itemHelp"></small></div>
+<div class="form-grid"><div class="field"><label for="formDate">Ngày nhận hàng thực tế</label><input id="formDate" type="date" required><small>Mẻ sốt nhập riêng tại trang sản xuất.</small></div><div class="field"><label for="formQty">Số lượng nhập</label><div class="quantity-field"><input id="formQty" type="number" min="0.001" step="0.001" inputmode="decimal" placeholder="0" required><select id="formUnit" aria-label="Đơn vị số lượng"></select></div><small id="quantityHelp"></small></div>
+<div class="field span2"><div class="money-mode"><label for="formCost" id="costLabel">Giá vốn</label><select id="costBasis" aria-label="Cách nhập giá vốn"><option value="total">Nhập tổng vốn lô</option><option value="unit">Nhập đơn giá</option></select></div><div class="money-field"><span>$</span><input id="formCost" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" required></div><small id="costHelp">Bao gồm phí vận chuyển về Úc và chi phí nhập hàng.</small></div>
+<div class="field span2" id="noteField"><label for="formNote">Ghi chú <span style="font-weight:400;color:#a1a8ae">· không bắt buộc</span></label><textarea id="formNote" maxlength="300" placeholder="Ví dụ: nhà cung cấp, đợt nhập hàng…"></textarea></div></div>
+<div class="preview-box" aria-live="polite"><div class="pair"><span>Số lượng lô</span><strong id="previewQty">—</strong></div><div class="pair"><span id="previewUnitLabel">Đơn giá</span><strong id="previewUnitPrice">—</strong></div><div class="pair total"><span>Tổng vốn lô hàng</span><strong id="previewTotal">$0.00</strong></div></div><p class="form-note" id="formNoteHelp"></p><p class="form-error" id="formMessage" role="alert"></p></div>
+<div class="dialog-actions"><button class="btn" type="button" id="cancelDialog">Huỷ</button><button class="btn accent" id="saveLot" type="submit"><svg class="icon"><use href="#icon-check"/></svg><span id="saveLabel">Lưu lô nhập</span></button></div></form></dialog>
+<div id="toast" class="toast" role="status" hidden></div>
 <script>
-(()=>{'use strict';const URL='https://eswrqkhsvlqndjbrgsqo.supabase.co',KEY='sb_publishable_-6iIwPaZQRMkkWAROdfvxg_dmVB81E2';let pass='',orders=[],products=[],batches=[];const el=id=>document.getElementById(id),money=n=>'$'+Number(n).toFixed(2),safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const tzdate=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());const dateUTC=s=>new Date(s+'T12:00:00Z');function monday(s){let d=dateUTC(s),w=(d.getUTCDay()+6)%7;d.setUTCDate(d.getUTCDate()-w);return d.toISOString().slice(0,10)}function range(){const d=dateUTC(el('week').value),m=el('mode').value;if(m==='month'){const start=el('week').value.slice(0,7)+'-01',end=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,1)).toISOString().slice(0,10);return[start,end]}const start=monday(el('week').value),e=dateUTC(start);e.setUTCDate(e.getUTCDate()+7);return[start,e.toISOString().slice(0,10)]}
-async function rpc(name,body){const r=await fetch(URL+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok){let msg='Không thể kết nối';try{const j=await r.json();msg=j.message||msg}catch{}throw Error(msg)}return r.json()}
-async function load(){const [o,p,b]=await Promise.all([rpc('get_print_orders_v3',{p_passcode:pass,p_limit:500}),rpc('get_order_editor_products_v1',{p_passcode:pass}),rpc('cct_cost_batches_admin_v1',{p_passcode:pass,p_action:'list'})]);orders=Array.isArray(o)?o:[];products=Array.isArray(p)?p:[];batches=Array.isArray(b)?b:[];populateProducts();el('batchCount').textContent=batches.length+' lô hàng';populateBatchEditor();render()}
-function populateProducts(){
- const q=el('productSearch').value.trim().toLocaleLowerCase('vi'),previous=el('product').value;
- const retail=products.filter(p=>String((p.sku||'')+' '+(p.name||'')).toLocaleLowerCase('vi').includes(q));
- const ingredients=ingredientCatalog.filter(i=>String(i.sku+' '+i.name).toLocaleLowerCase('vi').includes(q));
- el('product').innerHTML=retail.map(p=>'<option value="p:'+Number(p.id)+'">'+safe((p.sku?'['+p.sku+'] ':'')+p.name)+' · Hàng bán</option>').join('')+ingredients.map(i=>'<option value="i:'+Number(i.id)+'">'+safe('['+i.sku+'] '+i.name+' · Nguyên liệu / '+i.unit)+'</option>').join('');
- if(!retail.length&&!ingredients.length)el('product').innerHTML='<option value="">Không tìm thấy SKU</option>';
- if(Array.from(el('product').options).some(o=>o.value===previous))el('product').value=previous;
- syncPurchaseType();
+(()=>{'use strict';
+const API='https://eswrqkhsvlqndjbrgsqo.supabase.co',KEY='sb_publishable_-6iIwPaZQRMkkWAROdfvxg_dmVB81E2';
+const $=id=>document.getElementById(id),icon=n=>'<svg class="icon" aria-hidden="true"><use href="#icon-'+n+'"/></svg>';
+const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=v=>String(v||'').toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9]+/g,' ').trim();
+const money=n=>'$'+Number(n||0).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2}),number=n=>Number(n||0).toLocaleString('en-AU',{maximumFractionDigits:3});
+const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+const dateLabel=d=>{const x=String(d||'').slice(0,10).split('-');return x.length===3?x[2]+'/'+x[1]+'/'+x[0]:'Chưa có ngày'};
+const unitName=u=>u==='piece'?'cái':u==='ml'?'ml':u==='g'?'g':u||'món';
+const quantity=(n,u)=>u==='g'&&Math.abs(n)>=1000?number(n/1000)+' kg':u==='ml'&&Math.abs(n)>=1000?number(n/1000)+' lít':number(n)+' '+unitName(u);
+const displayPrice=(c,u)=>money(c*(u==='g'||u==='ml'?1000:1))+' / '+(u==='g'?'kg':u==='ml'?'lít':unitName(u));
+let pass='',products=[],batches=[],catalog=[],ingredientLots=[],productionAllocations=[],orders=[],aliases=[],allItems=[],type='all',selected='',busy=false,editing=null,loading=null,toastTimer;
+async function rpc(fn,data={}){const r=await fetch(API+'/rest/v1/rpc/'+fn,{method:'POST',signal:AbortSignal.timeout(30000),headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify({p_passcode:pass,...data})});const j=await r.json().catch(()=>({}));if(!r.ok)throw Error(j.message||'Không kết nối được dữ liệu. Vui lòng thử lại.');return j;}
+async function loadHistory(){let all=[],cursor={};for(;;){const page=await rpc('cct_sales_history_page_v1',cursor);if(!Array.isArray(page))throw Error('Lịch sử bán hàng chưa tải được.');all.push(...page);if(page.length<500)return all;const last=page.at(-1);if(cursor.p_before_token===last.order_token)throw Error('Không tải tiếp được lịch sử bán hàng.');cursor={p_before_token:last.order_token,p_before_created:last.created_at};}}
+function received(o){return String(o.fulfilment_method||'').toLowerCase().includes('pickup')?o.pickup_date||o.delivery_date:o.delivery_date||o.pickup_date;}
+function orderItems(o){return Array.isArray(o.order_items)&&o.order_items.length?o.order_items:Array.isArray(o.items)?o.items:[];}
+function buildItems(){
+ const list=new Map(),historic=new Map([[6,'Bánh tráng Dẻo Tôm Sốt Me Bơ'],[14,'Bánh tráng dẻo me sốt muối béo']]);
+ for(const p of products){if(String(p.sku||'').startsWith('SU-'))continue;list.set('p:'+p.id,{key:'p:'+p.id,id:Number(p.id),name:p.name,sku:p.sku||'',type:'retail',unit:'piece',stock:p.stock_qty,lots:[]});}
+ for(const b of batches){const key='p:'+b.product_id;if(!list.has(key))list.set(key,{key,id:Number(b.product_id),name:historic.get(Number(b.product_id))||'Sản phẩm cũ #'+b.product_id,sku:'',type:'retail',unit:'piece',stock:null,lots:[]});list.get(key).lots.push({...b,quantity:Number(b.quantity),total_cost:Number(b.quantity)*Number(b.unit_cost),remaining:Number(b.quantity)});}
+ for(const c of catalog)list.set('i:'+c.id,{key:'i:'+c.id,id:Number(c.id),name:c.name,sku:c.sku||'',type:'ingredient',unit:c.unit,stock:null,lots:[],sauce:String(c.sku||'').startsWith('SOT-')});
+ for(const l of ingredientLots){const key='i:'+l.ingredient_id;if(!list.has(key))list.set(key,{key,id:Number(l.ingredient_id),name:l.ingredient_name,sku:'Chưa gắn SKU',type:'ingredient',unit:l.unit,lots:[],unlinked:!l.ingredient_id});list.get(key).lots.push({...l,quantity:Number(l.quantity),remaining:Number(l.remaining),total_cost:Number(l.total_cost),unit_cost:Number(l.total_cost)/Number(l.quantity)});}
+ const retailById=new Map([...list.values()].filter(x=>x.type==='retail').map(x=>[x.id,x]));
+ const names=new Map([...retailById.values()].map(x=>[norm(x.name),x.id]));for(const a of aliases)if(retailById.has(Number(a.product_id)))names.set(norm(a.alias_name),Number(a.product_id));
+ const sorted=orders.filter(o=>o.status==='completed'&&received(o)).sort((a,b)=>String(received(a)).localeCompare(String(received(b)))||String(a.created_at).localeCompare(String(b.created_at))||String(a.order_token).localeCompare(String(b.order_token)));
+ for(const i of retailById.values())i.lots.sort((a,b)=>String(a.received_on).localeCompare(String(b.received_on))||Number(a.id)-Number(b.id));
+ for(const o of sorted){const day=String(received(o)).slice(0,10);for(const v of orderItems(o)){const id=Number(v.id??v.product_id),i=retailById.get(id)||retailById.get(names.get(norm(v.name)));if(!i)continue;let left=Number(v.qty)||0;if(left<=0)continue;for(const l of i.lots){if(l.received_on>day||l.remaining<=0)continue;const take=Math.min(left,l.remaining);l.remaining-=take;left-=take;if(left<=0)break;}}}
+ allItems=[...list.values()].map(i=>{i.lots.sort((a,b)=>String(b.received_on).localeCompare(String(a.received_on))||Number(b.id)-Number(a.id));return {...i,total:i.lots.reduce((n,l)=>n+l.total_cost,0),remaining:i.lots.reduce((n,l)=>n+l.remaining,0),last:i.lots[0]?.received_on||''};});
 }
-function syncPurchaseType(){
- const ingredient=el('product').value.startsWith('i:');
- el('retailFields').classList.toggle('hide',ingredient);
- el('ingredientFields').classList.toggle('hide',!ingredient);
- el('retailSave').classList.toggle('hide',ingredient);
- el('ingredientInlineSave').classList.toggle('hide',!ingredient);el('retailHistory').classList.toggle('hide',ingredient);el('inlineIngredientHistory').classList.toggle('hide',!ingredient);el('batchTotalLabel').textContent=ingredient?'Tổng vốn nguyên liệu':'Tổng vốn lô hàng';
- for(const id of ['quantity','unitcost'])el(id).required=!ingredient;
- for(const id of ['inlineIngredientQty','inlineIngredientCost','inlineIngredientDate']){el(id).required=ingredient;el(id).disabled=!ingredient;}
- const i=ingredientCatalog.find(x=>String(x.id)===el('product').value.slice(2));
- if(i)el('inlineIngredientLabel').textContent='Số lượng nhập ('+i.unit+')';updateBatchTotal();if(typeof renderInlineIngredientHistory==='function')renderInlineIngredientHistory();
+async function load(){
+ if(loading)return loading;$('reloadBtn').disabled=true;$('loadStatus').textContent='Đang cập nhật sổ lô nhập…';$('loadError').hidden=true;
+ loading=(async()=>{try{
+ const [p,b,c,l,o,a]=await Promise.all([rpc('get_order_editor_products_v1'),rpc('cct_cost_batches_admin_v1',{p_action:'list'}),rpc('cct_standard_recipe_admin_v1',{p_action:'list'}),rpc('cct_ingredient_fifo_admin_v1',{p_action:'list'}),loadHistory(),rpc('cct_alias_admin_v1',{p_action:'list'})]);
+ if(!Array.isArray(p)||!Array.isArray(b)||!Array.isArray(c.ingredients)||!Array.isArray(l.lots))throw Error('Dữ liệu lô nhập chưa đầy đủ. Vui lòng tải lại.');
+ products=p;batches=b;catalog=c.ingredients.filter(x=>x.unit!=='bag');ingredientLots=l.lots;productionAllocations=l.allocations||[];orders=o;aliases=Array.isArray(a)?a:[];buildItems();render();
+ $('loadStatus').textContent='Đã đồng bộ lúc '+new Date().toLocaleTimeString('vi-VN',{timeZone:'Australia/Melbourne',hour:'2-digit',minute:'2-digit'})+' · '+batches.length+' lô hàng bán, '+ingredientLots.length+' lô nguyên liệu';
+ }catch(e){$('loadError').textContent='Chưa cập nhật được: '+e.message+' Dữ liệu đang hiển thị là lần tải gần nhất.';$('loadError').hidden=false;throw e;}finally{$('reloadBtn').disabled=false;loading=null;}})();return loading;
 }
-function updateBatchTotal(){if(el('product').value.startsWith('i:')){el('batchTotal').textContent=money(Number(el('inlineIngredientCost').value)||0);return;}const q=Number(el('quantity').value),u=Number(el('unitcost').value);el('batchTotal').textContent=money(Number.isFinite(q*u)&&q>=0&&u>=0?q*u:0)}
-function received(o){return String(o.fulfilment_method||'').toLowerCase().includes('pickup')?o.pickup_date||o.delivery_date:o.delivery_date||o.pickup_date}
-function items(o){return Array.isArray(o.order_items)&&o.order_items.length?o.order_items:Array.isArray(o.items)?o.items:[]}
-// Match historical spelling variants to the canonical menu product ID.
-function canonicalProduct(item,prod){const raw=String(item.name||'').trim();const normalized=raw.toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9]+/g,' ').trim();const aliases=[[/^(banh trang )?bo toi( chua cay)?( duy best)?$/,5],[/^banh trang xi ke$/,3],[/^(set( 3)? )?banh trang (sate( tom( hanh)?)?|tom hanh)$/,4],[/^com chay( cha bong)?( 500g)?$/,10],[/^ghe (sua|non) rim( gion)?$/,11]];const direct=Number(item.id??item.product_id);if(direct>0&&prod.has(direct))return {id:direct,name:prod.get(direct).name};for(const [pattern,id] of aliases){if(pattern.test(normalized)&&prod.has(id))return {id,name:prod.get(id).name}}return {id:direct>0?direct:null,name:prod.get(direct)?.name||raw||'Sản phẩm chưa xác định'}}
-const historicalNames=new Map([[6,'Bánh tráng Dẻo Tôm Sốt Me Bơ'],[14,'Bánh tráng dẻo me sốt muối béo']]);
-function render(){const [from,to]=range(),prod=new Map(products.map(p=>[Number(p.id),p])),pools=new Map();for(const b of [...batches].sort((a,b)=>String(a.received_on).localeCompare(String(b.received_on))||Number(a.id)-Number(b.id))){const id=Number(b.product_id);if(!pools.has(id))pools.set(id,[]);pools.get(id).push({...b,left:Number(b.quantity)})}
-const completed=orders.filter(o=>o.status==='completed'),undated=completed.filter(o=>!received(o));const sorted=completed.filter(o=>received(o)).sort((a,b)=>String(received(a)).localeCompare(String(received(b)))||String(a.created_at).localeCompare(String(b.created_at)));let revenue=0,qty=0,cost=0,missing=0,n=0;const by=new Map();for(const o of sorted){const d=String(received(o)).slice(0,10),inRange=d>=from&&d<to;if(inRange)n++;for(const item of items(o)){const matched=canonicalProduct(item,prod),id=matched.id,q=Number(item.qty)||0;if(!q)continue;const p=prod.get(id);const unit=Number(item.unit_price??item.menu_price??p?.price??0);const line=Number(item.line_total??unit*q);let remaining=q,spent=0;for(const b of pools.get(id)||[]){if(String(b.received_on)>d||remaining<=0)continue;const take=Math.min(remaining,b.left);if(take>0){spent+=take*Number(b.unit_cost);b.left-=take;remaining-=take}}if(!inRange)continue;revenue+=line;qty+=q;cost+=spent;missing+=remaining;const key=id&&prod.has(id)?id:'name:'+matched.name.toLocaleLowerCase('vi');const entry=by.get(key)||{name:matched.name||historicalNames.get(id)||'Sản phẩm cũ (ID '+id+')',q:0,sales:0,cost:0,missing:0};entry.q+=q;entry.sales+=line;entry.cost+=spent;entry.missing+=remaining;by.set(key,entry)}}
-el('sales').textContent=money(revenue);el('count').textContent=n;el('qty').textContent=qty;el('profit').textContent=missing?'Chưa đủ vốn':money(revenue-cost);el('alerts').textContent=missing?'Có '+missing+' đơn vị bán chưa có lô giá vốn phù hợp. Không thể xác định lợi nhuận đầy đủ.':'Các sản phẩm trong kỳ đã được đối chiếu với lô giá vốn (nếu có dữ liệu đơn hàng).';el('lines').innerHTML=[...by.values()].sort((a,b)=>b.q-a.q).map(x=>'<tr><td>'+safe(x.name)+'</td><td>'+x.q+'</td><td>'+money(x.sales)+'</td><td>'+(x.missing?'Thiếu '+x.missing+' món':money(x.cost))+'</td><td>'+(x.missing?'Chưa xác định':money(x.sales-x.cost))+'</td></tr>').join('')||'<tr><td colspan="5">Chưa có đơn hoàn thành trong kỳ.</td></tr>';
-renderChart(sorted,from,to);renderInsights(by,revenue,n,qty,missing);filterRows();
-el('missing').textContent=undated.length?undated.length+' đơn: '+undated.slice(0,25).map(o=>o.order_number||o.order_token).join(', ')+(undated.length>25?'…':''):'Không có đơn hoàn thành thiếu ngày nhận hàng.';el('batches').innerHTML=[...batches].reverse().map(b=>'<tr><td>'+safe(b.received_on)+'</td><td>'+safe(prod.get(Number(b.product_id))?.name||b.product_id)+'</td><td>'+Number(b.quantity)+'</td><td>'+money(b.unit_cost)+'</td><td>'+money(Number(b.quantity)*Number(b.unit_cost))+'</td><td>'+safe(b.note)+'</td></tr>').join('')||'<tr><td colspan="7">Chưa có lô hàng nào.</td></tr>'}
-
-function fmtDay(s){const a=s.split('-');return a[2]+'/'+a[1]}
-function renderChart(sorted,from,to){
-const days=[],d=dateUTC(from),end=dateUTC(to);
-while(d<end&&days.length<35){days.push(d.toISOString().slice(0,10));d.setUTCDate(d.getUTCDate()+1)}
-const totals=new Map(days.map(x=>[x,0])),prod=new Map(products.map(p=>[Number(p.id),p]));
-for(const o of sorted){const date=String(received(o)).slice(0,10);if(!totals.has(date))continue;let sum=0;for(const item of items(o)){const q=Number(item.qty)||0,p=prod.get(Number(item.id??item.product_id)),unit=Number(item.unit_price??item.menu_price??p?.price??0);sum+=Number(item.line_total??unit*q)||0}totals.set(date,totals.get(date)+sum)}
-const monthly=days.length>10,step=monthly?7:1,groups=[];
-for(let i=0;i<days.length;i+=step){const segment=days.slice(i,i+step);groups.push({day:segment[0],value:segment.reduce((v,x)=>v+totals.get(x),0)})}
-const max=Math.max(1,...groups.map(x=>x.value));
-el('chartPeriod').textContent=fmtDay(from)+' – '+fmtDay(days[days.length-1]||from);
-el('revenueChart').innerHTML=groups.map(x=>'<div class="bar-col '+(x.value===max&&x.value>0?'is-max':'')+'"><span class="bar-value">'+(x.value?'$'+Math.round(x.value):'—')+'</span><div class="bar-shell"><div class="bar" style="height:'+Math.max(3,100*x.value/max)+'%" title="'+safe(x.day)+': '+money(x.value)+'"></div></div><span class="bar-label">'+fmtDay(x.day)+'</span></div>').join('');
+function visibleItems(){const raw=$('search').value.trim(),q=norm(raw);return allItems.filter(i=>(type==='all'||i.type===type)&&($('showEmpty').checked||i.lots.length)&&(raw.startsWith('#')?i.lots.some(l=>String(l.id)===raw.slice(1)):norm(i.name+' '+i.sku).includes(q)||i.lots.some(l=>norm('#'+l.id+' '+l.received_on+' '+dateLabel(l.received_on)).includes(q)))).sort((a,b)=>$('sort').value==='name'?a.name.localeCompare(b.name,'vi'):b.last.localeCompare(a.last)||a.name.localeCompare(b.name,'vi'));}
+function badge(i){return '<span class="badge '+(i.type==='retail'?'retail':'')+'">'+(i.type==='retail'?'Hàng bán':i.unit==='piece'?'Bao bì':'Nguyên liệu')+'</span>';}
+function render(){
+ $('metricCapital').textContent=money(allItems.reduce((n,i)=>n+i.total,0));$('metricItems').textContent=number(allItems.filter(i=>i.lots.length).length);$('metricLots').textContent=number(batches.length+ingredientLots.length);$('metricEmpty').textContent=number(ingredientLots.filter(l=>Number(l.remaining)<=0).length);
+ const list=visibleItems();if(!list.some(i=>i.key===selected))selected=list[0]?.key||'';
+ $('itemCount').textContent=number(list.length)+' mặt hàng';
+ $('itemList').innerHTML=list.length?list.map(i=>'<button type="button" class="item" data-key="'+safe(i.key)+'" aria-current="'+(i.key===selected)+'"><div class="item-sku">'+safe(i.sku||'CHƯA CÓ SKU')+'</div><div class="item-top"><span class="item-name">'+safe(i.name)+'</span>'+icon('arrow')+'</div><div class="item-bottom"><span>'+i.lots.length+' lô · '+(i.last?dateLabel(i.last):'Chưa nhập lô')+'</span>'+badge(i)+'</div>'+(i.type==='ingredient'&&i.lots.length?'<span class="item-note">'+(i.remaining>0?'Còn '+quantity(i.remaining,i.unit):'Đã phân bổ hết')+'</span>':'')+'</button>').join(''):'<div class="no-data">'+icon('search')+'Không tìm thấy mặt hàng phù hợp.<br>Thử tên ngắn hơn hoặc bật món chưa có lô.</div>';
+ renderDetail();
 }
-function renderInsights(by,revenue,ordersCount,quantity,missing){
-const best=[...by.values()].sort((a,b)=>b.q-a.q)[0],average=ordersCount?revenue/ordersCount:0;
-el('insights').innerHTML='<div class="insight-row"><span>Giá trị đơn trung bình</span><strong>'+money(average)+'</strong></div><div class="insight-row"><span>Món bán chạy nhất</span><strong style="max-width:54%;text-align:right">'+safe(best?.name||'Chưa có')+'</strong></div><div class="insight-row"><span>Số lượng món bán chạy</span><strong>'+(best?.q||0)+'</strong></div><div class="insight-row"><span>Thiếu dữ liệu giá vốn</span><strong>'+(missing?missing+' món':'Không')+'</strong></div>';
+function selectItem(key,mobile=true){selected=key;try{localStorage.setItem('cct_cost_item_v2',key)}catch{}render();if(mobile){document.body.classList.add('detail-open');if(matchMedia('(max-width:760px)').matches)$('detail').scrollIntoView({block:'start',behavior:'instant'});}}
+function renderDetail(){
+ const i=allItems.find(x=>x.key===selected),target=$('detail');if(!i){target.innerHTML='<div class="no-data">'+icon('box')+'Chọn một mặt hàng để xem lịch sử nhập.</div>';return;}
+ const status=$('detailLotStatus')?.value||'all',latest=i.lots[0],unit=i.unit;
+ const remaining=i.type==='ingredient'?quantity(i.remaining,unit):number(i.remaining)+' cái <em>theo FIFO</em>';
+ const lastPrice=latest?displayPrice(latest.unit_cost,unit):'Chưa có lô';
+ const lots=i.lots.filter(l=>status==='all'||(status==='available'?l.remaining>0:l.remaining<=0));
+ target.innerHTML='<div class="detail-head"><div class="breadcrumb"><span>'+safe(i.sku||'Chưa có SKU')+'</span><span>·</span>'+badge(i)+'</div><div class="detail-title"><h2>'+safe(i.name)+'</h2>'+(i.sauce?'<a class="btn" href="./production.html">Nhập mẻ sốt ↗</a>':'<button class="btn" data-action="add">'+icon('plus')+'Nhập thêm</button>')+'</div><div class="detail-stats"><div class="detail-stat"><span>'+(i.type==='ingredient'?'Số lượng còn trong lô':'Số lượng còn FIFO')+'</span><strong>'+remaining+'</strong></div><div class="detail-stat"><span>Tổng vốn đã nhập</span><strong>'+money(i.total)+'</strong></div><div class="detail-stat"><span>Đơn giá lô mới nhất</span><strong>'+lastPrice+'</strong>'+(i.type==='retail'&&i.stock!=null?'<span>Tồn bán trên menu: '+number(i.stock)+' cái</span>':'')+'</div></div></div><div class="history-head"><h3>Lịch sử lô nhập <span class="count">· '+i.lots.length+'</span></h3><select id="detailLotStatus" aria-label="Lọc trạng thái lô"><option value="all">Tất cả lô</option><option value="available">Lô còn số lượng</option><option value="empty">Lô đã phân bổ hết</option></select></div><div class="history"><div class="lot-row labels"><div>LÔ / NGÀY NHẬN</div><div>SL NHẬP</div><div>ĐƠN GIÁ</div><div>TỔNG VỐN</div><div>'+(i.type==='retail'?'CÒN FIFO':'CÒN TRONG LÔ')+'</div><span></span></div>'+ (lots.length?lots.map(l=>'<div class="lot-row"><div><span class="strong">'+dateLabel(l.received_on)+'</span><span class="secondary">Lô #'+l.id+'</span></div><div class="lot-qty"><span class="mobile-label">Số lượng nhập</span>'+quantity(l.quantity,unit)+'</div><div class="lot-price"><span class="mobile-label">Đơn giá</span>'+displayPrice(l.unit_cost,unit)+'</div><div class="lot-total"><span class="mobile-label">Tổng vốn</span><strong>'+money(l.total_cost)+'</strong></div><div class="lot-remaining"><span class="mobile-label">'+(i.type==='retail'?'Còn FIFO':'Còn trong lô')+'</span><span class="badge '+(l.remaining<=0?'empty':'')+'">'+quantity(l.remaining,unit)+'</span></div><button class="icon-btn" data-edit="'+l.id+'" aria-label="Xem và sửa lô '+l.id+'">'+icon('edit')+'</button></div>').join(''):'<div class="no-data">'+icon('box')+(i.lots.length?'Không có lô phù hợp với bộ lọc.':'Chưa có lô nào được ghi nhận.')+'</div>')+'</div><div class="lot-foot">'+(i.type==='ingredient'?'Số lượng được trừ theo các phân bổ đã lưu. Sửa giá vốn sẽ cập nhật chi phí liên quan, giữ nguyên lượng nhập.':'Còn FIFO được tính theo toàn bộ đơn đã hoàn thành. Nhập lô giá vốn không tự cộng tồn bán trên menu.')+'</div>';
+ $('detailLotStatus').value=status;$('detailLotStatus').onchange=renderDetail;
 }
-function filterRows(){const q=el('tableSearch').value.trim().toLocaleLowerCase('vi');for(const tr of el('lines').children)tr.hidden=!tr.textContent.toLocaleLowerCase('vi').includes(q)}
-function selectPeriod(period){const today=tzdate(),d=dateUTC(today);let target=today,mode='week';if(period==='lastweek'){const x=dateUTC(monday(today));x.setUTCDate(x.getUTCDate()-7);target=x.toISOString().slice(0,10)}if(period==='month'){mode='month'}if(period==='lastmonth'){mode='month';d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()-1);target=d.toISOString().slice(0,10)}el('mode').value=mode;el('week').value=mode==='week'?monday(target):target;document.querySelectorAll('[data-period]').forEach(b=>b.classList.toggle('active',b.dataset.period===period));render()}
-document.querySelectorAll('[data-period]').forEach(b=>b.addEventListener('click',()=>selectPeriod(b.dataset.period)));el('tableSearch').addEventListener('input',filterRows);
-
-function populateBatchEditor(){
- const sel=el('batchEditSelect'),current=sel.value;
- sel.innerHTML=[...batches].reverse().map(b=>{const p=products.find(x=>Number(x.id)===Number(b.product_id));return '<option value="'+Number(b.id)+'">'+safe(b.received_on+' · '+(p?.sku||'')+' '+(p?.name||b.product_id)+' · '+b.quantity+' món')+'</option>'}).join('');
- if(batches.some(b=>String(b.id)===current))sel.value=current;
- syncBatchDate();
+function getFormItem(){return allItems.find(i=>i.key===$('formItem').value);}
+function pickerOptions(keep){const q=norm($('pickerSearch').value),rows=allItems.filter(i=>!i.sauce&&!i.unlinked&&norm(i.name+' '+i.sku).includes(q)).sort((a,b)=>a.name.localeCompare(b.name,'vi'));const prior=$('formItem').value;$('formItem').innerHTML='<option value="">Chọn mặt hàng…</option>'+rows.map(i=>'<option value="'+safe(i.key)+'">'+safe((i.sku?'['+i.sku+'] ':'')+i.name+' · '+(i.type==='retail'?'Hàng bán':'Nguyên liệu'))+'</option>').join('');if(rows.some(i=>i.key===keep))$('formItem').value=keep;if(!editing&&$('formItem').value!==prior){$('formQty').value='';$('formCost').value='';}setupFormItem();}
+function setupFormItem(){
+ const i=getFormItem(),raw=i?.type==='ingredient',u=i?.unit||'piece';
+ $('formUnit').innerHTML=u==='g'?'<option value="1000">kg</option><option value="1">g</option>':u==='ml'?'<option value="1000">lít</option><option value="1">ml</option>':'<option value="1">cái</option>';
+ $('formQty').step=u==='piece'?'1':'0.001';$('formQty').min=u==='piece'?'1':'0.001';$('formUnit').dataset.scale=$('formUnit').value;
+ $('costBasis').value=u==='piece'?'unit':'total';$('costBasis').dataset.basis=$('costBasis').value;$('costBasis').disabled=!raw;
+ $('itemHelp').textContent=i?(raw?'Ghi nhận nguyên liệu / bao bì, dùng đơn vị '+unitName(u)+'.':'Lô giá vốn hàng bán, tách riêng với tồn bán trên menu.'):'';
+ $('formDate').max=today();$('formNoteHelp').textContent=raw?'Sau khi lưu, hệ thống tự bổ sung phân bổ cho các đơn còn thiếu vốn nếu lô hợp lệ theo ngày bán.':'Lô này dùng đối chiếu giá vốn FIFO; số tồn bán trên menu không thay đổi.';
+ $('quantityHelp').textContent=editing?'Số lượng của lô được giữ nguyên khi chỉnh sửa.':'';
+ $('formCost').disabled=false;
+ if(editing&&i){
+ const l=editing.lot,scale=Number($('formUnit').value);$('formQty').value=String(l.quantity/scale);
+ $('formCost').value=$('costBasis').value==='unit'?String(l.unit_cost*scale):String(l.total_cost);
+ $('formDate').value=l.received_on;$('formNote').value=l.note||'';
+ const productionLocked=raw&&productionAllocations.some(a=>Number(a.ingredient_lot_id)===Number(l.id));
+ if(productionLocked){$('formCost').disabled=true;$('costBasis').disabled=true;$('costHelp').innerHTML='Lô đã dùng sản xuất. Sửa giá cần đối soát <a href="./production.html">mẻ sản xuất</a>; tại đây vẫn có thể sửa ngày hợp lệ.';}
+ else $('costHelp').textContent='Sửa giá sẽ cập nhật chi phí đã phân bổ từ lô này. Số lượng được giữ nguyên.';
+ }else{$('costHelp').textContent='Bao gồm phí vận chuyển về Úc và chi phí nhập hàng.';}
+ preview();
 }
-function syncBatchDate(){const batch=batches.find(b=>String(b.id)===el('batchEditSelect').value);el('batchEditDate').value=batch?.received_on||'';el('batchEditCost').value=batch?Number(batch.unit_cost).toFixed(2):''}
-el('batchEditSelect').onchange=syncBatchDate;
-el('batchEditCostSave').onclick=async()=>{
- const b=batches.find(x=>String(x.id)===el('batchEditSelect').value),input=el('batchEditCost'),msg=el('batchEditMsg');if(!b)return;
- const raw=input.value.trim(),next=Number(raw);
- if(raw===''||!Number.isFinite(next)||next<0||next>1000000||Math.abs(next*100-Math.round(next*100))>0.000001){msg.textContent='Giá vốn không hợp lệ. Nhập số AUD tối đa hai chữ số thập phân.';return}
- if(next===Number(b.unit_cost)){msg.textContent='Giá vốn chưa thay đổi.';return}
- if(!confirm('Sửa giá vốn lô từ '+money(b.unit_cost)+' thành '+money(next)+' / món? Số lượng và ngày nhận giữ nguyên. FIFO sẽ được tính lại.'))return;
- const btn=el('batchEditCostSave');btn.disabled=true;msg.textContent='Đang lưu giá vốn…';
- try{await rpc('cct_cost_batch_price_edit_v1',{p_passcode:pass,p_batch_id:Number(b.id),p_old_cost:Number(b.unit_cost),p_new_cost:next});b.unit_cost=next;render();populateBatchEditor();msg.textContent='Đã cập nhật giá vốn và ghi lịch sử chỉnh sửa.'}
- catch(err){msg.textContent='Không sửa được giá vốn: '+err.message}
- finally{btn.disabled=false}
-};
-el('batchEditSave').onclick=async()=>{
- const b=batches.find(b=>String(b.id)===el('batchEditSelect').value),input=el('batchEditDate'),msg=el('batchEditMsg');if(!b)return;
- const next=input.value;if(!next||!input.checkValidity()){msg.textContent='Vui lòng chọn ngày hợp lệ.';return}
- if(next===b.received_on){msg.textContent='Ngày chưa thay đổi.';return}
- if(!confirm('Đổi ngày nhận lô từ '+b.received_on+' thành '+next+'? FIFO sẽ tính lại, số lượng và đơn giá vốn giữ nguyên.'))return;
- const btn=el('batchEditSave');btn.disabled=true;msg.textContent='Đang lưu…';
- try{await rpc('cct_cost_batch_date_edit_v1',{p_passcode:pass,p_batch_id:Number(b.id),p_old_date:b.received_on,p_new_date:next});b.received_on=next;render();populateBatchEditor();msg.textContent='Đã cập nhật ngày nhận lô. Lịch sử sửa được lưu.'}
- catch(err){msg.textContent='Không sửa được: '+err.message}
- finally{btn.disabled=false}
-};
-el('productSearch').addEventListener('input',populateProducts);el('product').addEventListener('change',syncPurchaseType);el('quantity').addEventListener('input',updateBatchTotal);el('unitcost').addEventListener('input',updateBatchTotal);el('week').value=monday(tzdate());el('received').value=tzdate();el('enter').onclick=async()=>{pass=el('pass').value;el('loginMsg').textContent='Đang tải…';try{await load();el('login').classList.add('hide');el('app').classList.remove('hide');sessionStorage.setItem('cct_print_code',pass);loadIngredients().catch(err=>{el('ingredientMsg').textContent=err.message})}catch(e){el('loginMsg').textContent=e.message}};el('refresh').onclick=()=>load().catch(e=>alert(e.message));el('week').onchange=render;el('mode').onchange=render;el('batchForm').onsubmit=async e=>{e.preventDefault();if(el('product').value.startsWith('i:')){const i=ingredientCatalog.find(x=>String(x.id)===el('product').value.slice(2));if(!i)return;const btn=el('ingredientInlineSave');btn.disabled=true;try{const x=await ingredientRpc('cct_ingredient_receive_sku_v1',{p_ingredient_id:i.id,p_received_on:el('inlineIngredientDate').value,p_quantity:Number(el('inlineIngredientQty').value),p_total_cost:Number(el('inlineIngredientCost').value),p_note:el('note').value});el('saveMsg').textContent='Đã lưu lô nguyên liệu #'+x.id;await loadIngredients()}catch(err){el('saveMsg').textContent='Lỗi: '+err.message}finally{btn.disabled=false}return;}if(!confirm('Xác nhận lưu lô hàng? Dữ liệu sẽ được dùng để tính FIFO.'))return;const btn=e.target.querySelector('button');btn.disabled=true;el('saveMsg').textContent='Đang lưu…';try{await rpc('cct_cost_batches_admin_v1',{p_passcode:pass,p_action:'add',p_product_id:Number(el('product').value.slice(2)),p_received_on:el('received').value,p_quantity:Number(el('quantity').value),p_unit_cost:Number(el('unitcost').value),p_note:el('note').value});await load();el('saveMsg').textContent='Đã lưu lô hàng.'}catch(err){el('saveMsg').textContent='Lỗi: '+err.message}finally{btn.disabled=false}};
-let ingredientCatalog=[],ingredientLots=[];
-async function ingredientRpc(fn,payload){return rpc(fn,{p_passcode:pass,...payload})}
-function ingredientChoices(){
- const term=el('ingredientSearch').value.toLowerCase(),previous=el('ingredientSku').value;
- const rows=ingredientCatalog.filter(i=>(i.sku+' '+i.name).toLowerCase().includes(term));
- el('ingredientSku').innerHTML=rows.map(i=>'<option value="'+i.id+'">['+i.sku+'] '+i.name+'</option>').join('');
- if(rows.some(i=>String(i.id)===previous))el('ingredientSku').value=previous;
- ingredientPreview();
+function formValues(){
+ const i=getFormItem(),q=Number($('formQty').value),scale=Number($('formUnit').value)||1,c=Number($('formCost').value),basis=$('costBasis').value;
+ const quantityBase=q*scale,total=Math.round((basis==='unit'?q*c:c)*100)/100,unitCost=quantityBase>0?total/quantityBase:0;
+ return {i,q,scale,c,quantityBase,total,unitCost,date:$('formDate').value,note:$('formNote').value.trim()};
 }
-function ingredientPreview(){
- const i=ingredientCatalog.find(x=>String(x.id)===el('ingredientSku').value),q=Number(el('ingredientQty').value),c=Number(el('ingredientCost').value);
- el('ingredientUnit').value=i?.unit||'';
- el('ingredientPreview').textContent=q>0?'Giá vốn dự kiến: $'+(c/q).toFixed(6)+'/'+(i?.unit||''):'';
+function preview(){
+ const v=formValues(),u=v.i?.unit||'piece',entryUnit=$('formUnit').selectedOptions[0]?.textContent||'cái';
+ $('costLabel').textContent=$('costBasis').value==='total'?'Tổng giá vốn lô (AUD)':'Giá vốn mỗi '+entryUnit+' (AUD)';
+ $('previewQty').textContent=v.quantityBase>0?quantity(v.quantityBase,u):'—';$('previewUnitPrice').textContent=v.quantityBase>0&&Number.isFinite(v.total)?displayPrice(v.unitCost,u):'—';$('previewTotal').textContent=money(Number.isFinite(v.total)?v.total:0);
+ $('formCost').step=$('costBasis').value==='unit'&&v.i?.type==='ingredient'?'0.000001':'0.01';$('saveLot').disabled=busy||!v.i||v.i.sauce;
 }
-async function loadIngredients(){
- const [a,b]=await Promise.all([ingredientRpc('cct_standard_recipe_admin_v1',{p_action:'list'}),ingredientRpc('cct_ingredient_fifo_admin_v1',{p_action:'list'})]);
- ingredientCatalog=(a.ingredients||[]).filter(x=>x.unit!=='bag');
- ingredientLots=b.lots||[];
- ingredientChoices();populateProducts();renderInlineIngredientHistory();renderAllIngredientLots();
- el('ingredientHistory').replaceChildren();
- for(const l of ingredientLots.slice().reverse()){
-  const row=document.createElement('div');row.className='lot-line';
-  const title=document.createElement('strong');title.textContent=l.ingredient_name;
-  const detail=document.createElement('small');
-  detail.textContent=l.received_on+' · '+l.remaining+'/'+l.quantity+' '+l.unit+' · $'+Number(l.total_cost).toFixed(2)+' · '+(ingredientCatalog.find(i=>i.id===l.ingredient_id)?.sku||'SKU chưa liên kết');
-  row.append(title,detail);el('ingredientHistory').append(row);
- }
- if(!ingredientLots.length)el('ingredientHistory').textContent='Chưa có lô nguyên liệu.';
+function openLot(itemKey,lotId){
+ editing=lotId!=null?{itemKey,lot:allItems.find(i=>i.key===itemKey)?.lots.find(l=>Number(l.id)===Number(lotId))}:null;
+ if(lotId!=null&&!editing?.lot)return;
+ $('lotForm').reset();$('formMessage').textContent='';$('pickerSearch').value='';$('formDate').value=today();
+ $('dialogTitle').textContent=editing?'Chỉnh sửa lô #'+editing.lot.id:'Nhập lô mới';$('dialogSubtitle').textContent=editing?'Kiểm tra ngày nhận và giá vốn của lô.':'Chọn mặt hàng, nhập số lượng và chi phí.';
+ $('saveLabel').textContent=editing?'Lưu thay đổi':'Lưu lô nhập';$('itemPicker').hidden=!!editing;
+ $('noteField').hidden=!!editing;$('formItem').disabled=!!editing;$('formQty').disabled=!!editing;$('formUnit').disabled=!!editing;
+ pickerOptions(itemKey||'');$('lotDialog').showModal();setTimeout(()=>{(editing?$('formDate'):getFormItem()?$('formQty'):$('pickerSearch')).focus()},40);
 }
-function renderAllIngredientLots(){
- const target=el('allIngredientRows');if(!target)return;
- const term=el('allIngredientSearch').value.trim().toLocaleLowerCase('vi');
- const rows=ingredientLots.filter(l=>{
-  const sku=ingredientCatalog.find(x=>Number(x.id)===Number(l.ingredient_id))?.sku||'';
-  return [l.ingredient_name,sku,'#'+l.id,l.received_on].join(' ').toLocaleLowerCase('vi').includes(term);
- }).slice().sort((a,b)=>Number(b.id)-Number(a.id));
- el('allIngredientCount').textContent=ingredientLots.length+' lô nguyên liệu';
- target.replaceChildren();
- for(const l of rows){
-  const sku=ingredientCatalog.find(x=>Number(x.id)===Number(l.ingredient_id))?.sku||'Chưa gắn SKU';
-  const card=document.createElement('article');card.className='ingredient-lot';
-  const head=document.createElement('div');head.className='ingredient-lot-header';
-  const name=document.createElement('strong');name.textContent=l.ingredient_name;
-  const code=document.createElement('small');code.textContent='#'+l.id+' · '+sku;head.append(name,code);
-  const detail=document.createElement('div');detail.className='ingredient-lot-detail';
-  for(const [label,value] of [['Ngày nhận',l.received_on],['Số lượng còn',Number(l.remaining).toLocaleString('en-AU')+' / '+Number(l.quantity).toLocaleString('en-AU')+' '+l.unit],['Tổng vốn','$'+Number(l.total_cost).toFixed(2)],['Đơn giá','$'+(Number(l.total_cost)/Number(l.quantity)).toFixed(5)+' / '+l.unit]]){
-   const cell=document.createElement('div');cell.textContent=label;const val=document.createElement('b');val.textContent=value;cell.append(val);detail.append(cell);
-  }
-  const edit=document.createElement('div');edit.className='ingredient-date-edit';
-  const label=document.createElement('label');label.textContent='Sửa ngày nhận thực tế';
-  const date=document.createElement('input');date.type='date';date.value=l.received_on;date.max=new Date(Date.now()+86400000).toISOString().slice(0,10);label.append(date);
-  const save=document.createElement('button');save.type='button';save.textContent='Lưu ngày';
-  const message=document.createElement('div');message.className='ingredient-lot-msg';
-  save.onclick=async()=>{
-   if(!date.value||date.value===l.received_on)return;
-   save.disabled=true;message.textContent='Đang lưu...';
-   try{
-    await ingredientRpc('cct_ingredient_lot_date_admin_v1',{p_lot_id:l.id,p_received_on:date.value});
-    l.received_on=date.value;message.textContent='Đã cập nhật ngày nhận';await loadIngredients();
-   }catch(e){message.textContent='Không lưu được: '+e.message}
-   finally{save.disabled=false}
-  };
-  edit.append(label,save);card.append(head,detail,edit,message);target.append(card);
- }
- if(!rows.length)target.textContent=ingredientLots.length?'Không có lô phù hợp.':'Chưa có lô nguyên liệu.';
-}
-function renderInlineIngredientHistory(){
- const target=el('inlineIngredientRows');if(!target)return;
- const id=Number(el('product').value.slice(2));
- const rows=ingredientLots.filter(l=>Number(l.ingredient_id)===id).slice().reverse();
- el('inlineIngredientCount').textContent=rows.length+' lô';
- target.replaceChildren();
- for(const l of rows){
-  const row=document.createElement('div');row.className='lot-line';
-  row.textContent='#'+l.id+' · '+l.ingredient_name+' · '+l.received_on+' · '+l.remaining+'/'+l.quantity+' '+l.unit+' · '+Number(l.total_cost).toFixed(2)+' AUD';
-  target.append(row);
- }
- if(!rows.length)target.textContent='Chưa có lô cho SKU này.';
-}
-el('allIngredientSearch').addEventListener('input',renderAllIngredientLots);
-el('ingredientSearch').oninput=ingredientChoices;
-el('ingredientSku').onchange=ingredientPreview;
-el('ingredientQty').oninput=ingredientPreview;
-el('ingredientCost').oninput=ingredientPreview;
-el('inlineIngredientCost').addEventListener('input',updateBatchTotal);
-el('ingredientDate').value=tzdate();
-el('inlineIngredientDate').value=tzdate();
-el('ingredientForm').onsubmit=async e=>{
- e.preventDefault();
- const i=ingredientCatalog.find(x=>String(x.id)===el('ingredientSku').value);
- if(!i)return;
- const btn=el('ingredientSave');btn.disabled=true;
+function closeDialog(){if(!busy)$('lotDialog').close();}
+function notify(s){clearTimeout(toastTimer);$('toast').textContent=s;$('toast').hidden=false;toastTimer=setTimeout(()=>$('toast').hidden=true,6500);}
+async function saveLot(e){
+ e.preventDefault();if(busy)return;const v=formValues();$('formMessage').textContent='';
+ if(!v.i||!Number.isFinite(v.quantityBase)||v.quantityBase<=0||!Number.isFinite(v.total)||v.total<0||!$('formCost').value.trim()||!v.date||v.date>today()){ $('formMessage').textContent='Kiểm tra mặt hàng, ngày nhận, số lượng lớn hơn 0 và giá vốn từ 0 trở lên.';return;}
+ if(v.i.unit==='piece'&&!Number.isInteger(v.quantityBase)){ $('formMessage').textContent='Số lượng tính theo cái phải là số nguyên.';return;}
+ if(v.i.type==='retail'&&Math.abs(v.unitCost*100-Math.round(v.unitCost*100))>0.00001){$('formMessage').textContent='Đơn giá hàng bán chỉ nhận tối đa hai chữ số thập phân.';return;}
+ busy=true;preview();$('saveLabel').textContent='Đang lưu…';let saved=false;
  try{
-  const x=await ingredientRpc('cct_ingredient_receive_sku_v1',{p_ingredient_id:i.id,p_received_on:el('ingredientDate').value,p_quantity:Number(el('ingredientQty').value),p_total_cost:Number(el('ingredientCost').value),p_note:el('ingredientNote').value});
-  el('ingredientMsg').textContent='Đã lưu lô #'+x.id;
-  await loadIngredients();
- }catch(err){el('ingredientMsg').textContent=err.message}
- finally{btn.disabled=false}
-};
-const priorCode=sessionStorage.getItem('cct_print_code');
-if(priorCode){el('pass').value=priorCode;el('enter').click()}
+ if(editing){const l=editing.lot;
+ if(v.date===l.received_on&&Math.abs(v.total-l.total_cost)<.000001){notify('Ngày và giá vốn chưa thay đổi.');closeAfterSave();return;}
+ if(v.i.type==='ingredient')await rpc('cct_ingredient_lot_edit_v2',{p_lot_id:Number(l.id),p_old_date:l.received_on,p_old_total:l.total_cost,p_new_date:v.date,p_new_total:v.total});
+ else await rpc('cct_retail_lot_edit_v2',{p_batch_id:Number(l.id),p_old_date:l.received_on,p_old_cost:Number(l.unit_cost),p_new_date:v.date,p_new_cost:Math.round(v.unitCost*100)/100});
+ }else if(v.i.type==='ingredient')await rpc('cct_ingredient_receive_sku_v1',{p_ingredient_id:v.i.id,p_received_on:v.date,p_quantity:v.quantityBase,p_total_cost:v.total,p_note:v.note});
+ else await rpc('cct_cost_batches_admin_v1',{p_action:'add',p_product_id:v.i.id,p_received_on:v.date,p_quantity:v.quantityBase,p_unit_cost:Math.round(v.unitCost*100)/100,p_note:v.note});
+ saved=true;selected=v.i.key;closeAfterSave();notify(editing?'Đã lưu thay đổi và cập nhật giá vốn liên quan.':'Đã lưu lô nhập. Các đơn thiếu vốn sẽ được đối soát tự động.');
+ await load();selectItem(v.i.key,false);
+ }catch(err){if(saved)notify('Lô đã lưu thành công, nhưng chưa tải lại được danh sách. Bấm nút tải lại; không nhập lại lô.');else $('formMessage').textContent='Chưa lưu: '+err.message;}
+ finally{busy=false;$('saveLabel').textContent=editing?'Lưu thay đổi':'Lưu lô nhập';preview();}
+}
+function closeAfterSave(){busy=false;$('lotDialog').close();}
+document.querySelectorAll('[data-type]').forEach(b=>b.onclick=()=>{type=b.dataset.type;document.querySelectorAll('[data-type]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));render();});
+for(const id of ['search','sort','showEmpty'])$(id).addEventListener(id==='search'?'input':'change',render);
+document.addEventListener('click',e=>{const row=e.target.closest('[data-key]');if(row)selectItem(row.dataset.key);const edit=e.target.closest('[data-edit]');if(edit)openLot(selected,Number(edit.dataset.edit));if(e.target.closest('[data-action="add"]'))openLot(selected);});
+const back=()=>{document.body.classList.remove('detail-open');$('search').scrollIntoView({block:'start',behavior:'instant'});};$('backBtn').onclick=back;
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('lotDialog').open)document.body.classList.remove('detail-open');});
+$('newLotBtn').onclick=()=>openLot(selected);$('reloadBtn').onclick=()=>load().catch(()=>{});
+$('closeDialog').onclick=closeDialog;$('cancelDialog').onclick=closeDialog;$('lotDialog').addEventListener('cancel',e=>{if(busy)e.preventDefault();});
+$('pickerSearch').oninput=()=>pickerOptions($('formItem').value);$('formItem').onchange=()=>{$('formQty').value='';$('formCost').value='';setupFormItem();};
+$('formQty').oninput=preview;$('formCost').oninput=preview;
+$('costBasis').onchange=()=>{const old=$('costBasis').dataset.basis,q=Number($('formQty').value),c=Number($('formCost').value);if(q>0&&$('formCost').value!=='')$('formCost').value=String(old==='unit'?Math.round(q*c*100)/100:Number((c/q).toFixed(6)));$('costBasis').dataset.basis=$('costBasis').value;preview();};
+$('formUnit').onchange=()=>{const old=Number($('formUnit').dataset.scale)||1,next=Number($('formUnit').value),q=Number($('formQty').value);if($('formQty').value!=='')$('formQty').value=String(Number((q*old/next).toFixed(6)));if($('costBasis').value==='unit'&&$('formCost').value!=='')$('formCost').value=String(Number((Number($('formCost').value)*next/old).toFixed(6)));$('formUnit').dataset.scale=String(next);preview();};
+$('lotForm').onsubmit=saveLot;
+$('loginForm').onsubmit=async e=>{e.preventDefault();pass=$('password').value.trim();if(!pass)return;$('loginBtn').disabled=true;$('loginMessage').textContent='Đang mở dữ liệu…';try{await load();$('login').hidden=true;$('app').hidden=false;$('topActions').hidden=false;sessionStorage.setItem('cct_print_code',pass);$('loginMessage').textContent='';}catch(err){$('loginMessage').textContent=/authorized|Unauthorized/i.test(err.message)?'Mã quản trị chưa đúng. Vui lòng thử lại.':err.message;}finally{$('loginBtn').disabled=false;}};
+try{selected=localStorage.getItem('cct_cost_item_v2')||'';}catch{}
+const prior=sessionStorage.getItem('cct_print_code');if(prior){$('password').value=prior;$('loginForm').requestSubmit();}
 })();
 </script></body></html>
