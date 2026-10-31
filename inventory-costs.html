@@ -21,7 +21,7 @@
 <symbol id="icon-chart" viewBox="0 0 24 24"><path d="M4 3v17h17M9 16V9M14 16V5M19 16v-5"/></symbol>
 </defs></svg>
 <main class="shell">
-<div class="topline"><div class="brand"><span class="brand-mark"><svg class="icon"><use href="#icon-box"/></svg></span>CÓ CÁI TIỆM <span style="color:#b2b9bf;font-weight:400">/ QUẢN TRỊ</span></div><span class="build-label">Inventory · v2.0</span></div>
+<div class="topline"><div class="brand"><span class="brand-mark"><svg class="icon"><use href="#icon-box"/></svg></span>CÓ CÁI TIỆM <span style="color:#b2b9bf;font-weight:400">/ QUẢN TRỊ</span></div><span class="build-label">Inventory · v2.1</span></div>
 <header class="intro"><div><h1>Giá vốn & lô nhập</h1><p>Từng món, từng lô. Rõ số lượng, rõ chi phí.</p></div><div class="actions" id="topActions" hidden><button class="btn" id="reloadBtn" aria-label="Tải lại dữ liệu"><svg class="icon"><use href="#icon-reload"/></svg></button><button class="btn primary" id="newLotBtn"><svg class="icon"><use href="#icon-plus"/></svg>Nhập lô mới</button></div></header>
 <nav class="nav" aria-label="Điều hướng quản trị"><a href="./order-manager.html"><svg class="icon"><use href="#icon-back"/></svg>Quản lý đơn</a><a href="./inventory-costs.html" class="active">Giá vốn & lô nhập</a><a href="./sales-dashboard.html"><svg class="icon"><use href="#icon-chart"/></svg>Sale Analysis</a><a href="./production.html">Mẻ sốt & sản xuất ↗</a></nav>
 <section class="login" id="login"><h2>Đăng nhập quản trị</h2><p>Dùng cùng mã đăng nhập với Order Manager.</p><form id="loginForm"><div class="field"><label for="password">Mã quản trị</label><input id="password" type="password" autocomplete="current-password" required></div><button class="btn primary" id="loginBtn">Mở sổ lô nhập <svg class="icon"><use href="#icon-arrow"/></svg></button><div id="loginMessage" class="form-error" role="status"></div></form></section>
@@ -98,7 +98,7 @@ function renderDetail(){
  const remaining=i.type==='ingredient'?quantity(i.remaining,unit):number(i.remaining)+' cái <em>theo FIFO</em>';
  const lastPrice=latest?displayPrice(latest.unit_cost,unit):'Chưa có lô';
  const lots=i.lots.filter(l=>status==='all'||(status==='available'?l.remaining>0:l.remaining<=0));
- target.innerHTML='<div class="detail-head"><div class="breadcrumb"><span>'+safe(i.sku||'Chưa có SKU')+'</span><span>·</span>'+badge(i)+'</div><div class="detail-title"><h2>'+safe(i.name)+'</h2>'+(i.sauce?'<a class="btn" href="./production.html">Nhập mẻ sốt ↗</a>':'<button class="btn" data-action="add">'+icon('plus')+'Nhập thêm</button>')+'</div><div class="detail-stats"><div class="detail-stat"><span>'+(i.type==='ingredient'?'Số lượng còn trong lô':'Số lượng còn FIFO')+'</span><strong>'+remaining+'</strong></div><div class="detail-stat"><span>Tổng vốn đã nhập</span><strong>'+money(i.total)+'</strong></div><div class="detail-stat"><span>Đơn giá lô mới nhất</span><strong>'+lastPrice+'</strong>'+(i.type==='retail'&&i.stock!=null?'<span>Tồn bán trên menu: '+number(i.stock)+' cái</span>':'')+'</div></div></div><div class="history-head"><h3>Lịch sử lô nhập <span class="count">· '+i.lots.length+'</span></h3><select id="detailLotStatus" aria-label="Lọc trạng thái lô"><option value="all">Tất cả lô</option><option value="available">Lô còn số lượng</option><option value="empty">Lô đã phân bổ hết</option></select></div><div class="history"><div class="lot-row labels"><div>LÔ / NGÀY NHẬN</div><div>SL NHẬP</div><div>ĐƠN GIÁ</div><div>TỔNG VỐN</div><div>'+(i.type==='retail'?'CÒN FIFO':'CÒN TRONG LÔ')+'</div><span></span></div>'+ (lots.length?lots.map(l=>'<div class="lot-row"><div><span class="strong">'+dateLabel(l.received_on)+'</span><span class="secondary">Lô #'+l.id+'</span></div><div class="lot-qty"><span class="mobile-label">Số lượng nhập</span>'+quantity(l.quantity,unit)+'</div><div class="lot-price"><span class="mobile-label">Đơn giá</span>'+displayPrice(l.unit_cost,unit)+'</div><div class="lot-total"><span class="mobile-label">Tổng vốn</span><strong>'+money(l.total_cost)+'</strong></div><div class="lot-remaining"><span class="mobile-label">'+(i.type==='retail'?'Còn FIFO':'Còn trong lô')+'</span><span class="badge '+(l.remaining<=0?'empty':'')+'">'+quantity(l.remaining,unit)+'</span></div><button class="icon-btn" data-edit="'+l.id+'" aria-label="Xem và sửa lô '+l.id+'">'+icon('edit')+'</button></div>').join(''):'<div class="no-data">'+icon('box')+(i.lots.length?'Không có lô phù hợp với bộ lọc.':'Chưa có lô nào được ghi nhận.')+'</div>')+'</div><div class="lot-foot">'+(i.type==='ingredient'?'Số lượng được trừ theo các phân bổ đã lưu. Sửa giá vốn sẽ cập nhật chi phí liên quan, giữ nguyên lượng nhập.':'Còn FIFO được tính theo toàn bộ đơn đã hoàn thành. Nhập lô giá vốn không tự cộng tồn bán trên menu.')+'</div>';
+ target.innerHTML='<div class="detail-head"><div class="breadcrumb"><span>'+safe(i.sku||'Chưa có SKU')+'</span><span>·</span>'+badge(i)+'</div><div class="detail-title"><h2>'+safe(i.name)+'</h2>'+(i.sauce?'<a class="btn" href="./production.html">Nhập mẻ sốt ↗</a>':'<button class="btn" data-action="add">'+icon('plus')+'Nhập thêm</button>')+'</div><div class="detail-stats"><div class="detail-stat"><span>'+(i.type==='ingredient'?'Số lượng còn trong lô':'Số lượng còn FIFO')+'</span><strong>'+remaining+'</strong></div><div class="detail-stat"><span>Tổng vốn đã nhập</span><strong>'+money(i.total)+'</strong></div><div class="detail-stat"><span>Đơn giá lô mới nhất</span><strong>'+lastPrice+'</strong>'+(i.type==='retail'&&i.stock!=null?'<span>Tồn bán trên menu: '+number(i.stock)+' cái</span>':'')+'</div></div></div><div class="history-head"><h3>Lịch sử lô nhập <span class="count">· '+i.lots.length+'</span></h3><select id="detailLotStatus" aria-label="Lọc trạng thái lô"><option value="all">Tất cả lô</option><option value="available">Lô còn số lượng</option><option value="empty">Lô đã phân bổ hết</option></select></div><div class="history"><div class="lot-row labels"><div>LÔ / NGÀY NHẬN</div><div>SL NHẬP</div><div>ĐƠN GIÁ</div><div>TỔNG VỐN</div><div>'+(i.type==='retail'?'CÒN FIFO':'CÒN TRONG LÔ')+'</div><span></span></div>'+ (lots.length?lots.map(l=>'<div class="lot-row"><div><span class="strong">'+dateLabel(l.received_on)+'</span><span class="secondary">Lô #'+l.id+'</span></div><div class="lot-qty"><span class="mobile-label">Số lượng nhập</span>'+quantity(l.quantity,unit)+'</div><div class="lot-price"><span class="mobile-label">Đơn giá</span>'+displayPrice(l.unit_cost,unit)+'</div><div class="lot-total"><span class="mobile-label">Tổng vốn</span><strong>'+money(l.total_cost)+'</strong></div><div class="lot-remaining"><span class="mobile-label">'+(i.type==='retail'?'Còn FIFO':'Còn trong lô')+'</span><span class="badge '+(l.remaining<=0?'empty':'')+'">'+quantity(l.remaining,unit)+'</span></div><button class="icon-btn" data-edit="'+l.id+'" aria-label="Xem và sửa lô '+l.id+'">'+icon('edit')+'</button></div>').join(''):'<div class="no-data">'+icon('box')+(i.lots.length?'Không có lô phù hợp với bộ lọc.':'Chưa có lô nào được ghi nhận.')+'</div>')+'</div><div class="lot-foot">'+(i.type==='ingredient'?'Số còn = số nhập trừ số đã phân bổ. Các thay đổi được lưu lịch sử và cập nhật giá vốn liên quan.':'Còn FIFO được tính theo toàn bộ đơn đã hoàn thành. Nhập lô giá vốn không tự cộng tồn bán trên menu.')+'</div>';
  $('detailLotStatus').value=status;$('detailLotStatus').onchange=renderDetail;
 }
 function getFormItem(){return allItems.find(i=>i.key===$('formItem').value);}
@@ -110,7 +110,7 @@ function setupFormItem(){
  $('costBasis').value=u==='piece'?'unit':'total';$('costBasis').dataset.basis=$('costBasis').value;$('costBasis').disabled=!raw;
  $('itemHelp').textContent=i?(raw?'Ghi nhận nguyên liệu / bao bì, dùng đơn vị '+unitName(u)+'.':'Lô giá vốn hàng bán, tách riêng với tồn bán trên menu.'):'';
  $('formDate').max=today();$('formNoteHelp').textContent=raw?'Sau khi lưu, hệ thống tự bổ sung phân bổ cho các đơn còn thiếu vốn nếu lô hợp lệ theo ngày bán.':'Lô này dùng đối chiếu giá vốn FIFO; số tồn bán trên menu không thay đổi.';
- $('quantityHelp').textContent=editing?'Số lượng của lô được giữ nguyên khi chỉnh sửa.':'';
+ $('quantityHelp').textContent=editing?(raw?'Đã phân bổ '+quantity(editing.lot.quantity-editing.lot.remaining,u)+'. Số còn sẽ tự tính lại.':'Còn FIFO sẽ tính lại theo số nhập và đơn hoàn thành.'):'';
  $('formCost').disabled=false;
  if(editing&&i){
  const l=editing.lot,scale=Number($('formUnit').value);$('formQty').value=String(l.quantity/scale);
@@ -118,7 +118,7 @@ function setupFormItem(){
  $('formDate').value=l.received_on;$('formNote').value=l.note||'';
  const productionLocked=raw&&productionAllocations.some(a=>Number(a.ingredient_lot_id)===Number(l.id));
  if(productionLocked){$('formCost').disabled=true;$('costBasis').disabled=true;$('costHelp').innerHTML='Lô đã dùng sản xuất. Sửa giá cần đối soát <a href="./production.html">mẻ sản xuất</a>; tại đây vẫn có thể sửa ngày hợp lệ.';}
- else $('costHelp').textContent='Sửa giá sẽ cập nhật chi phí đã phân bổ từ lô này. Số lượng được giữ nguyên.';
+ else $('costHelp').textContent='Giá vốn và số còn sẽ tính lại theo số liệu chị sửa. Lịch sử chỉnh sửa được lưu.';
  }else{$('costHelp').textContent='Bao gồm phí vận chuyển về Úc và chi phí nhập hàng.';}
  preview();
 }
@@ -137,9 +137,9 @@ function openLot(itemKey,lotId){
  editing=lotId!=null?{itemKey,lot:allItems.find(i=>i.key===itemKey)?.lots.find(l=>Number(l.id)===Number(lotId))}:null;
  if(lotId!=null&&!editing?.lot)return;
  $('lotForm').reset();$('formMessage').textContent='';$('pickerSearch').value='';$('formDate').value=today();
- $('dialogTitle').textContent=editing?'Chỉnh sửa lô #'+editing.lot.id:'Nhập lô mới';$('dialogSubtitle').textContent=editing?'Kiểm tra ngày nhận và giá vốn của lô.':'Chọn mặt hàng, nhập số lượng và chi phí.';
+ $('dialogTitle').textContent=editing?'Chỉnh sửa lô #'+editing.lot.id:'Nhập lô mới';$('dialogSubtitle').textContent=editing?'Sửa số lượng, ngày nhận, giá vốn và ghi chú của lô.':'Chọn mặt hàng, nhập số lượng và chi phí.';
  $('saveLabel').textContent=editing?'Lưu thay đổi':'Lưu lô nhập';$('itemPicker').hidden=!!editing;
- $('noteField').hidden=!!editing;$('formItem').disabled=!!editing;$('formQty').disabled=!!editing;$('formUnit').disabled=!!editing;
+ $('noteField').hidden=false;$('formItem').disabled=!!editing;$('formQty').disabled=false;$('formUnit').disabled=false;
  pickerOptions(itemKey||'');$('lotDialog').showModal();setTimeout(()=>{(editing?$('formDate'):getFormItem()?$('formQty'):$('pickerSearch')).focus()},40);
 }
 function closeDialog(){if(!busy)$('lotDialog').close();}
@@ -152,9 +152,9 @@ async function saveLot(e){
  busy=true;preview();$('saveLabel').textContent='Đang lưu…';let saved=false;
  try{
  if(editing){const l=editing.lot;
- if(v.date===l.received_on&&Math.abs(v.total-l.total_cost)<.000001){notify('Ngày và giá vốn chưa thay đổi.');closeAfterSave();return;}
- if(v.i.type==='ingredient')await rpc('cct_ingredient_lot_edit_v2',{p_lot_id:Number(l.id),p_old_date:l.received_on,p_old_total:l.total_cost,p_new_date:v.date,p_new_total:v.total});
- else await rpc('cct_retail_lot_edit_v2',{p_batch_id:Number(l.id),p_old_date:l.received_on,p_old_cost:Number(l.unit_cost),p_new_date:v.date,p_new_cost:Math.round(v.unitCost*100)/100});
+ if(v.date===l.received_on&&Math.abs(v.total-l.total_cost)<.000001&&v.quantityBase===l.quantity&&v.note===(l.note||'')){notify('Số liệu lô nhập chưa thay đổi.');closeAfterSave();return;}
+ if(v.i.type==='ingredient')await rpc('cct_ingredient_lot_edit_v3',{p_lot_id:Number(l.id),p_old_date:l.received_on,p_old_total:l.total_cost,p_new_date:v.date,p_new_total:v.total,p_old_quantity:l.quantity,p_new_quantity:v.quantityBase,p_note:v.note});
+ else await rpc('cct_retail_lot_edit_v3',{p_batch_id:Number(l.id),p_old_date:l.received_on,p_old_cost:Number(l.unit_cost),p_new_date:v.date,p_new_cost:Math.round(v.unitCost*100)/100,p_old_quantity:l.quantity,p_new_quantity:v.quantityBase,p_note:v.note});
  }else if(v.i.type==='ingredient')await rpc('cct_ingredient_receive_sku_v1',{p_ingredient_id:v.i.id,p_received_on:v.date,p_quantity:v.quantityBase,p_total_cost:v.total,p_note:v.note});
  else await rpc('cct_cost_batches_admin_v1',{p_action:'add',p_product_id:v.i.id,p_received_on:v.date,p_quantity:v.quantityBase,p_unit_cost:Math.round(v.unitCost*100)/100,p_note:v.note});
  saved=true;selected=v.i.key;closeAfterSave();notify(editing?'Đã lưu thay đổi và cập nhật giá vốn liên quan.':'Đã lưu lô nhập. Các đơn thiếu vốn sẽ được đối soát tự động.');
@@ -180,3 +180,4 @@ try{selected=localStorage.getItem('cct_cost_item_v2')||'';}catch{}
 const prior=sessionStorage.getItem('cct_print_code');if(prior){$('password').value=prior;$('loginForm').requestSubmit();}
 })();
 </script></body></html>
+
