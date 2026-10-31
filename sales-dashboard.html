@@ -21,10 +21,24 @@ const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'
 const dateUTC=s=>new Date(s+'T12:00:00Z'),today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const monday=s=>{const d=dateUTC(s);d.setUTCDate(d.getUTCDate()-(d.getUTCDay()+6)%7);return d.toISOString().slice(0,10)};
 let pass='',orders=[],products=[],batches=[],rows=[],aliases=[],sauceReport={allocations:[],unresolved:[]},singleCosts=[],comboCosts=[],specialCosts=[],shakeCosts=[],chickenCosts=[],monthlyRows=[];
-async function rpc(name,payload){const r=await fetch(URL+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!r.ok){const data=await r.json().catch(()=>({}));throw Error(data.message||'Không tải được dữ liệu')}return r.json()}
+async function rpc(name,payload){const r=await fetch(URL+'/rest/v1/rpc/'+name,{method:'POST',signal:AbortSignal.timeout(30000),headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!r.ok){const data=await r.json().catch(()=>({}));throw Error(data.message||'Không tải được dữ liệu')}return r.json()}
 async function loadHistory(){let result=[],cursor={};for(;;){const page=await rpc('cct_sales_history_page_v1',{p_passcode:pass,...cursor});if(!Array.isArray(page))throw Error('Dữ liệu lịch sử không hợp lệ');result.push(...page);if(page.length<500)return result;const last=page[page.length-1];if(cursor.p_before_token===last.order_token)throw Error('Không thể tải tiếp lịch sử');cursor={p_before_token:last.order_token,p_before_created:last.created_at}}}
-async function load(){ $('reload').disabled=true;$('loadStatus').textContent='Đang tải toàn bộ lịch sử và đối chiếu giá vốn…';try{await loadData();$('loadStatus').textContent='Đã tải '+orders.length+' đơn hoàn thành trong toàn bộ lịch sử · '+new Date().toLocaleTimeString('vi-VN',{timeZone:'Australia/Melbourne'});}finally{$('reload').disabled=false}}
-async function loadData(){const [o,p,b,a,sc,single,combo,special,shake,chicken]=await Promise.all([loadHistory(),rpc('get_order_editor_products_v1',{p_passcode:pass}),rpc('cct_cost_batches_admin_v1',{p_passcode:pass,p_action:'list'}),rpc('cct_alias_admin_v1',{p_passcode:pass,p_action:'list'}),rpc('cct_sauce_cost_report_v1',{p_passcode:pass}),rpc('cct_single_fifo_cost_report_v2',{p_passcode:pass}),rpc('cct_combo_fifo_cost_report_v2',{p_passcode:pass}),rpc('cct_special_order_cost_report_v1',{p_passcode:pass}),rpc('cct_mango_shake_cost_report_v1',{p_passcode:pass}),rpc('cct_chicken_mix_cost_report_v1',{p_passcode:pass})]);chickenCosts=Array.isArray(chicken)?chicken:[];shakeCosts=Array.isArray(shake)?shake:[];specialCosts=Array.isArray(special)?special:[];comboCosts=Array.isArray(combo)?combo:[];singleCosts=Array.isArray(single)?single:[];sauceReport=sc||{allocations:[],unresolved:[]};aliases=Array.isArray(a)?a:[];orders=Array.isArray(o)?o:[];products=Array.isArray(p)?p:[];batches=Array.isArray(b)?b:[];populateYears();render()}
+let loadInFlight=null;
+async function load({background=false}={}){
+ if(loadInFlight)return loadInFlight;
+ if(background&&(document.hidden||$('dashboard').hidden||!navigator.onLine||document.activeElement===$('date')||!isoFromDisplay($('date').value)))return;
+ $('reload').disabled=true;
+ if(!background)$('loadStatus').textContent='Đang tải toàn bộ lịch sử và đối chiếu giá vốn…';
+ loadInFlight=(async()=>{try{
+  await loadData();
+  $('loadStatus').textContent='Đã tải '+orders.length+' đơn hoàn thành · '+new Date().toLocaleTimeString('vi-VN',{timeZone:'Australia/Melbourne'})+' · Tự cập nhật mỗi 60 giây';
+ }catch(e){
+  if(!background)throw e;
+  $('loadStatus').textContent='Chưa tự cập nhật được: '+e.message+' · Đang giữ báo cáo lần tải gần nhất; sẽ thử lại tự động.';
+ }finally{$('reload').disabled=false;loadInFlight=null;}})();
+ return loadInFlight;
+}
+async function loadData(){const [o,p,b,a,sc,single,combo,special,shake,chicken]=await Promise.all([loadHistory(),rpc('get_order_editor_products_v1',{p_passcode:pass}),rpc('cct_cost_batches_admin_v1',{p_passcode:pass,p_action:'list'}),rpc('cct_alias_admin_v1',{p_passcode:pass,p_action:'list'}),rpc('cct_sauce_cost_report_v1',{p_passcode:pass}),rpc('cct_single_fifo_cost_report_v2',{p_passcode:pass}),rpc('cct_combo_fifo_cost_report_v2',{p_passcode:pass}),rpc('cct_special_order_cost_report_v1',{p_passcode:pass}),rpc('cct_mango_shake_cost_report_v1',{p_passcode:pass}),rpc('cct_chicken_mix_cost_report_v1',{p_passcode:pass})]);chickenCosts=Array.isArray(chicken)?chicken:[];shakeCosts=Array.isArray(shake)?shake:[];specialCosts=Array.isArray(special)?special:[];comboCosts=Array.isArray(combo)?combo:[];singleCosts=Array.isArray(single)?single:[];sauceReport=sc||{allocations:[],unresolved:[]};aliases=Array.isArray(a)?a:[];orders=Array.isArray(o)?o:[];products=Array.isArray(p)?p:[];batches=Array.isArray(b)?b:[];populateYears();if(isoFromDisplay($('date').value))render()}
 function received(o){return String(o.fulfilment_method||'').toLowerCase().includes('pickup')?o.pickup_date||o.delivery_date:o.delivery_date||o.pickup_date}
 function items(o){return Array.isArray(o.order_items)&&o.order_items.length?o.order_items:Array.isArray(o.items)?o.items:[]}
 function canonicalProduct(item,prod){const originalId=Number(item.id??item.product_id);const raw=String(item.name||historicalNames.get(originalId)||'').trim();const normalized=raw.toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9]+/g,' ').trim();const legacyPatterns=[[/^(banh trang )?bo toi( chua cay)?( duy best)?$/,5],[/^banh trang xi ke$/,3],[/^(set( 3)? )?banh trang (sate( tom( hanh)?)?|tom hanh)$/,4],[/^com chay( cha bong)?( 500g)?$/,10],[/^ghe (sua|non) rim( gion)?$/,11]];if(normalized==='sua dan bong tuyet')return {id:null,name:'Sứa Đạn + Bông Tuyết (đơn đặc biệt)'};const direct=originalId;if(direct>0&&prod.has(direct))return {id:direct,name:prod.get(direct).name};for(const [pattern,id] of legacyPatterns){if(pattern.test(normalized)&&prod.has(id))return {id,name:prod.get(id).name}}const normalizeName=v=>String(v||'').toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9]+/g,' ').trim();const linked=aliases.filter(a=>String(a.alias_name||'').toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9]+/g,' ').trim()===normalized && prod.has(Number(a.product_id)));if(linked.length===1){const id=Number(linked[0].product_id);return {id,name:prod.get(id).name}}const exact=[...prod.entries()].filter(([id,p])=>normalizeName(p.name)===normalized);if(exact.length===1)return {id:exact[0][0],name:exact[0][1].name};return {id:direct>0?direct:null,name:prod.get(direct)?.name||historicalNames.get(direct)||raw||'Sản phẩm chưa xác định'}}
@@ -83,6 +97,14 @@ $('search').oninput=renderRows;$('reload').onclick=()=>load().catch(e=>alert(e.m
 $('date').value=formatDateLong(monday(today()));$('datePicker').value=monday(today());
 $('loginBtn').onclick=async()=>{pass=$('password').value.trim();if(!pass)return;$('loginBtn').disabled=true;$('loginMsg').textContent='Đang tải dữ liệu...';try{await load();$('login').hidden=true;$('dashboard').hidden=false;sessionStorage.setItem('cct_print_code',pass)}catch(e){$('loginMsg').textContent=e.message==='not_authorized'?'Mã quản trị không đúng.':e.message}finally{$('loginBtn').disabled=false}};
 $('password').onkeydown=e=>{if(e.key==='Enter')$('loginBtn').click()};
+
+// Refresh when returning from stock entry, reconnecting, and while this report stays visible.
+function autoRefresh(){return load({background:true})}
+setInterval(autoRefresh,60000);
+window.addEventListener('focus',autoRefresh);
+window.addEventListener('online',autoRefresh);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)autoRefresh()});
+
 const stored=sessionStorage.getItem('cct_print_code');if(stored){$('password').value=stored;$('loginBtn').click()}
-})();</script><div style="position:fixed;bottom:8px;right:8px;background:#eef2f5;color:#53606b;border:1px solid #d7dde2;border-radius:8px;padding:3px 8px;font-size:11px;z-index:5;opacity:.85">Sales v30.10 · báo cáo năm</div>
+})();</script><div style="position:fixed;bottom:8px;right:8px;background:#eef2f5;color:#53606b;border:1px solid #d7dde2;border-radius:8px;padding:3px 8px;font-size:11px;z-index:5;opacity:.85">Sales v31.10 · tự cập nhật giá vốn</div>
 </body></html>
