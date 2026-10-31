@@ -144,6 +144,11 @@ function openLot(itemKey,lotId){
 }
 function closeDialog(){if(!busy)$('lotDialog').close();}
 function notify(s){clearTimeout(toastTimer);$('toast').textContent=s;$('toast').hidden=false;toastTimer=setTimeout(()=>$('toast').hidden=true,6500);}
+function announceCostChange(){
+ const message={at:Date.now()};
+ try{localStorage.setItem('cct_costs_changed_v1',JSON.stringify(message));}catch{}
+ try{const channel=new BroadcastChannel('cct_costs_v1');channel.postMessage(message);channel.close();}catch{}
+}
 async function saveLot(e){
  e.preventDefault();if(busy)return;const v=formValues();$('formMessage').textContent='';
  if(!v.i||!Number.isFinite(v.quantityBase)||v.quantityBase<=0||!Number.isFinite(v.total)||v.total<0||!$('formCost').value.trim()||!v.date||v.date>today()){ $('formMessage').textContent='Kiểm tra mặt hàng, ngày nhận, số lượng lớn hơn 0 và giá vốn từ 0 trở lên.';return;}
@@ -157,7 +162,7 @@ async function saveLot(e){
  else await rpc('cct_retail_lot_edit_v3',{p_batch_id:Number(l.id),p_old_date:l.received_on,p_old_cost:Number(l.unit_cost),p_new_date:v.date,p_new_cost:Math.round(v.unitCost*100)/100,p_old_quantity:l.quantity,p_new_quantity:v.quantityBase,p_note:v.note});
  }else if(v.i.type==='ingredient')await rpc('cct_ingredient_receive_sku_v1',{p_ingredient_id:v.i.id,p_received_on:v.date,p_quantity:v.quantityBase,p_total_cost:v.total,p_note:v.note});
  else await rpc('cct_cost_batches_admin_v1',{p_action:'add',p_product_id:v.i.id,p_received_on:v.date,p_quantity:v.quantityBase,p_unit_cost:Math.round(v.unitCost*100)/100,p_note:v.note});
- saved=true;selected=v.i.key;closeAfterSave();notify(editing?'Đã lưu thay đổi và cập nhật giá vốn liên quan.':'Đã lưu lô nhập. Các đơn thiếu vốn sẽ được đối soát tự động.');
+ saved=true;announceCostChange();selected=v.i.key;closeAfterSave();notify(editing?'Đã lưu thay đổi. Sale Analysis sẽ tự đồng bộ giá vốn và lợi nhuận.':'Đã lưu lô nhập. Các đơn thiếu vốn sẽ được đối soát tự động.');
  await load();selectItem(v.i.key,false);
  }catch(err){if(saved)notify('Lô đã lưu thành công, nhưng chưa tải lại được danh sách. Bấm nút tải lại; không nhập lại lô.');else $('formMessage').textContent='Chưa lưu: '+err.message;}
  finally{busy=false;$('saveLabel').textContent=editing?'Lưu thay đổi':'Lưu lô nhập';preview();}
