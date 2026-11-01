@@ -35,6 +35,7 @@ if not cat=any(cats) then cats:=array_prepend(cat,cats);end if;
 end if;
 cats:=array_remove(cats,'dattruoc');
 if is_pre or cat='dattruoc' then cats:=array_append(cats,'dattruoc');end if;
+cats:=array_prepend(cat,array_remove(cats,cat));
 if p_product_id is null then
 perform pg_advisory_xact_lock(hashtext('cct-menu-create-name'));
 if exists(select 1 from public.products where lower(name)=lower(new_name)) then raise exception 'name_exists';end if;
