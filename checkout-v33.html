@@ -732,7 +732,7 @@ document.addEventListener("DOMContentLoaded", function () {
         "/rest/v1/products" +
         "?select=id,name,price,category,categories,emoji,description,image_url,sort_order,is_active,stock_qty,option_groups" +
         "&is_active=eq.true" +
-        "&or=(stock_qty.is.null,stock_qty.gt.0)" +
+        "&or=(stock_qty.is.null,stock_qty.gt.0,category.eq.dattruoc,categories.cs.{dattruoc})" +
         "&order=sort_order.asc,id.asc";
 
       const response = await fetch(url, {
@@ -759,7 +759,7 @@ document.addEventListener("DOMContentLoaded", function () {
           description: p.description || "",
           image_url: p.image_url || "",
           sort_order: Number(p.sort_order || 0),
-          stock_qty: p.stock_qty === null ? null : Number(p.stock_qty),
+          stock_qty: (p.category === 'dattruoc' || (p.categories || []).includes('dattruoc')) ? null : (p.stock_qty === null ? null : Number(p.stock_qty)),
           option_groups: Array.isArray(p.option_groups) ? p.option_groups : []
         };
       });
