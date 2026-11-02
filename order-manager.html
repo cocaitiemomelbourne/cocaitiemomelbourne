@@ -898,7 +898,24 @@ function receiptItemMoney(item,language){
   return value===null?(language==="en"?"Price unavailable":"Chưa có giá"):money(value);
 }
 function restoreReceiptPrices(items,legacyItems,subtotal){
-  const key=i=>String(i.name||"").replace(/\s*\([^)]*\)\s*$/g,"").trim().toLowerCase()+"|"+Number(i.qty);
+  const normalize=v=>String(v||"").replace(/\s*\([^)]*\)\s*$/g,"").trim().toLowerCase();
+  const key=i=>{
+    const product=receiptCatalog.find(p=>i.id!==null&&i.id!==undefined&&String(p.id)===String(i.id))||
+      receiptCatalog.find(p=>[p.name,p.name_en].some(n=>n&&normalize(n)===normalize(i.name)));
+    let option=String(i.option_text||"").trim();
+    const aliases=[];
+    (product?.option_groups||[]).forEach((group,g)=>{
+      const translated=(product.option_groups_en||[])[g];if(!translated)return;
+      if(translated.name&&group.name)aliases.push([translated.name,group.name]);
+      (group.choices||[]).forEach((choice,c)=>{const english=translated.choices?.[c];if(typeof choice==="string"&&typeof english==="string")aliases.push([english,choice])});
+    });
+    if(aliases.length){
+      const replacements=new Map(aliases);
+      const pattern=[...replacements.keys()].sort((a,b)=>b.length-a.length).map(x=>x.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|");
+      option=option.replace(new RegExp(pattern,"g"),match=>replacements.get(match));
+    }
+    return (product?"id:"+product.id:"name:"+normalize(i.name))+"|"+Number(i.qty)+"|"+option.toLowerCase();
+  };
   const rawTotal=legacyItems.reduce((sum,i)=>sum+(receiptLineTotal(i)??0),0);
   const safe=legacyItems.length===items.length&&subtotal!==null&&Math.abs(rawTotal-Number(subtotal))<0.005;
   return items.map(item=>{
