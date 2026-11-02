@@ -741,7 +741,6 @@ body{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial
           <div id="feeRow" class="row"><span id="feeLabel">Delivery</span><span id="deliveryFee">—</span></div>
           <div id="discountRow" class="row"><span>Discount</span><span id="discountAmount">—</span></div>
           <div class="row total"><span id="totalLabel">TỔNG</span><span id="total">—</span></div>
-          <div class="row payment-only"><span>Phương thức</span><b id="payment">—</b></div>
         </div>
 
         <div class="rule"></div>
@@ -1653,7 +1652,6 @@ function makeReceiptCanvas(v,kitchen){
     const pricing=pricingSummary(v);
     if(pricing.discount>0)add("Discount: -"+money(pricing.discount)+(v.discount_type==="percent"&&v.discount_value!==null?" ("+Number(v.discount_value).toFixed(2).replace(".00","")+"%)":""),19);
     add((en?(pricing.pending?"PROVISIONAL TOTAL":"TOTAL"):pricing.label.toUpperCase())+": "+money(pricing.amount),26,true);
-    add(t("Phương thức: ","Payment method: ")+(v.payment_method||"—"),19);
   }
   rule();add(t("GHI CHÚ","NOTE"),20,true);add(!v.customer_note||v.customer_note==="Không có"?t("Không có","None"):v.customer_note,20,kitchen);
   if(!kitchen){rule();add(t("Cảm ơn bạn đã ủng hộ","Thank you for your support"),19,false,true);add("Có Cái Tiệm",20,true,true);add("@cocaitiem.o.melbourne",17,false,true)}
