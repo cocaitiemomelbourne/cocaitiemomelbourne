@@ -7,6 +7,33 @@
 @media(max-width:760px){.notice{display:none}.metrics .metric:nth-child(2),.metrics .metric:nth-child(4){display:none}.nav{margin:12px 0 16px}.detail-open .intro,.detail-open .nav,.detail-open .status-line{display:none}.detail-open .workspace{margin-top:18px}}
 @media(min-width:761px){.mobile-label{display:none}}
 @media(prefers-reduced-motion:no-preference){dialog[open]{animation:appear .16s ease-out}@keyframes appear{from{transform:translateY(8px);opacity:.6}to{transform:none;opacity:1}}}
+</style>
+<style id="lot-form-alignment-v3">
+#lotDialog .form-grid{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+#lotDialog .form-grid>.field,#lotDialog .quantity-field,#lotDialog .money-field{min-width:0;max-width:100%}
+#lotDialog .field input,#lotDialog .field select{display:block;box-sizing:border-box;width:100%;min-width:0;max-width:100%;height:46px;min-height:46px;margin:0;font-size:16px;line-height:22px}
+#lotDialog input[type="date"]{min-inline-size:0;-webkit-appearance:none;appearance:none;text-align:left}
+#lotDialog input[type="date"]::-webkit-date-and-time-value{text-align:left;min-height:22px}
+#lotDialog .quantity-field{grid-template-columns:minmax(0,1fr) 84px;align-items:start;gap:8px}
+#lotDialog .money-mode{min-width:0;gap:10px}
+#lotDialog .money-mode select{width:auto;max-width:190px;height:36px;min-height:36px;font-size:12px;padding:6px 10px}
+#lotDialog .money-field>span{top:13px;line-height:22px}
+#lotDialog .dialog-head>div{min-width:0;padding-right:12px}
+#lotDialog .dialog-body{overflow-wrap:anywhere}
+@media(max-width:600px){
+ #lotDialog{width:calc(100vw - 24px);max-height:calc(100dvh - 24px)}
+ #lotDialog .dialog-head{padding:18px}
+ #lotDialog .dialog-body{padding:18px 18px 5px}
+ #lotDialog .dialog-actions{padding:16px 18px;gap:10px}
+ #lotDialog .form-grid{grid-template-columns:minmax(0,1fr);gap:18px}
+ #lotDialog .span2{grid-column:auto}
+ #lotDialog .quantity-field{grid-template-columns:minmax(0,1fr) 100px}
+ #lotDialog .money-mode{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+ #lotDialog .money-mode select{width:100%;max-width:none;height:46px;min-height:46px;font-size:14px;border:1px solid #dfe4e8;border-radius:9px;padding:10px 12px;background:#f9fafb}
+ #lotDialog .field label{font-size:12px}
+ #lotDialog .field small{font-size:11px}
+ #lotDialog .dialog-actions .btn{min-height:46px}
+}
 </style></head><body>
 <svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs>
 <symbol id="icon-box" viewBox="0 0 24 24"><path d="m3 7 9-4 9 4v11l-9 4-9-4Z"/><path d="m3 7 9 4 9-4M12 11v11M8 5l9 4"/></symbol>
