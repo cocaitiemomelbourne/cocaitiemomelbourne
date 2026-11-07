@@ -569,7 +569,8 @@ body{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial
 }
 @media print{.v14-print-tools{display:none!important}.v13-receipt-visible{display:block!important}}
 </style>
-</head>
+<style>.measured-row{display:grid!important;grid-template-columns:minmax(0,2fr) minmax(80px,1fr) minmax(100px,1fr);gap:10px;align-items:end;border-color:#b9c7b3;background:#f7faf5}.measured-row>.custom-label,.measured-components,.measured-add,.measured-help,.measured-note,.measured-summary,.measured-row>.remove-item{grid-column:1/-1}.measured-row label{font-size:12px;display:grid;gap:7px;margin:0;min-width:0}.measured-row input,.measured-row select{width:100%;min-width:0;padding:11px;border:1px solid #d8cec3;border-radius:9px;background:white;font-size:16px}.measured-components{display:grid;gap:10px}.measured-component{display:grid;grid-template-columns:minmax(0,2fr) minmax(85px,1fr) 30px auto;gap:8px;align-items:end;padding:12px;border:1px solid #d9e2d5;border-radius:10px;background:white}.measured-remove{align-self:end;min-height:42px}.measured-unit{font-size:12px;align-self:center;padding-top:20px}.measured-summary{margin:0;color:#496345}.measured-help{line-height:1.6;margin:0}.measured-row>.custom-name{background:#edf3e9;font-weight:700}.measured-add{justify-self:start}.measured-note{grid-column:1/-1}input.option-input[type=hidden]{display:none!important}@media(max-width:650px){.measured-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.measured-row>.custom-name{grid-column:1/-1}.measured-component{grid-template-columns:minmax(0,1fr) 30px auto}.measured-source-label{grid-column:1/-1}.measured-unit{padding-top:20px}#editRows .measured-row.v12-expanded>label{display:grid!important;margin-top:10px}#editRows .measured-row.v12-expanded>.measured-components{margin-top:12px}#editRows .measured-row.v12-expanded>.custom-name{display:none!important}}
+</style></head>
 <body>
 <div class="wrap">
 <section id="login" class="login card">
@@ -605,9 +606,9 @@ body{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial
           <label class="full">Ghi chú đơn<textarea id="manualNote" maxlength="1000" rows="2"></textarea></label>
         </div>
         <h3>Món hàng</h3>
-        <div class="muted">Món trong menu lấy giá hiện tại và trừ tồn kho; món ngoài menu không trừ tồn kho.</div>
+        <div class="muted">Bán theo gram/ml tự tính FIFO khi hoàn thành đơn. Món ngoài menu thông thường không liên kết kho nguyên liệu.</div>
         <div id="manualRows"></div>
-        <div class="manual-actions"><button id="manualAddMenu" type="button" class="btn alt">＋ Món trong menu</button><button id="manualAddCustom" type="button" class="btn alt">＋ Món ngoài menu</button></div>
+        <div class="manual-actions"><button id="manualAddMenu" type="button" class="btn alt">＋ Món trong menu</button><button id="manualAddMeasured" type="button" class="btn alt">＋ Bán theo gram / ml</button><button id="manualAddCustom" type="button" class="btn alt">＋ Món ngoài menu</button></div>
         <div id="manualSummary" class="price-box" style="margin-top:14px" aria-live="polite"></div>
       </fieldset>
       <div class="manual-actions"><button id="manualSave" type="submit" class="btn primary">Lưu đơn & gửi email</button><button id="manualCancel" type="button" class="btn alt">Đóng</button></div>
@@ -676,11 +677,11 @@ body{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial
 
   <div class="edit-items card">
     <h3>Sửa món trong đơn</h3>
-    <div class="muted">Món trong menu tự điều chỉnh tồn kho. Có thể sửa <b>Đơn giá</b> riêng cho đơn này; giá trên menu/web không thay đổi. Món ngoài menu chỉ lưu trong đơn này.</div>
+    <div class="muted">Món trong menu tự điều chỉnh tồn kho. Có thể sửa <b>Đơn giá</b> riêng cho đơn này; giá trên menu/web không thay đổi. Bán theo gram/ml dùng nguyên liệu FIFO khi đơn hoàn thành. Món ngoài menu không liên kết kho sẽ chưa tự tính được vốn.</div>
     <div id="editRows"></div>
     <div class="edit-actions">
       <button id="addItemRow" class="btn alt">+ Thêm món trong menu</button>
-      <button id="addCustomItemRow" class="btn alt">+ Thêm món ngoài menu</button>
+      <button id="addMeasuredItemRow" class="btn alt">+ Bán theo gram / ml</button><button id="addCustomItemRow" class="btn alt">+ Thêm món ngoài menu</button>
       <button id="saveItems" class="btn primary">Lưu thay đổi món</button>
     </div>
     <div id="editMsg" class="save-msg"></div>
@@ -985,6 +986,7 @@ document.getElementById("saveReceiptDate").addEventListener("click",async functi
   finally{btn.disabled=false}
 });
 async function fetchOrders(){
+  await loadMeasuredSources();
   const translations=await fetch(URL+"/rest/v1/products?select=id,name,name_en,option_groups,option_groups_en",{headers:{apikey:KEY,Authorization:"Bearer "+KEY}});
   if(!translations.ok)throw new Error("Không tải được tên món song ngữ. Vui lòng thử tải lại.");
   receiptCatalog=await translations.json();
@@ -1039,6 +1041,7 @@ function productOptions(selectedId){
 
 function addEditorRow(item,target=editRows){
   item=item||{};
+  if(item.sale_mode==="measured"){addMeasuredRow(item,target);return}
   if(item.is_custom===true){addCustomEditorRow(item,target);return}
   let id=item.id;
   if(!id&&item.name){const matched=productByName(item.name);if(matched)id=matched.id;}
@@ -1082,6 +1085,25 @@ function renderEditor(v){
   editMsg.textContent="";
 }
 
+let measuredSources=[];
+async function loadMeasuredSources(){const data=await rpc('cct_measured_sources_v1',{p_passcode:code});measuredSources=Array.isArray(data)?data:[];}
+function measuredSourceKey(x){return x.kind+':'+x.source_id}
+function addMeasuredRow(item={},target=editRows){
+ const row=document.createElement('div');row.className='edit-row custom-row measured-row'+(item.cost_components?.length?'':' v12-expanded');row.dataset.custom='true';row.dataset.measured='true';
+ row.innerHTML='<div class="custom-label">Bán theo gram / ml · Tự tính FIFO khi hoàn thành đơn</div><input class="custom-name" readonly aria-label="Tên món bán lẻ"><label>Số phần<input class="qty-input" type="number" min="1" max="99999" step="1" value="'+esc(item.qty||1)+'" aria-label="Số phần bán lẻ"></label><label>Giá bán / phần (AUD)<input class="custom-price" type="number" min="0" max="1000000" step=".01" value="'+esc(item.unit_price??'')+'" aria-label="Giá bán một phần"></label><div class="measured-components"></div><button type="button" class="btn alt measured-add">+ Sốt / bao bì / thành phần đi kèm</button><p class="muted measured-help">Nhập lượng cho 1 phần. Không tự cộng sốt hoặc bao bì; thêm đúng thứ chị dùng. Nhiều phần sẽ nhân lượng tương ứng.</p><input class="measured-note" maxlength="300" placeholder="Ghi chú thêm (không dùng để tính định lượng)" value="'+esc(item.measured_note||'')+'" aria-label="Ghi chú bán lẻ"><input class="option-input" type="hidden"><p class="measured-summary muted" role="status"></p><button type="button" class="btn alt remove-item">Xóa món bán lẻ</button>';
+ target.appendChild(row);
+ const holder=row.querySelector('.measured-components');
+ function refresh(){const cs=[...holder.children].map(d=>{const src=measuredSources.find(s=>measuredSourceKey(s)===d.querySelector('select').value),q=d.querySelector('input').value;return {src,q}});row.querySelector('.custom-name').value=cs[0]?.src?.name||'';const label=cs.map((c,i)=>c.src?(i?c.src.name+' ':'')+(c.q||'…')+(c.src.unit==='piece'?' cái':c.src.unit):'Chưa chọn nguồn kho').join(' + ');row.querySelector('.option-input').value=label+(row.querySelector('.measured-note').value?' · '+row.querySelector('.measured-note').value:'');row.querySelector('.measured-summary').textContent='Mỗi phần: '+label+' · '+(row.querySelector('.qty-input').value||1)+' phần';if(target===manualRows)updateManualSummary();}
+ function addComponent(c={}){const d=document.createElement('div');d.className='measured-component';const selected=c.kind?measuredSourceKey(c):'';d.innerHTML='<label class="measured-source-label">Nguyên liệu / sốt / bao bì<select required aria-label="Nguồn kho bán lẻ"><option value="">Chọn từ kho…</option>'+['ingredient','production'].map(kind=>'<optgroup label="'+(kind==='ingredient'?'Nguyên liệu & bao bì':'Mẻ sốt / sơ chế')+'">'+measuredSources.filter(s=>s.kind===kind&&(s.active||measuredSourceKey(s)===selected)).map(s=>'<option value="'+esc(measuredSourceKey(s))+'">'+esc(s.name+' · '+s.sku+' ('+(s.unit==='piece'?'cái':s.unit)+')')+'</option>').join('')+'</optgroup>').join('')+'</select></label><label>Lượng / phần<input type="number" min=".001" max="1000000" step="any" required value="'+esc(c.quantity??'')+'" aria-label="Lượng thực bán mỗi phần"></label><span class="measured-unit">—</span><button type="button" class="btn alt measured-remove" aria-label="Bỏ thành phần">Bỏ</button>';holder.appendChild(d);d.querySelector('select').value=selected;
+ const update=()=>{const src=measuredSources.find(s=>measuredSourceKey(s)===d.querySelector('select').value);d.querySelector('.measured-unit').textContent=src?(src.unit==='piece'?'cái':src.unit):'—';d.querySelector('input').step=src?.unit==='piece'?'1':'any';d.querySelector('input').min=src?.unit==='piece'?'1':'.001';refresh()};d.querySelector('select').onchange=update;d.querySelector('input').oninput=refresh;d.querySelector('button').onclick=()=>{if(holder.children.length<=1)return;d.remove();refresh()};update();}
+ (item.cost_components?.length?item.cost_components:[{}]).forEach(addComponent);row.querySelector('.measured-add').onclick=()=>{if(holder.children.length>=20)return;addComponent()};row.querySelector('.measured-note').oninput=refresh;row.querySelector('.qty-input').addEventListener('input',refresh);refresh();
+}
+function measuredPayload(row,qty){const cs=[...row.querySelector('.measured-components').children].map(d=>{const src=measuredSources.find(s=>measuredSourceKey(s)===d.querySelector('select').value);return {kind:src?.kind,source_id:src?.source_id,quantity:Number(d.querySelector('input').value),unit:src?.unit}});const p=row.querySelector('.custom-price').value;return {is_custom:true,sale_mode:'measured',name:row.querySelector('.custom-name').value,qty,unit_price:p===''?null:Number(p),option_text:row.querySelector('.option-input').value,measured_note:row.querySelector('.measured-note').value,cost_components:cs};}
+function validateMeasured(items){for(const it of items.filter(x=>x.sale_mode==='measured')){if(!it.cost_components?.length||it.cost_components.some(c=>!c.source_id||!['ingredient','production'].includes(c.kind)||!Number.isFinite(c.quantity)||c.quantity<=0||c.quantity>1000000||(c.unit==='piece'&&!Number.isInteger(c.quantity))))throw Error('Món bán lẻ cần chọn nguồn kho và nhập định lượng hợp lệ cho từng thành phần. Bao bì tính số cái nguyên.');}}
+async function startMeasured(target){try{await loadMeasuredSources();if(!measuredSources.length)throw Error('Chưa có nguyên liệu trong kho');addMeasuredRow({},target)}catch(e){(target===manualRows?manualMsg:editMsg).textContent=e.message}}
+document.getElementById('addMeasuredItemRow').onclick=()=>{if(currentView)void startMeasured(editRows)};
+document.getElementById('manualAddMeasured').onclick=()=>void startMeasured(manualRows);
+
 function addCustomEditorRow(item,target=editRows){
   item=item||{};
   const row=document.createElement("div");
@@ -1099,6 +1121,7 @@ function editorPayload(target=editRows){
   return Array.from(target.querySelectorAll(".edit-row")).map(row=>{
     const qty=Number(row.querySelector(".qty-input").value);
     const option_text=row.querySelector(".option-input").value.trim();
+    if(row.dataset.measured==="true")return measuredPayload(row,qty);
     if(row.dataset.custom==="true"){
       const price=row.querySelector(".custom-price").value.trim();
       return {is_custom:true,name:row.querySelector(".custom-name").value.trim(),qty,
@@ -1153,6 +1176,7 @@ function manualDetails(){
     delivery_fee:method==="pickup"?0:fee===""?null:Number(fee)};
 }
 function validateManual(items,details){
+  validateMeasured(items);
   if(!details.customer_name)throw new Error("Vui lòng nhập tên khách.");
   if(!/^[0-9]{8,15}$/.test(details.phone.replace(/\D/g,"")))throw new Error("Số điện thoại cần 8–15 chữ số.");
   if(details.fulfilment_method!=="pickup"&&details.shipping_address.length<3)throw new Error("Vui lòng nhập địa chỉ giao hàng.");
@@ -1187,6 +1211,7 @@ async function openManualOrder(){
   if(manualBusy)return;
   if(!manualCard.classList.contains("hidden")){manualCard.scrollIntoView({behavior:"smooth"});return}
   try{
+    await loadMeasuredSources();
     await recoverManualOrder();
     if(sessionStorage.getItem("cct_manual_pending_token"))return;
     const data=await rpc("get_order_editor_products_v1",{p_passcode:code});
@@ -1336,6 +1361,7 @@ function buildCopyText(v){
 async function saveEditedItems(){
   if(!currentView)return;
   const payload=editorPayload();
+  try{validateMeasured(payload)}catch(e){editMsg.textContent=e.message;return}
   if(!payload.length){editMsg.textContent="Đơn phải có ít nhất 1 món.";return}
   if(payload.some(x=>!Number.isInteger(x.qty)||x.qty<1||x.qty>99999||(!x.is_custom&&!x.id))){editMsg.textContent="Kiểm tra lại món và số lượng (1–99999).";return}
   if(payload.some(x=>!x.is_custom&&(!Number.isFinite(x.unit_price)||x.unit_price<0||x.unit_price>1000000||Math.abs(x.unit_price*100-Math.round(x.unit_price*100))>0.000001))){editMsg.textContent="Đơn giá cần hợp lệ, tối đa 2 chữ số thập phân.";return}
@@ -1906,6 +1932,7 @@ const saved=sessionStorage.getItem("cct_print_code");if(saved){passcode.value=sa
 
       var itemName="Món";
       if(customName) itemName=customName.value.trim()||"Món ngoài menu";
+      if(row.dataset.measured==="true"){var spec=row.querySelector(".option-input");if(spec&&spec.value)itemName+=" · "+spec.value;}
       else if(select){
         var opt=select.options[select.selectedIndex];
         itemName=opt ? String(opt.textContent||"").split(" — ")[0].trim() : "Chọn món";
@@ -2035,5 +2062,6 @@ const saved=sessionStorage.getItem("cct_print_code");if(saved){passcode.value=sa
 </script>
 </body>
 </html>
+
 
 
