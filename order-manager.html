@@ -812,19 +812,35 @@ function displayDate(v){return String(v||"").replace(/^(\d{4})-(\d{2})-(\d{2})$/
 function setText(id,v){const el=document.getElementById(id);if(el)el.textContent=v===null||v===undefined||v===""?"—":String(v)}
 function firstMatch(text,re){const m=String(text||"").match(re);return m?m[1].trim():""}
 
+function receiptLegacyItemParts(raw){
+  const full=String(raw||'').trim();
+  const known=receiptCatalog.flatMap(p=>[p.name,p.name_en]).filter(Boolean).sort((a,b)=>b.length-a.length);
+  for(const name of known){
+    if(full.toLocaleLowerCase('vi')===name.toLocaleLowerCase('vi'))return {name,option_text:''};
+    if(full.slice(0,name.length).toLocaleLowerCase('vi')!==name.toLocaleLowerCase('vi'))continue;
+    const tail=full.slice(name.length).trim();
+    if(/^\([\s\S]*\)$/.test(tail))return {name,option_text:tail.slice(1,-1).trim()};
+    if(/^—\s+/.test(tail))return {name,option_text:tail.replace(/^—\s+/,'').trim()};
+  }
+  const parens=full.match(/^(.*?)\s+\(([^()]*)\)$/);
+  if(parens)return {name:parens[1].trim(),option_text:parens[2].trim()};
+  const dash=full.indexOf(' — ');
+  return dash<0?{name:full,option_text:''}:{name:full.slice(0,dash).trim(),option_text:full.slice(dash+3).trim()};
+}
 function parseLegacy(o){
   const raw=String(o.order_text||"");
   const lines=raw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
   const p={items:[],customer_name:"",phone:"",recipient_name:"",shipping_address:"",payment_method:"",customer_note:"",fulfilment_method:"",subtotal:null,delivery_fee:null};
-  if(lines.length&&!/^\d+\s*x\s+/i.test(lines[0])&&!/^(Tổng|Total|Tiền món|Items):/i.test(lines[0]))p.customer_name=lines[0];
+  if(lines.length&&!/^\d+\s*[x×]\s+/i.test(lines[0])&&!/^(Tổng|Total|Tiền món|Items):/i.test(lines[0]))p.customer_name=lines[0];
 
   const fieldLine=/^(?:Tổng|Total|Tạm tính|Provisional total|Tiền món|Items|Items subtotal|Subtotal|Phí giao hàng|Delivery fee|Delivery|AusPost|Nhận hàng|Fulfilment|Tên người nhận|Recipient|SĐT|Phone|Địa chỉ|Address|Thanh toán|Payment|Ghi chú|Note|PayID)\s*:/i;
 
   for(let i=0;i<lines.length;i++){
     const line=lines[i];
-    const item=line.match(/^(\d+)\s*x\s+(.+?)\s+\$([0-9]+(?:\.[0-9]+)?)$/i);
+    const item=line.match(/^(\d+)\s*[x×]\s+(.+?)\s+\$([0-9]+(?:\.[0-9]+)?)$/i);
     if(item){
-      const qty=Number(item[1]),name=item[2].replace(/\s+—\s+.*$/,"").trim(),optionText=item[2].includes(" — ")?item[2].split(" — ").slice(1).join(" — ").trim():"",lineTotal=Number(item[3]);
+      const qty=Number(item[1]),lineTotal=Number(item[3]),parsed=receiptLegacyItemParts(item[2]);
+      const name=parsed.name,optionText=parsed.option_text;
       p.items.push({qty:qty,name:name,option_text:optionText,line_total:lineTotal});
       continue;
     }
@@ -847,7 +863,7 @@ function parseLegacy(o){
       if(m[1].trim())parts.push(m[1].trim());
       let j=i+1;
       while(j<lines.length&&!fieldLine.test(lines[j])){
-        if(!/^\d+\s*x\s+/i.test(lines[j]))parts.push(lines[j]);
+        if(!/^\d+\s*[x×]\s+/i.test(lines[j]))parts.push(lines[j]);
         j++;
       }
       p.shipping_address=parts.join(", ");
@@ -2062,6 +2078,7 @@ const saved=sessionStorage.getItem("cct_print_code");if(saved){passcode.value=sa
 </script>
 </body>
 </html>
+
 
 
 
