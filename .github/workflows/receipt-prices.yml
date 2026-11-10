@@ -1,0 +1,23 @@
+name: Receipt price regression
+on:
+  push:
+    paths:
+      - 'order-manager.html'
+      - 'tests/receipt-price-regression.cjs'
+      - '.github/workflows/receipt-prices.yml'
+  pull_request:
+    paths:
+      - 'order-manager.html'
+      - 'tests/receipt-price-regression.cjs'
+      - '.github/workflows/receipt-prices.yml'
+permissions:
+  contents: read
+jobs:
+  receipt-prices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node tests/receipt-price-regression.cjs
