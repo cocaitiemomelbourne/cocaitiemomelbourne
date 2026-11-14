@@ -7,6 +7,9 @@
 @media(max-width:760px){.notice{display:none}.metrics .metric:nth-child(2),.metrics .metric:nth-child(4){display:none}.nav{margin:12px 0 16px}.detail-open .intro,.detail-open .nav,.detail-open .status-line{display:none}.detail-open .workspace{margin-top:18px}}
 @media(min-width:761px){.mobile-label{display:none}}
 @media(prefers-reduced-motion:no-preference){dialog[open]{animation:appear .16s ease-out}@keyframes appear{from{transform:translateY(8px);opacity:.6}to{transform:none;opacity:1}}}
+
+/* Focused view reused by stock-check; keeps one FIFO calculation and lot editor. */
+body.stock-embed{background:#fff}body.stock-embed .shell{max-width:none;padding:12px}body.stock-embed .topline,body.stock-embed .intro,body.stock-embed .nav,body.stock-embed .notice,body.stock-embed .metrics,body.stock-embed .status-line,body.stock-embed .master,body.stock-embed .mobile-back,body.stock-embed .help-card,body.stock-embed .foot-links{display:none!important}body.stock-embed .workspace{display:block}body.stock-embed .detail-pane{display:block!important}body.stock-embed #detail{border:0;box-shadow:none}body.stock-embed .detail-head{padding-top:8px}.stock-context{padding:14px;border:1px solid #e4ddd2;border-radius:12px;margin-bottom:12px;background:#faf8f3}.stock-context p{margin:6px 0;font-size:14px;line-height:1.6}.stock-context select{width:100%;margin-top:10px;padding:12px}
 </style>
 <style id="lot-form-alignment-v3">
 #lotDialog .form-grid{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
@@ -82,6 +85,8 @@ const dateLabel=d=>{const x=String(d||'').slice(0,10).split('-');return x.length
 const unitName=u=>u==='piece'?'cái':u==='ml'?'ml':u==='g'?'g':u||'món';
 const quantity=(n,u)=>u==='g'&&Math.abs(n)>=1000?number(n/1000)+' kg':u==='ml'&&Math.abs(n)>=1000?number(n/1000)+' lít':number(n)+' '+unitName(u);
 const displayPrice=(c,u)=>money(c*(u==='g'||u==='ml'?1000:1))+' / '+(u==='g'?'kg':u==='ml'?'lít':unitName(u));
+const stockParams=new URLSearchParams(location.search),stockEmbed=stockParams.get('embed')==='stock',stockProduct=stockParams.get('product');
+if(stockEmbed)document.body.classList.add('stock-embed');
 let pass='',products=[],batches=[],catalog=[],ingredientLots=[],productionAllocations=[],orders=[],aliases=[],allItems=[],type='all',selected='',busy=false,editing=null,loading=null,toastTimer;
 async function rpc(fn,data={}){const r=await fetch(API+'/rest/v1/rpc/'+fn,{method:'POST',signal:AbortSignal.timeout(30000),headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify({p_passcode:pass,...data})});const j=await r.json().catch(()=>({}));if(!r.ok)throw Error(j.message||'Không kết nối được dữ liệu. Vui lòng thử lại.');return j;}
 async function loadHistory(){let all=[],cursor={};for(;;){const page=await rpc('cct_sales_history_page_v1',cursor);if(!Array.isArray(page))throw Error('Lịch sử bán hàng chưa tải được.');all.push(...page);if(page.length<500)return all;const last=page.at(-1);if(cursor.p_before_token===last.order_token)throw Error('Không tải tiếp được lịch sử bán hàng.');cursor={p_before_token:last.order_token,p_before_created:last.created_at};}}
@@ -114,14 +119,27 @@ function visibleItems(){const raw=$('search').value.trim(),q=norm(raw);return al
 function badge(i){return '<span class="badge '+(i.type==='retail'?'retail':'')+'">'+(i.type==='retail'?'Hàng bán':i.unit==='piece'?'Bao bì':'Nguyên liệu')+'</span>';}
 function render(){
  $('metricCapital').textContent=money(allItems.reduce((n,i)=>n+i.total,0));$('metricItems').textContent=number(allItems.filter(i=>i.lots.length).length);$('metricLots').textContent=number(batches.length+ingredientLots.length);$('metricEmpty').textContent=number(ingredientLots.filter(l=>Number(l.remaining)<=0).length);
- const list=visibleItems();if(!list.some(i=>i.key===selected))selected=list[0]?.key||'';
+ const list=visibleItems();if(stockEmbed){selected=stockSourceKey||'p:'+stockProduct;}else if(!list.some(i=>i.key===selected))selected=list[0]?.key||'';
  $('itemCount').textContent=number(list.length)+' mặt hàng';
  $('itemList').innerHTML=list.length?list.map(i=>'<button type="button" class="item" data-key="'+safe(i.key)+'" aria-current="'+(i.key===selected)+'"><div class="item-sku">'+safe(i.sku||'CHƯA CÓ SKU')+'</div><div class="item-top"><span class="item-name">'+safe(i.name)+'</span>'+icon('arrow')+'</div><div class="item-bottom"><span>'+i.lots.length+' lô · '+(i.last?dateLabel(i.last):'Chưa nhập lô')+'</span>'+badge(i)+'</div>'+(i.type==='ingredient'&&i.lots.length?'<span class="item-note">'+(i.remaining>0?'Còn '+quantity(i.remaining,i.unit):'Đã phân bổ hết')+'</span>':'')+'</button>').join(''):'<div class="no-data">'+icon('search')+'Không tìm thấy mặt hàng phù hợp.<br>Thử tên ngắn hơn hoặc bật món chưa có lô.</div>';
  renderDetail();
 }
 function selectItem(key,mobile=true){selected=key;try{localStorage.setItem('cct_cost_item_v2',key)}catch{}render();if(mobile){document.body.classList.add('detail-open');if(matchMedia('(max-width:760px)').matches)$('detail').scrollIntoView({block:'start',behavior:'instant'});}}
+let stockSourceKey='';
+function stockContext(i){
+ if(!stockEmbed)return;
+ let box=$('stockContext');if(!box){box=document.createElement('div');box.id='stockContext';box.className='stock-context';$('detail').before(box);}
+ const p=products.find(p=>String(p.id)===stockProduct);
+ if(!p){box.textContent='Không tìm thấy món. Đóng cửa sổ rồi tải lại kiểm kho.';return;}
+ const recipe=String(p.sku||'').startsWith('SU-')||!allItems.some(x=>x.key==='p:'+stockProduct);
+ if(recipe){box.innerHTML='<strong>Giá vốn theo nguyên liệu / công thức</strong><p>Tồn món bán theo phần; nguyên liệu theo g, ml hoặc cái. Không so trực tiếp hai số này. Chọn nguyên liệu bên dưới để kiểm tra và sửa lô ngay tại đây.</p><select id="stockSource" aria-label="Chọn nguyên liệu hoặc sốt"><option value="">Chọn nguyên liệu / sốt cần kiểm tra…</option>'+allItems.filter(x=>x.type==='ingredient').sort((a,b)=>a.name.localeCompare(b.name,'vi')).map(x=>'<option value="'+safe(x.key)+'">'+safe(x.sku+' · '+x.name)+'</option>').join('')+'</select><p><a target="_blank" rel="noopener" href="./standard-recipe.html">Xem định lượng công thức ↗</a> · <a target="_blank" rel="noopener" href="./production.html">Xem mẻ sốt ↗</a></p>';
+ $('stockSource').value=stockSourceKey;$('stockSource').onchange=e=>{stockSourceKey=e.target.value;selected=stockSourceKey||'p:'+stockProduct;renderDetail();};
+ }else if(i){const countedRaw=stockParams.get('counted'),counted=countedRaw!==null&&/^\d+$/.test(countedRaw)?Number(countedRaw):null,stock=counted??p.stock_qty,comparisonLabel=counted!==null?'Số đếm chưa lưu':'Tồn hệ thống',delta=stock==null?null:Number(stock)-i.remaining;
+ box.innerHTML='<strong>'+comparisonLabel+': '+(stock==null?'Chưa giới hạn tồn':number(stock)+' phần')+'</strong><p>'+(i.lots.length===0?'Chưa có lô giá vốn. Chị có thể nhập lô ngay bên dưới.':delta===null?'Chưa có số tồn bán để đối chiếu.':delta===0?comparisonLabel+' khớp với số còn theo FIFO.':comparisonLabel+' '+(delta>0?'nhiều hơn':'ít hơn')+' FIFO '+number(Math.abs(delta))+' phần. Kiểm tra ngày nhập, đơn hoàn thành và hao hụt trước khi điều chỉnh.')+'</p><p>Nhập / sửa lô cập nhật giá vốn; số đếm kiểm kho chỉ lưu khi chị xác nhận ở trang kiểm kho.</p>';
+ }
+}
 function renderDetail(){
- const i=allItems.find(x=>x.key===selected),target=$('detail');if(!i){target.innerHTML='<div class="no-data">'+icon('box')+'Chọn một mặt hàng để xem lịch sử nhập.</div>';return;}
+ const i=allItems.find(x=>x.key===selected),target=$('detail');stockContext(i);if(!i){target.innerHTML='<div class="no-data">'+icon('box')+''+(stockEmbed?'Chọn nguyên liệu ở trên để xem lô.':'Chọn một mặt hàng để xem lịch sử nhập.')+'</div>';return;}
  const status=$('detailLotStatus')?.value||'all',latest=i.lots[0],unit=i.unit;
  const remaining=i.type==='ingredient'?quantity(i.remaining,unit):number(i.remaining)+' cái <em>theo FIFO</em>';
  const lastPrice=latest?displayPrice(latest.unit_cost,unit):'Chưa có lô';
@@ -166,8 +184,8 @@ function openLot(itemKey,lotId){
  if(lotId!=null&&!editing?.lot)return;
  $('lotForm').reset();$('formMessage').textContent='';$('pickerSearch').value='';$('formDate').value=today();
  $('dialogTitle').textContent=editing?'Chỉnh sửa lô #'+editing.lot.id:'Nhập lô mới';$('dialogSubtitle').textContent=editing?'Sửa số lượng, ngày nhận, giá vốn và ghi chú của lô.':'Chọn mặt hàng, nhập số lượng và chi phí.';
- $('saveLabel').textContent=editing?'Lưu thay đổi':'Lưu lô nhập';$('itemPicker').hidden=!!editing;
- $('noteField').hidden=false;$('formItem').disabled=!!editing;$('formQty').disabled=false;$('formUnit').disabled=false;
+ $('saveLabel').textContent=editing?'Lưu thay đổi':'Lưu lô nhập';$('itemPicker').hidden=!!editing||stockEmbed;
+ $('noteField').hidden=false;$('formItem').disabled=!!editing||stockEmbed;$('formQty').disabled=false;$('formUnit').disabled=false;
  pickerOptions(itemKey||'');$('lotDialog').showModal();setTimeout(()=>{(editing?$('formDate'):getFormItem()?$('formQty'):$('pickerSearch')).focus()},40);
 }
 function closeDialog(){if(!busy)$('lotDialog').close();}
@@ -213,4 +231,3 @@ try{selected=localStorage.getItem('cct_cost_item_v2')||'';}catch{}
 const prior=sessionStorage.getItem('cct_print_code');if(prior){$('password').value=prior;$('loginForm').requestSubmit();}
 })();
 </script></body></html>
-
