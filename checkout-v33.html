@@ -1197,6 +1197,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (index === 4) return sum + opt.choiceIndex * 5;
       }
       if (id === 140) return sum + opt.choiceIndex * (index === 0 ? 7 : 5);
+      if (id === 142) return sum + (Number(opt.choiceIndex) === 2 ? 2 : 0);
       return sum;
     }, 0);
     const unitPrice = Number(product.price) + addonPrice;
