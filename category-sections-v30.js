@@ -77,6 +77,7 @@
         });
 
         sections.sort(function(a,b){
+          if(a.slug==="sua" || b.slug==="sua") return Number(b.slug==="sua")-Number(a.slug==="sua");
           if(a.slug==="dattruoc" && b.slug!=="dattruoc") return 1;
           if(b.slug==="dattruoc" && a.slug!=="dattruoc") return -1;
           return String(a.label||"").localeCompare(
