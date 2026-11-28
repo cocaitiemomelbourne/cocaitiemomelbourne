@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta http-equiv="Cache-Control" content="no-store"><title>Quản lý Kho & Giá vốn | Có Cái Tiệm</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#263038;background:#f5f6f8;--ink:#263038;--muted:#79838d;--line:#e5e8ed;--primary:#293846;--bg:#f5f6f8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg)}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.55;cursor:wait}a{color:inherit;text-decoration:none}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #94afc8;outline-offset:3px}
+.shell{max-width:1230px;margin:auto;padding:24px 20px 60px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:18px}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:.1em;color:#89929a}
+h1{margin:5px 0;font-size:clamp(27px,4vw,36px);letter-spacing:-.045em;line-height:1.2}h2{margin:0;font-size:18px;letter-spacing:-.02em}
+.subtitle{color:var(--muted);margin:0;font-size:13px;line-height:1.6}
+.links{display:flex;gap:8px;flex-wrap:wrap}.links a{border:1px solid var(--line);background:white;border-radius:11px;padding:10px 12px;font-weight:700;font-size:12px;white-space:nowrap}
+.panel{background:white;border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:14px;box-shadow:0 2px 12px #19253605}
+.auth{max-width:490px;margin:40px auto}.auth label{display:block;font-size:13px;font-weight:700;margin:18px 0 7px}
+.auth input{display:block;width:100%;border:1px solid #dce1e8;border-radius:11px;height:46px;padding:11px}
+button.primary{background:var(--primary);color:white;border:0;border-radius:11px;padding:12px 16px;font-weight:750;min-height:44px}
+.auth button{margin-top:14px}.message{color:#ad4c35;font-size:13px;margin-top:12px;min-height:20px}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.metric{background:white;border:1px solid var(--line);border-radius:16px;padding:17px;min-width:0}
+.metric .label{font-size:12px;color:#77828d;font-weight:650}.metric strong{display:block;margin-top:8px;font-size:clamp(21px,3vw,30px);letter-spacing:-.045em}
+.metric small{display:block;margin-top:5px;font-size:11px;color:#84909a;line-height:1.45}
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.search{flex:1;min-width:220px;position:relative}.search span{position:absolute;top:13px;left:13px;color:#86919c}
+.search input{width:100%;height:46px;padding:10px 12px 10px 39px;border:1px solid #dce1e8;border-radius:11px;font-size:14px;background:#fff}
+.softbtn{border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 13px;color:#536171;font-size:12px;font-weight:700;min-height:44px}
+.tabbar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0}
+.tab{border:1px solid var(--line);background:white;color:#52606b;border-radius:13px;padding:14px 10px;text-align:center;font-weight:760;font-size:14px;min-height:52px}
+.tab.active{background:var(--primary);color:white;border-color:var(--primary)}
+.tab small{font-size:11px;display:block;margin-top:3px;font-weight:450;opacity:.8}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:13px}.section-head p{font-size:12px;color:var(--muted);margin:4px 0 0;line-height:1.5}
+.list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.item{border:1px solid var(--line);border-radius:12px;padding:13px;min-width:0;background:#fff}
+.item-top{display:flex;align-items:start;justify-content:space-between;gap:8px}.item strong{font-size:14px;display:block;overflow-wrap:anywhere}.item .sku{font-size:11px;color:#88939d;margin-top:4px}
+.stock{font-size:12px;padding:5px 8px;background:#f1f4f7;border-radius:7px;white-space:nowrap;font-weight:750}
+.stock.low{color:#985a18;background:#fff2df}.stock.zero{color:#a63f39;background:#fff0ed}.stock.free{color:#687b85}
+.item-actions{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap}
+.item-actions button{background:#f4f6f8;color:#415261;padding:8px 10px;border:1px solid #e7eaef;border-radius:8px;font-size:12px;font-weight:700}
+.info{font-size:12px;color:#697986;line-height:1.65;padding:12px 14px;border-radius:12px;background:#eff3f6;margin:12px 0}
+.module{border:1px solid var(--line);border-radius:18px;background:white;overflow:hidden;box-shadow:0 2px 12px #19253605}
+.module-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px;border-bottom:1px solid var(--line)}
+.module-head p{font-size:12px;color:var(--muted);margin:6px 0 0;line-height:1.5}.module-head a{font-size:12px;color:#48657b;font-weight:700}
+iframe{border:0;width:100%;height:900px;display:block;background:transparent}
+.frame[hidden],#app[hidden],#login[hidden],#overview[hidden]{display:none!important}
+.empty{color:#7b8792;font-size:13px;padding:20px;border:1px dashed var(--line);border-radius:12px;grid-column:1/-1}
+.footer{color:#83909a;font-size:11px;line-height:1.6;margin-top:16px}
+@media(max-width:760px){.shell{padding:18px 10px 35px}.top{align-items:flex-start;flex-direction:column}.metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.metric{padding:13px}.panel{padding:13px}.list{grid-template-columns:1fr}.tab{font-size:12px;padding:11px 6px}.tab small{font-size:10px}.module-head{padding:14px}.module-head h2{font-size:16px}.search{min-width:100%}}
+</style></head><body><main class="shell">
+<header class="top"><div><span class="eyebrow">CÓ CÁI TIỆM / TRUNG TÂM QUẢN TRỊ</span><h1>Quản lý Kho & Giá vốn</h1><p class="subtitle">Kiểm kho · Lô nhập FIFO · Hao hụt — một nơi, một dữ liệu.</p></div><nav class="links" aria-label="Trang quản trị"><a href="./admin-hub.html">Quản lý cửa hàng</a><a href="./order-manager.html">Đơn hàng</a><a href="./sales-dashboard.html">Sales Analytics</a></nav></header>
+<section class="panel auth" id="login"><h2>Mở trung tâm quản lý kho</h2><p class="subtitle">Dùng mã quản trị như Order Manager. Tất cả thao tác bên dưới đều sử dụng phân quyền hiện tại.</p><form id="authForm"><label for="password">Mã quản trị</label><input type="password" id="password" autocomplete="current-password" required><button class="primary" id="loginBtn" type="submit">Mở quản lý kho</button><div id="authError" class="message" role="alert"></div></form></section>
+<div id="app" hidden>
+<section class="metrics" aria-label="Tổng quan kho">
+ <div class="metric"><span class="label">Sản phẩm</span><strong id="mTotal">—</strong><small>Số SKU trong hệ thống</small></div>
+ <div class="metric"><span class="label">Còn hàng</span><strong id="mAvailable">—</strong><small>SKU có số lượng dương</small></div>
+ <div class="metric"><span class="label">Sắp hết / hết</span><strong id="mLow">—</strong><small>Đang theo dõi tồn</small></div>
+ <div class="metric"><span class="label">Chưa theo dõi số lượng</span><strong id="mUntracked">—</strong><small>Không tự đổi thành hết hàng</small></div>
+</section>
+<section class="panel">
+ <div class="toolbar"><label class="search"><span aria-hidden="true">⌕</span><input id="globalSearch" type="search" placeholder="Tìm tên món, SKU, nguyên liệu hoặc lô nhập…" aria-label="Tìm trong quản lý kho"></label><button class="softbtn" id="reload" type="button">↻ Đồng bộ dữ liệu</button><button class="softbtn" id="showOverview" type="button">Danh sách nhanh</button></div>
+ <div class="info">Tồn bán lẻ được quản lý theo phần/cái; nguyên liệu và sốt theo lô FIFO (g/ml). Chênh lệch kiểm kê không tự đổi giá vốn đơn hàng. Hàng hỏng được ghi chi phí riêng vào Sales Analytics.</div>
+</section>
+<div class="tabbar" role="tablist" aria-label="Quản lý kho">
+ <button type="button" class="tab active" data-tab="stock" role="tab" aria-selected="true">📦 Kiểm kho<small>Tồn bán & menu</small></button>
+ <button type="button" class="tab" data-tab="lots" role="tab" aria-selected="false">💰 Lô nhập & Giá vốn<small>Nguyên liệu · FIFO</small></button>
+ <button type="button" class="tab" data-tab="waste" role="tab" aria-selected="false">🗑️ Hàng hỏng / Hao hụt<small>Chi phí thất thoát</small></button>
+</div>
+<section id="overview" class="panel" hidden><div class="section-head"><div><h2>Danh sách sản phẩm</h2><p>Chọn thao tác ngay trên món; mọi thay đổi được ghi vào sổ hiện tại.</p></div><span id="resultCount" class="subtitle"></span></div><div id="items" class="list"></div></section>
+<section class="module frame" id="viewStock" data-frame="stock"><div class="module-head"><div><h2>Kiểm kho & Trạng thái menu</h2><p>Nhập số kiểm đếm, lọc tồn, xem lịch sử và đối chiếu lô theo SKU.</p></div><a href="./stock-check.html" target="_blank" rel="noopener">Mở riêng ↗</a></div><iframe id="frameStock" title="Kiểm kho" loading="eager"></iframe></section>
+<section class="module frame" id="viewLots" data-frame="lots" hidden><div class="module-head"><div><h2>Lô nhập & Giá vốn FIFO</h2><p>Nhập/sửa lô và tra từng nguyên liệu. Giá vốn được giữ theo lịch sử đã phân bổ.</p></div><a href="./inventory-costs.html" target="_blank" rel="noopener">Mở riêng ↗</a></div><iframe id="frameLots" title="Lô nhập và Giá vốn" loading="lazy"></iframe></section>
+<section class="module frame" id="viewWaste" data-frame="waste" hidden><div class="module-head"><div><h2>Hàng hỏng, hết hạn & Hao hụt</h2><p>Ghi nhận lượng bỏ, đúng lô và chi phí riêng; xem lịch sử hoặc huỷ phiếu ghi nhầm.</p></div><a href="./waste.html" target="_blank" rel="noopener">Mở riêng ↗</a></div><iframe id="frameWaste" title="Hao hụt" loading="lazy"></iframe></section>
+<p class="footer">Dữ liệu giữ nguyên ở các chức năng hiện tại. Trung tâm này chỉ hợp nhất cách truy cập và hiển thị; không tự sửa FIFO, đơn bán hay số tồn khi mở trang.</p>
+</div></main>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const U='https://eswrqkhsvlqndjbrgsqo.supabase.co/rest/v1/rpc/';
+const K='sb_publishable_-6iIwPaZQRMkkWAROdfvxg_dmVB81E2';
+const urls={stock:'./stock-check.html',lots:'./inventory-costs.html',waste:'./waste.html'};
+const frameIds={stock:'frameStock',lots:'frameLots',waste:'frameWaste'};
+let pass='',items=[],tab='stock',query='',overview=false,loading=false;
+const norm=v=>String(v||'').toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
+const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function rpc(fn,args={}){const r=await fetch(U+fn,{method:'POST',headers:{apikey:K,Authorization:'Bearer '+K,'Content-Type':'application/json'},body:JSON.stringify({p_passcode:pass,...args})});const d=await r.json().catch(()=>null);if(!r.ok)throw Error(d?.message||d?.error||'Không tải được dữ liệu');return d;}
+function summary(){
+ $('mTotal').textContent=items.length.toLocaleString('vi-VN');
+ $('mAvailable').textContent=items.filter(x=>Number(x.stock_qty)>0&&x.stock_qty!==null).length.toLocaleString('vi-VN');
+ $('mLow').textContent=items.filter(x=>x.stock_qty!==null&&x.stock_qty!==undefined&&Number(x.stock_qty)<=Number(x.low_threshold??3)).length.toLocaleString('vi-VN');
+ $('mUntracked').textContent=items.filter(x=>x.stock_qty==null).length.toLocaleString('vi-VN');
+}
+async function refresh(){
+ if(loading||!pass)return;loading=true;$('reload').disabled=true;
+ try{const v=await rpc('cct_stock_list_v2');if(!Array.isArray(v))throw Error('Danh sách tồn kho không hợp lệ');items=v;summary();renderItems();$('authError').textContent='';}
+ catch(e){$('authError').textContent=e.message;throw e;}finally{loading=false;$('reload').disabled=false;}
+}
+function renderItems(){
+ const q=norm(query.trim());const filtered=items.filter(p=>norm((p.name||'')+' '+(p.sku||'')).includes(q));
+ $('resultCount').textContent=filtered.length+' SKU';
+ const visible=filtered.slice(0,48);
+ $('items').innerHTML=visible.map(p=>{
+   let s=p.stock_qty==null?'Không giới hạn':Number(p.stock_qty)+' phần';
+   let cls=p.stock_qty==null?'free':Number(p.stock_qty)<=0?'zero':Number(p.stock_qty)<=Number(p.low_threshold??3)?'low':'';
+   return '<article class="item"><div class="item-top"><div><strong>'+safe(p.name)+'</strong><div class="sku">'+safe(p.sku||'#'+p.id)+'</div></div><span class="stock '+cls+'">'+safe(s)+'</span></div><div class="item-actions"><button data-act="stock" data-id="'+p.id+'">Kiểm kho</button><button data-act="lots" data-id="'+p.id+'">Xem lô / giá vốn</button><button data-act="waste" data-id="'+p.id+'">Hao hụt</button></div></article>';
+ }).join('')+(filtered.length>48?'<p class="empty">Đang hiển thị 48 SKU đầu tiên. Hãy gõ tên hoặc mã SKU để lọc chính xác.</p>':(!visible.length?'<p class="empty">Chưa tìm thấy SKU. Nguyên liệu theo gram có thể tìm trong tab Lô nhập & Giá vốn.</p>':''));
+}
+function applySearch(t){
+ const f=$(frameIds[t]),doc=f.contentDocument;if(!doc)return;
+ const search=doc.getElementById('search');if(search&&search.value!==query){search.value=query;search.dispatchEvent(new Event('input',{bubbles:true}));}
+ if(t==='lots'){const e=doc.getElementById('showEmpty');if(e&&query&&!e.checked){e.checked=true;e.dispatchEvent(new Event('change',{bubbles:true}));}}
+}
+function resize(t){
+ const f=$(frameIds[t]);if(!f||!f.contentDocument)return;
+ try{const d=f.contentDocument,b=d.body,root=d.documentElement;const h=Math.max(660,Math.max(b?.scrollHeight||0,root?.scrollHeight||0)+30);if(Math.abs(parseInt(f.style.height||'0',10)-h)>15)f.style.height=h+'px';}catch(e){}
+}
+function adapt(t){
+ const f=$(frameIds[t]);let d;try{d=f.contentDocument;if(!d||!d.body)return;}catch(e){return;}
+ if(!d.getElementById('cct-unified-theme')){
+  const st=d.createElement('style');st.id='cct-unified-theme';
+  const common='html,body{background:transparent!important;color:#263038!important;font-family:system-ui,-apple-system,"Segoe UI",sans-serif!important}body{min-height:0!important}.wrap,.shell,main{max-width:none!important;padding:7px 4px 15px!important;margin:0 auto!important}.card,.panel{border-color:#e5e8ed!important;box-shadow:none!important} .btn.primary,button.primary{background:#293846!important;color:#fff!important;border-color:#293846!important} dialog{max-width:min(95vw,860px)!important}';
+  const specific=t==='stock'?'.top{display:none!important}.footer{position:sticky;bottom:0!important}':t==='lots'?'.topline,.intro,.nav,.foot-links{display:none!important}.notice{margin-top:5px!important}': 'main>header{display:none!important}';
+  st.textContent=common+specific;d.head.appendChild(st);
+ }
+ if(!f.dataset.observing&&typeof ResizeObserver!=='undefined'){try{const obs=new ResizeObserver(()=>resize(t));obs.observe(d.body);f._cctObserver=obs;f.dataset.observing='1';}catch(e){}}
+ applySearch(t);resize(t);
+}
+function initFrame(t){
+ const f=$(frameIds[t]);if(!f.dataset.loaded){
+  f.dataset.loaded='1';f.addEventListener('load',()=>{adapt(t);setTimeout(()=>adapt(t),800);setTimeout(()=>adapt(t),2200);});
+  f.src=urls[t]+'?center=1';
+ }
+}
+function switchTab(t,updateHash=true){
+ if(!urls[t])t='stock';tab=t;
+ document.querySelectorAll('[data-tab]').forEach(b=>{const active=b.dataset.tab===t;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active));});
+ document.querySelectorAll('[data-frame]').forEach(v=>v.hidden=v.dataset.frame!==t);
+ initFrame(t);adapt(t);
+ if(updateHash&&location.hash!=='#'+t)history.replaceState(null,'','#'+t);
+}
+$('globalSearch').addEventListener('input',e=>{query=e.target.value;renderItems();applySearch(tab);});
+$('items').addEventListener('click',e=>{
+ const b=e.target.closest('button[data-act]');if(!b)return;const p=items.find(x=>String(x.id)===b.dataset.id);if(!p)return;
+ query=p.sku||p.name;$('globalSearch').value=query;renderItems();
+ if(b.dataset.act==='lots')localStorage.setItem('cct_cost_item_v2','p:'+p.id);
+ switchTab(b.dataset.act);setTimeout(()=>{applySearch(tab);document.querySelector('.tabbar').scrollIntoView({behavior:'smooth',block:'start'});},250);
+});
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+$('showOverview').onclick=()=>{overview=!overview;$('overview').hidden=!overview;$('showOverview').textContent=overview?'Ẩn danh sách nhanh':'Danh sách nhanh';if(overview)renderItems();};
+$('reload').onclick=async()=>{try{await refresh();const f=$(frameIds[tab]);if(f.dataset.loaded)f.contentWindow.location.reload();}catch(e){alert(e.message)}};
+$('authForm').onsubmit=async e=>{
+ e.preventDefault();pass=$('password').value.trim();if(!pass)return;$('loginBtn').disabled=true;$('authError').textContent='';
+ try{await refresh();sessionStorage.setItem('cct_print_code',pass);$('login').hidden=true;$('app').hidden=false;switchTab((location.hash||'#stock').slice(1),false);}
+ catch(e){$('authError').textContent=/authorized|not_authorized/i.test(e.message)?'Mã quản trị chưa đúng.':e.message;}
+ finally{$('loginBtn').disabled=false;}
+};
+window.addEventListener('hashchange',()=>{if(!$('app').hidden)switchTab(location.hash.slice(1),false)});
+window.addEventListener('focus',()=>{if(pass)refresh().catch(()=>{});});
+try{const chan=new BroadcastChannel('cct_costs_v1');chan.onmessage=()=>{if(pass)refresh().catch(()=>{});};}catch(e){}
+let pre=sessionStorage.getItem('cct_print_code');if(pre){$('password').value=pre;$('authForm').requestSubmit();}
+})();
+</script></body></html>
