@@ -380,7 +380,7 @@ body{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial
  #app.v9-inbox>.top>div:last-child{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:11px}
  #app.v9-inbox>.top .btn{font-size:11px;padding:9px 5px;min-width:0;white-space:normal;line-height:1.15;text-align:center;min-height:39px}
  #app.v9-inbox>.top #newOrder{grid-column:span 2;order:-2}
- #app.v9-inbox>.top a[href="./stock-check.html"]{order:-1}
+ #app.v9-inbox>.top a[href="./inventory-center.html#stock"]{order:-1}
  #app.v9-inbox>.top a[href="./sales-dashboard.html"]{grid-column:span 1}
  .v9-status-tabs{gap:6px;padding-bottom:8px}
  .v9-status-tab{padding:9px 11px;border-radius:10px}
@@ -584,7 +584,7 @@ body{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial
 <section id="app" class="hidden">
   <div class="top">
     <div><h1>Order Manager</h1><div class="muted">Xem đơn → báo phí → đổi trạng thái → in bill hoặc phiếu bếp</div></div>
-    <div><a href="./admin-hub.html" class="btn alt" style="display:inline-block;text-decoration:none;background:#e9dfca;color:#302a22;font-weight:800">☰ Quản lý cửa hàng</a> <a href="./menu-manager.html" class="btn alt" style="display:inline-block;text-decoration:none">🍋 Quản lý menu</a> <a href="./product-catalog.html" class="btn alt" style="display:inline-block;text-decoration:none">🏷️ Danh mục</a> <a href="./stock-check.html" class="btn alt" style="display:inline-block;text-decoration:none">📦 Kiểm kho</a> <a href="./sales-dashboard.html" class="btn alt" style="display:inline-block;text-decoration:none">📊 Sales Analytics</a> <button id="newOrder" class="btn primary">＋ Tạo đơn mới</button> <button id="reload" class="btn alt">↻ Tải lại</button> <button id="lock" class="btn alt">Khoá</button></div>
+    <div><a href="./admin-hub.html" class="btn alt" style="display:inline-block;text-decoration:none;background:#e9dfca;color:#302a22;font-weight:800">☰ Quản lý cửa hàng</a> <a href="./menu-manager.html" class="btn alt" style="display:inline-block;text-decoration:none">🍋 Quản lý menu</a> <a href="./product-catalog.html" class="btn alt" style="display:inline-block;text-decoration:none">🏷️ Danh mục</a> <a href="./inventory-center.html#stock" class="btn alt" style="display:inline-block;text-decoration:none">📦 Kho & Giá vốn</a> <a href="./sales-dashboard.html" class="btn alt" style="display:inline-block;text-decoration:none">📊 Sales Analytics</a> <button id="newOrder" class="btn primary">＋ Tạo đơn mới</button> <button id="reload" class="btn alt">↻ Tải lại</button> <button id="lock" class="btn alt">Khoá</button></div>
   </div>
 
   <div id="manualRecoveryMsg" class="notice hidden" role="status" style="margin-bottom:14px"></div>
