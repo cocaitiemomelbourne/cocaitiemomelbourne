@@ -55,7 +55,7 @@ iframe{border:0;width:100%;height:900px;display:block;background:transparent}
  <div class="metric"><span class="label">Chưa theo dõi số lượng</span><strong id="mUntracked">—</strong><small>Không tự đổi thành hết hàng</small></div>
 </section>
 <section class="panel">
- <div class="toolbar"><label class="search"><span aria-hidden="true">⌕</span><input id="globalSearch" type="search" placeholder="Tìm tên món, SKU, nguyên liệu hoặc lô nhập…" aria-label="Tìm trong quản lý kho"></label><button class="softbtn" id="reload" type="button">↻ Đồng bộ dữ liệu</button><button class="softbtn" id="showOverview" type="button">Danh sách nhanh</button></div>
+ <div class="toolbar"><label class="search"><span aria-hidden="true">⌕</span><input id="globalSearch" type="search" placeholder="Tìm tên món, SKU, nguyên liệu hoặc lô nhập…" aria-label="Tìm trong quản lý kho"></label><button class="softbtn" id="reload" type="button">↻ Đồng bộ dữ liệu</button><button class="softbtn" id="showOverview" type="button">Ẩn danh sách nhanh</button></div>
  <div class="info">Tồn bán lẻ được quản lý theo phần/cái; nguyên liệu và sốt theo lô FIFO (g/ml). Chênh lệch kiểm kê không tự đổi giá vốn đơn hàng. Hàng hỏng được ghi chi phí riêng vào Sales Analytics.</div>
 </section>
 <div class="tabbar" role="tablist" aria-label="Quản lý kho">
@@ -63,7 +63,7 @@ iframe{border:0;width:100%;height:900px;display:block;background:transparent}
  <button type="button" class="tab" data-tab="lots" role="tab" aria-selected="false">💰 Lô nhập & Giá vốn<small>Nguyên liệu · FIFO</small></button>
  <button type="button" class="tab" data-tab="waste" role="tab" aria-selected="false">🗑️ Hàng hỏng / Hao hụt<small>Chi phí thất thoát</small></button>
 </div>
-<section id="overview" class="panel" hidden><div class="section-head"><div><h2>Danh sách sản phẩm</h2><p>Chọn thao tác ngay trên món; mọi thay đổi được ghi vào sổ hiện tại.</p></div><span id="resultCount" class="subtitle"></span></div><div id="items" class="list"></div></section>
+<section id="overview" class="panel"><div class="section-head"><div><h2>Danh sách sản phẩm</h2><p>Chọn thao tác ngay trên món; mọi thay đổi được ghi vào sổ hiện tại.</p></div><span id="resultCount" class="subtitle"></span></div><div id="items" class="list"></div></section>
 <section class="module frame" id="viewStock" data-frame="stock"><div class="module-head"><div><h2>Kiểm kho & Trạng thái menu</h2><p>Nhập số kiểm đếm, lọc tồn, xem lịch sử và đối chiếu lô theo SKU.</p></div><a href="./stock-check.html" target="_blank" rel="noopener">Mở riêng ↗</a></div><iframe id="frameStock" title="Kiểm kho" loading="eager"></iframe></section>
 <section class="module frame" id="viewLots" data-frame="lots" hidden><div class="module-head"><div><h2>Lô nhập & Giá vốn FIFO</h2><p>Nhập/sửa lô và tra từng nguyên liệu. Giá vốn được giữ theo lịch sử đã phân bổ.</p></div><a href="./inventory-costs.html" target="_blank" rel="noopener">Mở riêng ↗</a></div><iframe id="frameLots" title="Lô nhập và Giá vốn" loading="lazy"></iframe></section>
 <section class="module frame" id="viewWaste" data-frame="waste" hidden><div class="module-head"><div><h2>Hàng hỏng, hết hạn & Hao hụt</h2><p>Ghi nhận lượng bỏ, đúng lô và chi phí riêng; xem lịch sử hoặc huỷ phiếu ghi nhầm.</p></div><a href="./waste.html" target="_blank" rel="noopener">Mở riêng ↗</a></div><iframe id="frameWaste" title="Hao hụt" loading="lazy"></iframe></section>
@@ -77,7 +77,7 @@ const U='https://eswrqkhsvlqndjbrgsqo.supabase.co/rest/v1/rpc/';
 const K='sb_publishable_-6iIwPaZQRMkkWAROdfvxg_dmVB81E2';
 const urls={stock:'./stock-check.html',lots:'./inventory-costs.html',waste:'./waste.html'};
 const frameIds={stock:'frameStock',lots:'frameLots',waste:'frameWaste'};
-let pass='',items=[],tab='stock',query='',overview=false,loading=false;
+let pass='',items=[],tab='stock',query='',overview=true,loading=false;
 const norm=v=>String(v||'').toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
 const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function rpc(fn,args={}){const r=await fetch(U+fn,{method:'POST',headers:{apikey:K,Authorization:'Bearer '+K,'Content-Type':'application/json'},body:JSON.stringify({p_passcode:pass,...args})});const d=await r.json().catch(()=>null);if(!r.ok)throw Error(d?.message||d?.error||'Không tải được dữ liệu');return d;}
@@ -95,12 +95,12 @@ async function refresh(){
 function renderItems(){
  const q=norm(query.trim());const filtered=items.filter(p=>norm((p.name||'')+' '+(p.sku||'')).includes(q));
  $('resultCount').textContent=filtered.length+' SKU';
- const visible=filtered.slice(0,48);
+ const limit=q?48:8;const visible=filtered.slice(0,limit);
  $('items').innerHTML=visible.map(p=>{
    let s=p.stock_qty==null?'Không giới hạn':Number(p.stock_qty)+' phần';
    let cls=p.stock_qty==null?'free':Number(p.stock_qty)<=0?'zero':Number(p.stock_qty)<=Number(p.low_threshold??3)?'low':'';
    return '<article class="item"><div class="item-top"><div><strong>'+safe(p.name)+'</strong><div class="sku">'+safe(p.sku||'#'+p.id)+'</div></div><span class="stock '+cls+'">'+safe(s)+'</span></div><div class="item-actions"><button data-act="stock" data-id="'+p.id+'">Kiểm kho</button><button data-act="lots" data-id="'+p.id+'">Xem lô / giá vốn</button><button data-act="waste" data-id="'+p.id+'">Hao hụt</button></div></article>';
- }).join('')+(filtered.length>48?'<p class="empty">Đang hiển thị 48 SKU đầu tiên. Hãy gõ tên hoặc mã SKU để lọc chính xác.</p>':(!visible.length?'<p class="empty">Chưa tìm thấy SKU. Nguyên liệu theo gram có thể tìm trong tab Lô nhập & Giá vốn.</p>':''));
+ }).join('')+(filtered.length>limit?'<p class="empty">Đang hiển thị '+limit+' trong '+filtered.length+' SKU. Tìm tên hoặc mã SKU để xem các món khác.</p>':(!visible.length?'<p class="empty">Chưa tìm thấy SKU. Nguyên liệu theo gram có thể tìm trong tab Lô nhập & Giá vốn.</p>':''));
 }
 function applySearch(t){
  const f=$(frameIds[t]),doc=f.contentDocument;if(!doc)return;
@@ -135,7 +135,7 @@ function switchTab(t,updateHash=true){
  initFrame(t);adapt(t);
  if(updateHash&&location.hash!=='#'+t)history.replaceState(null,'','#'+t);
 }
-$('globalSearch').addEventListener('input',e=>{query=e.target.value;renderItems();applySearch(tab);});
+$('globalSearch').addEventListener('input',e=>{query=e.target.value;if(query.trim()&&!overview){overview=true;$('overview').hidden=false;$('showOverview').textContent='Ẩn danh sách nhanh';}renderItems();applySearch(tab);});
 $('items').addEventListener('click',e=>{
  const b=e.target.closest('button[data-act]');if(!b)return;const p=items.find(x=>String(x.id)===b.dataset.id);if(!p)return;
  query=p.sku||p.name;$('globalSearch').value=query;renderItems();
